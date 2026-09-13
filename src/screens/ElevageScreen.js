@@ -1,0 +1,403 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useCache } from '../context/CacheContext';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import api from '../services/api';
+import Header from '../components/Header';
+
+const BADGES = {
+  demarrage: { label: 'Démarrage', bg: '#EFF6FF', text: '#1D4ED8' },
+  croissance: { label: 'Croissance', bg: '#FFF7ED', text: '#C2410C' },
+  finition: { label: 'Finition', bg: '#ECFDF5', text: '#047857' },
+  vente: { label: 'Vente', bg: '#F5F3FF', text: '#6D28D9' },
+};
+
+const ElevageScreen = ({ token, projetActifId }) => {
+    const { getCache, setCache } = useCache();
+  const headers = { Authorization: `Bearer ${token}` };
+  const [lots, setLots] = useState([]);
+  const [projet, setProjet] = useState(null);
+  const [mortalites, setMortalites] = useState([]);
+  const [chargement, setChargement] = useState(getCache(`elevage_${projetActifId}`) ? false : true);
+  const [vue, setVue] = useState('liste'); // liste | nouveau | modifier | mortalite | historique
+  const [lotSelectionne, setLotSelectionne] = useState(null);
+  const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState('');
+
+  const [form, setForm] = useState({
+    nom: '', date_arrivee: new Date().toISOString().split('T')[0], fournisseur: '',
+    quantite_initiale: '', prix_unitaire: '1000', enclos: 'Enclos A',
+    transport_cout: '0', etat_sanitaire: 'Bon état', observations: '',
+  });
+  const [editForm, setEditForm] = useState({ males: '', femelles: '', enclos: '', phase_actuelle: 'demarrage', observations: '' });
+  const [mortForm, setMortForm] = useState({ nombre: '', cause: 'Inconnue', observations: '' });
+  const charger = async (forcer = false) => {
+    const cleCache = `elevage_${projetActifId}`;
+    if (!forcer) {
+      const cache = getCache(cleCache);
+      if (cache) {
+        setLots(cache.lots);
+        setProjet(cache.projet);
+        setChargement(false);
+        return;
+      }
+    }
+    try {
+      const [lotsRes, projetRes] = await Promise.all([
+        api.get(`/lots?projet_id=${projetActifId}`, { headers }),
+        api.get(`/projets/${projetActifId}`, { headers }),
+      ]);
+      setLots(lotsRes.data);
+      setProjet(projetRes.data);
+      setCache(cleCache, { lots: lotsRes.data, projet: projetRes.data });
+    } catch (error) {
+      console.log("Erreur élevage:", error.message);
+    } finally {
+      setChargement(false);
+    }
+  };
+  useEffect(() => {
+    if (projetActifId) charger();
+  }, [projetActifId]);
+
+  const chargerMortalites = async (lotId) => {
+    try {
+      const res = await api.get(`/lots/${lotId}/mortalites`, { headers });
+      setMortalites(res.data);
+    } catch (error) { console.log('Erreur mortalités:', error.message); }
+  };
+
+  const creerLot = async () => {
+    if (!form.nom || !form.quantite_initiale) { setErreur('Nom et quantité sont obligatoires.'); return; }
+    setEnvoi(true); setErreur('');
+    try {
+      await api.post('/lots', { ...form, projet_id: projetActifId, quantite_initiale: parseInt(form.quantite_initiale), prix_unitaire: parseFloat(form.prix_unitaire), transport_cout: parseFloat(form.transport_cout) }, { headers });
+      setVue('liste'); charger();
+    } catch (error) { setErreur(error.response?.data?.message || 'Erreur.'); }
+    finally { setEnvoi(false); }
+  };
+
+  const enregistrerModification = async () => {
+    setEnvoi(true); setErreur('');
+    try {
+      await api.put(`/lots/${lotSelectionne.uuid_id || lotSelectionne.id}`, editForm, { headers });
+      setVue('liste'); charger();
+    } catch (error) { setErreur(error.response?.data?.message || 'Erreur.'); }
+    finally { setEnvoi(false); }
+  };
+
+  const enregistrerMortalite = async () => {
+    if (!mortForm.nombre) { setErreur('Nombre requis.'); return; }
+    setEnvoi(true); setErreur('');
+    try {
+      await api.post('/lots/mortalites', { ...mortForm, nombre: parseInt(mortForm.nombre), lot_id: lotSelectionne.uuid_id || lotSelectionne.id, date_mortalite: new Date().toISOString().split('T')[0] }, { headers });
+      setVue('liste'); charger();
+    } catch (error) { setErreur(error.response?.data?.message || 'Erreur.'); }
+    finally { setEnvoi(false); }
+  };
+
+  const supprimerLot = (lot) => {
+    Alert.alert('Supprimer', `Supprimer ${lot.nom} ? Action irréversible.`, [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Supprimer', style: 'destructive', onPress: async () => {
+        try { await api.delete(`/lots/${lot.uuid_id || lot.id}`, { headers }); charger(); }
+        catch { Alert.alert('Erreur', 'Suppression impossible.'); }
+      }},
+    ]);
+  };
+
+  const totalRecus = lots.reduce((s, l) => s + parseInt(l.quantite_initiale || 0), 0);
+  const totalVivants = lots.reduce((s, l) => s + parseInt(l.vivants || l.quantite_initiale || 0), 0);
+  const totalMorts = lots.reduce((s, l) => s + parseInt(l.total_morts || 0), 0);
+  const tauxSurvie = totalRecus > 0 ? ((totalVivants / totalRecus) * 100).toFixed(1) : 100;
+  const objectif = projet?.objectif_sujets || 1000;
+  const progression = Math.round((totalRecus / objectif) * 100);
+
+  // --- VUE HISTORIQUE ---
+  if (vue === 'historique' && lotSelectionne) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+        <Header titre={`Historique · ${lotSelectionne.nom}`} />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.carteNoire}>
+            <Text style={styles.carteNoireLabel}>Total morts</Text>
+            <Text style={styles.carteNoireMontant}>{lotSelectionne.total_morts || 0}</Text>
+            <Text style={styles.carteNoireSousLabel}>Taux survie : {lotSelectionne.taux_survie || 100}% · {parseInt(lotSelectionne.vivants || lotSelectionne.quantite_initiale)} vivants</Text>
+          </View>
+          {mortalites.length === 0 ? <Text style={styles.vide}>Aucune mortalité enregistrée</Text> : mortalites.map(m => (
+            <View style={styles.carte} key={m.id}>
+              <View style={styles.ligneEntre}>
+                <Text style={styles.mortTitre}>-{m.nombre} mort{m.nombre > 1 ? 's' : ''}</Text>
+                <Text style={styles.carteSousTexte}>{new Date(m.date_mortalite).toLocaleDateString('fr-FR')}</Text>
+              </View>
+              <Text style={styles.carteSousTexte}>Cause : {m.cause}</Text>
+            </View>
+          ))}
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+            <Text style={styles.boutonSecondaireTexte}>← Retour</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // --- VUE MORTALITÉ ---
+  if (vue === 'mortalite' && lotSelectionne) {
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Header titre={`Mortalité · ${lotSelectionne.nom}`} />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.alerteRouge}>
+            <Text style={styles.alerteRougeTexte}>Effectif actuel : {parseInt(lotSelectionne.vivants || lotSelectionne.quantite_initiale)} vivants</Text>
+          </View>
+          <View style={styles.carte}>
+            <Text style={styles.label}>Nombre de morts *</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={mortForm.nombre} onChangeText={v => setMortForm({ ...mortForm, nombre: v })} />
+            <Text style={styles.label}>Cause</Text>
+            <TextInput style={styles.champ} value={mortForm.cause} onChangeText={v => setMortForm({ ...mortForm, cause: v })} placeholder="Maladie, prédateur, accident..." />
+            <Text style={styles.label}>Observations</Text>
+            <TextInput style={[styles.champ, { height: 70 }]} multiline value={mortForm.observations} onChangeText={v => setMortForm({ ...mortForm, observations: v })} />
+          </View>
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
+          <TouchableOpacity style={styles.boutonRouge} onPress={enregistrerMortalite} disabled={envoi}>
+            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Enregistrer la mortalité'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // --- VUE MODIFIER ---
+  if (vue === 'modifier' && lotSelectionne) {
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Header titre={`Modifier · ${lotSelectionne.nom}`} />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.carte}>
+            <Text style={styles.label}>Phase actuelle</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {['demarrage', 'croissance', 'finition', 'vente'].map(p => (
+                <TouchableOpacity key={p} onPress={() => setEditForm({ ...editForm, phase_actuelle: p })}
+                  style={[styles.chip, editForm.phase_actuelle === p && styles.chipActif]}>
+                  <Text style={[styles.chipTexte, editForm.phase_actuelle === p && styles.chipTexteActif]}>{BADGES[p].label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {(editForm.phase_actuelle === 'finition' || editForm.phase_actuelle === 'vente') && (
+              <>
+                <Text style={styles.label}>Mâles</Text>
+                <TextInput style={styles.champ} keyboardType="numeric" value={editForm.males} onChangeText={v => setEditForm({ ...editForm, males: v })} />
+                <Text style={styles.label}>Femelles</Text>
+                <TextInput style={styles.champ} keyboardType="numeric" value={editForm.femelles} onChangeText={v => setEditForm({ ...editForm, femelles: v })} />
+              </>
+            )}
+            <Text style={styles.label}>Enclos</Text>
+            <TextInput style={styles.champ} value={editForm.enclos} onChangeText={v => setEditForm({ ...editForm, enclos: v })} />
+            <Text style={styles.label}>Observations</Text>
+            <TextInput style={[styles.champ, { height: 70 }]} multiline value={editForm.observations} onChangeText={v => setEditForm({ ...editForm, observations: v })} />
+          </View>
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
+          <TouchableOpacity style={styles.boutonPrincipal} onPress={enregistrerModification} disabled={envoi}>
+            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Enregistrer les modifications'}</Text>
+          </TouchableOpacity>
+          <View style={styles.zoneDanger}>
+            <Text style={styles.zoneDangerLabel}>Zone de danger</Text>
+            <TouchableOpacity style={styles.boutonSupprimer} onPress={() => { setVue('liste'); supprimerLot(lotSelectionne); }}>
+              <Text style={styles.boutonSupprimerTexte}>Supprimer ce lot</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // --- VUE NOUVEAU LOT ---
+  if (vue === 'nouveau') {
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Header titre="Nouveau lot" />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.carte}>
+            <Text style={styles.label}>Nom du lot *</Text>
+            <TextInput style={styles.champ} placeholder="Ex: Lot 5" value={form.nom} onChangeText={v => setForm({ ...form, nom: v })} />
+            <Text style={styles.label}>Fournisseur</Text>
+            <TextInput style={styles.champ} value={form.fournisseur} onChangeText={v => setForm({ ...form, fournisseur: v })} />
+            <Text style={styles.label}>Quantité totale *</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={form.quantite_initiale} onChangeText={v => setForm({ ...form, quantite_initiale: v })} />
+            <Text style={styles.label}>Prix unitaire (F)</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={form.prix_unitaire} onChangeText={v => setForm({ ...form, prix_unitaire: v })} />
+            <Text style={styles.label}>Enclos</Text>
+            <TextInput style={styles.champ} value={form.enclos} onChangeText={v => setForm({ ...form, enclos: v })} />
+            <Text style={styles.label}>Coût transport (F)</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={form.transport_cout} onChangeText={v => setForm({ ...form, transport_cout: v })} />
+            <Text style={styles.label}>Observations</Text>
+            <TextInput style={[styles.champ, { height: 70 }]} multiline value={form.observations} onChangeText={v => setForm({ ...form, observations: v })} />
+          </View>
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
+          <TouchableOpacity style={styles.boutonPrincipal} onPress={creerLot} disabled={envoi}>
+            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Enregistrer le lot'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // --- VUE LISTE (par défaut) ---
+  return (
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <Header titre="Elevage" sousTitre={`${totalVivants} vivants / ${totalRecus} reçus`}
+        action={
+          <TouchableOpacity style={styles.boutonPetit} onPress={() => { setForm({ ...form, nom: '', quantite_initiale: '' }); setVue('nouveau'); }}>
+            <Text style={styles.boutonPetitTexte}>+ Lot</Text>
+          </TouchableOpacity>
+        }
+      />
+      {chargement ? (
+        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+      ) : (
+        <ScrollView style={styles.conteneur}>
+          <View style={{ marginTop: 8, marginBottom: 16 }}>
+            <View style={styles.ligneEntre}>
+              <Text style={styles.progressLabel}>Objectif {objectif} sujets</Text>
+              <Text style={styles.progressLabel}>{totalRecus} reçus · {progression}%</Text>
+            </View>
+            <View style={styles.progressFond}>
+              <View style={[styles.progressBarre, { width: `${Math.min(progression, 100)}%` }]} />
+            </View>
+          </View>
+
+          <View style={styles.grille3}>
+            <View style={styles.stat}><Text style={styles.statChiffre}>{totalRecus}</Text><Text style={styles.statLabel}>Reçus</Text></View>
+            <View style={styles.stat}><Text style={[styles.statChiffre, { color: '#DC2626' }]}>{totalMorts}</Text><Text style={styles.statLabel}>Morts</Text></View>
+            <View style={styles.stat}><Text style={[styles.statChiffre, { color: tauxSurvie >= 90 ? '#059669' : '#EA580C' }]}>{tauxSurvie}%</Text><Text style={styles.statLabel}>Survie</Text></View>
+          </View>
+
+          <Text style={styles.sectionTitre}>{lots.length} lot{lots.length > 1 ? 's' : ''} actif{lots.length > 1 ? 's' : ''}</Text>
+
+          {lots.length === 0 ? (
+            <View style={styles.videCarte}>
+              <Text style={styles.vide}>Aucun lot enregistré</Text>
+              <TouchableOpacity style={styles.boutonPrincipal} onPress={() => setVue('nouveau')}>
+                <Text style={styles.boutonPrincipalTexte}>Ajouter un lot</Text>
+              </TouchableOpacity>
+            </View>
+          ) : lots.map(lot => {
+            const badge = BADGES[lot.phase_actuelle] || BADGES.demarrage;
+            const vivants = parseInt(lot.vivants || lot.quantite_initiale);
+            const morts = parseInt(lot.total_morts || 0);
+            const survie = lot.taux_survie || 100;
+            return (
+              <View style={styles.carteLot} key={lot.id}>
+                <View style={styles.ligneEntre}>
+                  <Text style={styles.carteTitre}>{lot.nom}</Text>
+                  <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+                    <Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text>
+                  </View>
+                </View>
+                <Text style={styles.carteSousTexte}>{new Date(lot.date_arrivee).toLocaleDateString('fr-FR')} · {lot.fournisseur} · {lot.enclos}</Text>
+
+                {(lot.males > 0 || lot.femelles > 0) ? (
+                  <Text style={styles.carteSousTexte}>♂ {lot.males} mâles · ♀ {lot.femelles} femelles</Text>
+                ) : (
+                  <Text style={styles.italique}>Sexage non encore effectué</Text>
+                )}
+
+                <View style={styles.grille4}>
+                  <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.quantite_initiale}</Text><Text style={styles.miniStatLabel}>Reçus</Text></View>
+                  <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{vivants}</Text><Text style={styles.miniStatLabel}>Vivants</Text></View>
+                  <View style={styles.miniStat}><Text style={[styles.miniStatChiffre, { color: '#DC2626' }]}>{morts}</Text><Text style={styles.miniStatLabel}>Morts</Text></View>
+                  <View style={styles.miniStat}><Text style={[styles.miniStatChiffre, { color: survie >= 90 ? '#059669' : '#EA580C' }]}>{survie}%</Text><Text style={styles.miniStatLabel}>Survie</Text></View>
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
+                  <TouchableOpacity style={styles.actionRouge} onPress={() => { setLotSelectionne(lot); setMortForm({ nombre: '', cause: 'Inconnue', observations: '' }); setVue('mortalite'); }}>
+                    <Text style={styles.actionRougeTexte}>+ Mortalité</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionBleue} onPress={() => { setLotSelectionne(lot); chargerMortalites(lot.uuid_id || lot.id); setVue('historique'); }}>
+                    <Text style={styles.actionBleueTexte}>Historique</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionGrise} onPress={() => { setLotSelectionne(lot); setEditForm({ males: lot.males || '', femelles: lot.femelles || '', enclos: lot.enclos || '', phase_actuelle: lot.phase_actuelle || 'demarrage', observations: lot.observations || '' }); setVue('modifier'); }}>
+                    <Text style={styles.actionGriseTexte}>Modifier</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  conteneur: { flex: 1, padding: 16 },
+  centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  progressLabel: { fontSize: 11, color: '#6B7280' },
+  progressFond: { height: 8, backgroundColor: '#E5E7EB', borderRadius: 4, marginTop: 6, overflow: 'hidden' },
+  progressBarre: { height: '100%', backgroundColor: '#111827', borderRadius: 4 },
+  grille3: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  stat: { flex: 1, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 12, alignItems: 'center' },
+  statChiffre: { fontSize: 20, fontWeight: '600', color: '#111827' },
+  statLabel: { fontSize: 11, color: '#9CA3AF', marginTop: 2 },
+  sectionTitre: { fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 10 },
+  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E7EB', padding: 30, alignItems: 'center' },
+  vide: { color: '#9CA3AF', fontSize: 13, marginBottom: 12 },
+  carteLot: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
+  carteSousTexte: { fontSize: 12, color: '#6B7280', marginTop: 4 },
+  italique: { fontSize: 12, color: '#9CA3AF', fontStyle: 'italic', marginTop: 4 },
+  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  badgeTexte: { fontSize: 11, fontWeight: '600' },
+  grille4: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10, marginTop: 8, borderTopWidth: 1, borderTopColor: '#F9FAFB' },
+  miniStat: { alignItems: 'center' },
+  miniStatChiffre: { fontSize: 13, fontWeight: '600', color: '#111827' },
+  miniStatLabel: { fontSize: 10, color: '#9CA3AF' },
+  actionRouge: { flex: 1, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  actionRougeTexte: { color: '#DC2626', fontSize: 11, fontWeight: '600' },
+  actionBleue: { flex: 1, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  actionBleueTexte: { color: '#1D4ED8', fontSize: 11, fontWeight: '600' },
+  actionGrise: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  actionGriseTexte: { color: '#4B5563', fontSize: 11, fontWeight: '600' },
+  boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
+  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
+  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6' },
+  chipActif: { backgroundColor: '#111827' },
+  chipTexte: { fontSize: 12, color: '#6B7280' },
+  chipTexteActif: { color: '#fff', fontWeight: '600' },
+  erreurTexte: { color: '#DC2626', fontSize: 13, marginTop: 12 },
+  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  boutonRouge: { backgroundColor: '#DC2626', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
+  alerteRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, padding: 10, marginTop: 8 },
+  alerteRougeTexte: { color: '#B91C1C', fontSize: 12, fontWeight: '600' },
+  mortTitre: { color: '#DC2626', fontSize: 13, fontWeight: '600' },
+  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 12 },
+  carteNoireLabel: { color: '#9CA3AF', fontSize: 12 },
+  carteNoireMontant: { color: '#fff', fontSize: 22, fontWeight: '600' },
+  carteNoireSousLabel: { color: '#9CA3AF', fontSize: 11, marginTop: 4 },
+  zoneDanger: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#FECACA', borderRadius: 12, padding: 14, marginTop: 16 },
+  zoneDangerLabel: { color: '#DC2626', fontSize: 12, fontWeight: '600', marginBottom: 8 },
+  boutonSupprimer: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  boutonSupprimerTexte: { color: '#B91C1C', fontSize: 13, fontWeight: '600' },
+});
+
+export default ElevageScreen;

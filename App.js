@@ -1,20 +1,122 @@
+import React from 'react';
+import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { ProjetProvider, useProjet } from './src/context/ProjetContext';
+import { EspaceProvider, useEspace } from './src/context/EspaceContext';
+import { CacheProvider } from './src/context/CacheContext';
+import { ConnexionProvider } from './src/context/ConnexionContext';
+import { NavigationProjetsProvider } from './src/context/NavigationProjetsContext';
+// Import dynamique plus bas, pour éviter qu'Expo Go ne plante à l'ouverture
+// du module expo-notifications lui-même (retiré d'Expo Go depuis le SDK 53).
+import BottomNav from './src/components/BottomNav';
+
+import LoginScreen from './src/screens/LoginScreen';
+import AccueilFermeScreen from './src/screens/AccueilFermeScreen';
+import GestionInvestScreen from './src/screens/GestionInvestScreen';
+import AccueilRouteur from './src/screens/AccueilRouteur';
+import NouveauProjetScreen from './src/screens/NouveauProjetScreen';
+import ElevageScreen from './src/screens/ElevageScreen';
+import ReproductionScreen from './src/screens/ReproductionScreen';
+import GestionScreen from './src/screens/GestionScreen';
+import CommerceScreen from './src/screens/CommerceScreen';
+import AnalysesScreen from './src/screens/AnalysesScreen';
+import FermeScreen from './src/screens/FermeScreen';
+import GestionFermeScreen from './src/screens/GestionFermeScreen';
+import CaissesScreen from './src/screens/CaissesScreen';
+import EquipementsScreen from './src/screens/EquipementsScreen';
+import BilanScreen from './src/screens/BilanScreen';
+import RapportScreen from './src/screens/RapportScreen';
+import InvestissementScreen from './src/screens/InvestissementScreen';
+import ProfilScreen from './src/screens/ProfilScreen';
+import JournalScreen from './src/screens/JournalScreen';
+import GestionProjetScreen from './src/screens/GestionProjetScreen';
+import GestionUtilisateursScreen from './src/screens/GestionUtilisateursScreen';
+
+const Stack = createNativeStackNavigator();
+
+const AvecNav = ({ children }) => (
+  <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>{children}</View>
+    <BottomNav />
+  </View>
+);
+
+const AppNavigator = () => {
+  const { utilisateur, token } = useAuth();
+  const { projetActifId, projets } = useProjet();
+  const { animationDirection, setAnimationDirection } = useEspace();
+
+  React.useEffect(() => {
+    setTimeout(() => setAnimationDirection('none'), 300);
+  }, [animationDirection]);
+  const projetNom = projets.find(p => (p.uuid_id || p.id) === projetActifId)?.nom;
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: animationDirection }}>
+      <Stack.Screen name="Accueil">{() => <AvecNav><AccueilRouteur token={token} projetActifId={projetActifId} utilisateurNom={utilisateur?.nom} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Elevage">{() => <AvecNav><ElevageScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="GestionProjet">{({ route, navigation }) => <AvecNav><GestionProjetScreen token={token} projetId={route.params?.projetId} onRetour={() => navigation.goBack()} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Reproduction">{() => <AvecNav><ReproductionScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Gestion">{() => <AvecNav><GestionScreen token={token} projetActifId={projetActifId} projetNom={projetNom} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Commerce">{() => <AvecNav><CommerceScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Analyses">{() => <AvecNav><AnalysesScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Ferme">{() => <AvecNav><FermeScreen token={token} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="FermeDepenses">{() => <AvecNav><GestionFermeScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Caisses">{() => <AvecNav><CaissesScreen token={token} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Equipements">{() => <AvecNav><EquipementsScreen token={token} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Bilan">{() => <AvecNav><BilanScreen token={token} /></AvecNav>}</Stack.Screen>
+            <Stack.Screen name="Journal">{() => <AvecNav><JournalScreen token={token} /></AvecNav>}</Stack.Screen>
+                  <Stack.Screen name="GestionUtilisateurs">{() => <AvecNav><GestionUtilisateursScreen token={token} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Rapport">{() => <AvecNav><RapportScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Investissement">{() => <AvecNav><InvestissementScreen token={token} projetActifId={projetActifId} utilisateurNom={utilisateur?.nom} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Profil">{() => <AvecNav><ProfilScreen utilisateur={{ utilisateur }} token={token} onDeconnecter={useAuth().logout} /></AvecNav>}</Stack.Screen>
+    </Stack.Navigator>
+  );
+};
+
+const Racine = () => {
+  const { utilisateur, loading, token } = useAuth();
+
+  React.useEffect(() => {
+    if (utilisateur && token) {
+      import('expo-constants').then(({ default: Constants }) => {
+        if (Constants.appOwnership !== 'expo') {
+          import('./src/services/notifications').then(({ enregistrerPourNotifications }) => {
+            enregistrerPourNotifications(token).catch(err => console.log('Notifications non disponibles:', err.message));
+          });
+        }
+      });
+    }
+  }, [utilisateur]);
+
+  if (loading) return null;
+  if (!utilisateur) return <LoginScreen />;
+
+  return (
+    <ConnexionProvider>
+      <NavigationProjetsProvider>
+      <ProjetProvider>
+        <EspaceProvider>
+          <CacheProvider>
+            <NavigationContainer>
+              <AppNavigator />
+            </NavigationContainer>
+          </CacheProvider>
+        </EspaceProvider>
+      </ProjetProvider>
+    </NavigationProjetsProvider>
+    </ConnexionProvider>
+  );
+};
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthProvider>
+      <StatusBar style="dark" />
+      <Racine />
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
