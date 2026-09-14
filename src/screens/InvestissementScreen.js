@@ -254,6 +254,7 @@ const progressionTemporelle = (dateDebut, dateFin) => {
 
 const InvestissementScreen = ({ token, projetActifId, utilisateurNom }) => {
   const { projetActif } = useProjet();
+  const [detailsOuverts, setDetailsOuverts] = useState(false);
   const { getCache, setCache } = useCache();
   const headers = { Authorization: `Bearer ${token}` };
   const [onglet, setOnglet] = useState('investissement');
@@ -327,51 +328,59 @@ const InvestissementScreen = ({ token, projetActifId, utilisateurNom }) => {
 
           {onglet === 'investissement' && (
             investissement ? (
-              <View>
-                <View style={styles.carteNoire}>
-                  <Text style={styles.carteNoireLabel}>Capital investi</Text>
-                  <Text style={styles.carteNoireMontant}>{formatMontant(investissement.mise)}</Text>
-                  <Text style={styles.carteNoireSousLabel}>{investissement.projet_nom}</Text>
-                  <View style={styles.grille2noire}>
-                    <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Rendement promis</Text><Text style={styles.miniNoireValeur}>{investissement.rendement_promis}%</Text></View>
-                    <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Part du projet</Text><Text style={styles.miniNoireValeur}>{((investissement.mise / investissement.total_investi) * 100).toFixed(1)}%</Text></View>
-                    <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Montant total dû</Text><Text style={styles.miniNoireValeur}>{formatMontant(investissement.mise * (1 + investissement.rendement_promis / 100))}</Text></View>
-                    <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Coût total du projet</Text><Text style={styles.miniNoireValeur}>{formatMontant(investissement.total_investi)}</Text></View>
-                  </View>
+              <View style={{ gap: 14 }}>
+                <View style={estilosApple.carteApple}>
+                  <Text style={estilosApple.labelApple}>CE QUE VOUS ALLEZ RECEVOIR</Text>
+                  <Text style={estilosApple.montantApple}>{formatMontant(investissement.mise * (1 + investissement.rendement_promis / 100))}</Text>
+                  <Text style={estilosApple.sousTexteApple}>Sur votre mise de {formatMontant(investissement.mise)} · {((investissement.mise / investissement.total_investi) * 100).toFixed(1)}% du projet</Text>
+                  <TouchableOpacity onPress={() => setDetailsOuverts(prev => !prev)}>
+                    <Text style={estilosApple.lienDetails}>{detailsOuverts ? 'Masquer les détails' : 'Voir les détails'}</Text>
+                  </TouchableOpacity>
+                  {detailsOuverts && (
+                    <View style={estilosApple.detailsBloc}>
+                      <View style={estilosApple.ligneDetail}><Text style={estilosApple.detailLabel}>Rendement promis</Text><Text style={estilosApple.detailValeur}>{investissement.rendement_promis}%</Text></View>
+                      <View style={estilosApple.ligneDetail}><Text style={estilosApple.detailLabel}>Coût total du projet</Text><Text style={estilosApple.detailValeur}>{formatMontant(investissement.total_investi)}</Text></View>
+                    </View>
+                  )}
                 </View>
+
                 {investissement.mou_url && (
-                  <TouchableOpacity onPress={() => Linking.openURL(investissement.mou_url)} style={styles.carte}>
-                    <Text style={styles.carteTitre}>📄 Contrat (MOU)</Text>
-                    <Text style={{ fontSize: 12, color: '#4B5563', marginTop: 4 }}>Toucher pour ouvrir le document</Text>
+                  <TouchableOpacity onPress={() => Linking.openURL(investissement.mou_url)} style={estilosApple.carteApple}>
+                    <Text style={estilosApple.titreApple}>📄 Votre contrat</Text>
+                    <Text style={estilosApple.sousTexteApple}>Toucher pour consulter le document</Text>
                   </TouchableOpacity>
                 )}
+
                 {(() => {
-                  const couleurs = couleurSurvie(projetActif?.taux_survie_reel);
+                  const taux = projetActif?.taux_survie_reel;
+                  const accent = taux == null || taux >= 70 ? '#2D6A4F' : '#B08D57';
+                  const messages = taux == null
+                    ? { titre: 'Suivi en cours', sous: "Le cheptel démarre tout juste son suivi." }
+                    : taux >= 90
+                    ? { titre: 'Le cheptel se porte bien', sous: `${taux}% de sujets en bonne santé.` }
+                    : taux >= 70
+                    ? { titre: 'Le cheptel est suivi de près', sous: `${taux}% de sujets en bonne santé — une équipe s'en occupe au quotidien.` }
+                    : { titre: 'Une attention particulière est portée au cheptel', sous: `${taux}% de sujets en bonne santé — le gestionnaire prend les mesures nécessaires.` };
                   const progression = progressionTemporelle(projetActif?.date_debut, projetActif?.date_fin);
-                  const gainNet = investissement.mise * (investissement.rendement_promis / 100);
                   return (
-                    <View style={{ backgroundColor: couleurs.fond, borderWidth: 1, borderColor: couleurs.bordure, borderRadius: 12, padding: 12, marginBottom: 12 }}>
-                      <Text style={{ fontSize: 12, color: couleurs.texte, fontWeight: '500' }}>
-                        {projetActif?.taux_survie_reel != null ? `${projetActif.taux_survie_reel}% de survie` : 'Suivi en cours'}
-                      </Text>
+                    <View style={estilosApple.carteApple}>
+                      <Text style={estilosApple.titreApple}>{messages.titre}</Text>
+                      <Text style={estilosApple.sousTexteApple}>{messages.sous}</Text>
                       {progression !== null && (
-                        <View style={{ height: 4, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 2, marginTop: 8, marginBottom: 10, overflow: 'hidden' }}>
-                          <View style={{ height: 4, backgroundColor: '#111827', borderRadius: 2, width: `${progression}%` }} />
+                        <View>
+                          <View style={estilosApple.barreFond}>
+                            <View style={[estilosApple.barreRemplie, { width: `${progression}%`, backgroundColor: accent }]} />
+                          </View>
+                          <Text style={estilosApple.sousTexteApple}>Le projet avance bien, à {progression}% de son parcours</Text>
                         </View>
                       )}
-                      <Text style={{ fontSize: 11, color: '#4B5563' }}>Gain net attendu ({investissement.rendement_promis}%)</Text>
-                      <Text style={{ fontSize: 16, fontWeight: '700', color: '#047857' }}>{formatMontant(gainNet)}</Text>
                     </View>
                   );
                 })()}
-                <View style={styles.carte}>
-                  <Text style={styles.carteTitre}>Statut du paiement</Text>
-                  <View style={styles.ligneEntre}>
-                    <Text style={styles.carteSousTexte}>Statut</Text>
-                    <View style={[styles.badge, { backgroundColor: investissement.statut_paiement === 'paye' ? '#ECFDF5' : '#F3F4F6' }]}>
-                      <Text style={[styles.badgeTexte, { color: investissement.statut_paiement === 'paye' ? '#047857' : '#4B5563' }]}>{investissement.statut_paiement === 'paye' ? 'Payé' : 'En attente'}</Text>
-                    </View>
-                  </View>
+
+                <View style={estilosApple.carteApple}>
+                  <Text style={estilosApple.labelApple}>SUIVI DU VERSEMENT</Text>
+                  <Text style={estilosApple.titreApple}>{investissement.statut_paiement === 'paye' ? 'Payé' : 'En cours de traitement'}</Text>
                 </View>
               </View>
             ) : <Text style={styles.vide}>Aucun investissement trouvé</Text>
@@ -463,6 +472,21 @@ const styles = StyleSheet.create({
   champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
   boutonPrincipal: { backgroundColor: '#111827', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 13, fontWeight: '600' },
+});
+
+const estilosApple = StyleSheet.create({
+  carteApple: { backgroundColor: '#fff', borderRadius: 24, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  labelApple: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 6 },
+  montantApple: { color: '#1D1D1F', fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
+  sousTexteApple: { color: '#6E6E73', fontSize: 13, marginTop: 6 },
+  titreApple: { color: '#1D1D1F', fontSize: 14, fontWeight: '600' },
+  lienDetails: { color: '#6E6E73', fontSize: 12, marginTop: 14, textDecorationLine: 'underline' },
+  detailsBloc: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F5F5F7', gap: 8 },
+  ligneDetail: { flexDirection: 'row', justifyContent: 'space-between' },
+  detailLabel: { color: '#6E6E73', fontSize: 12 },
+  detailValeur: { color: '#1D1D1F', fontSize: 12, fontWeight: '600' },
+  barreFond: { height: 5, backgroundColor: '#F5F5F7', borderRadius: 3, marginTop: 14, overflow: 'hidden' },
+  barreRemplie: { height: 5, borderRadius: 3 },
 });
 
 export default InvestissementScreen;
