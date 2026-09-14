@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "956388761953",
+    "project_id": "la-grande-ferme-participative",
+    "storage_bucket": "la-grande-ferme-participative.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:956388761953:android:0b64436f09e5438ec1e520",
+        "android_client_info": {
+          "package_name": "com.lagrandefermeparticipative.lagrandefermeapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1SQIP6Jt-TGXVbupQamRR_dP-avfFqZs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
