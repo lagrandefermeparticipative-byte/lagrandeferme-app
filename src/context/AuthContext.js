@@ -47,7 +47,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     await SecureStore.deleteItemAsync('token');
-    await AsyncStorage.multiRemove(['utilisateur', 'modeVue']);
+    // On nettoie aussi les réglages propres à un compte (mode de vue, espace
+    // actif, projet actif) — sans ça, ils restent en mémoire et s'appliquent
+    // à tort à la personne suivante qui se connecte sur ce même appareil.
+    await AsyncStorage.multiRemove(['utilisateur', 'modeVue', 'espaceActif', 'projet_actif_id']);
     setUtilisateur(null);
     setToken(null);
   };
