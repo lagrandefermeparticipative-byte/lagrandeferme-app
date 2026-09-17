@@ -283,7 +283,7 @@ const InvestissementScreen = ({ token, projetActifId, utilisateurNom }) => {
     }
     try {
       const [investRes, rapportsRes] = await Promise.all([
-        api.get("/utilisateurs/mon-investissement", { headers }),
+        api.get(`/utilisateurs/mon-investissement?projet_id=${projetActifId}`, { headers }),
         api.get(`/rapports?projet_id=${projetActifId}`, { headers }),
       ]);
       const invest = investRes.data.length > 0 ? investRes.data[0] : null;

@@ -29,7 +29,8 @@ const Header = ({ titre, sousTitre, sansRetour, action, masquerSwitch }) => {
 
   const afficheSwitch = !masquerSwitch && (
     (utilisateur?.role === 'gestion_invest' && estInvestisseurGlobal) ||
-    (mesRolesSurProjet.includes('investisseur') && (mesRolesSurProjet.includes('technicien') || utilisateur?.role === 'tech_invest'))
+    utilisateur?.role === 'tech_invest' ||
+    (mesRolesSurProjet.includes('investisseur') && mesRolesSurProjet.includes('technicien'))
   );
   const { projets, projetActifId, choisirProjet } = useProjet();
   const afficheSelecteurProjet = projets.length > 1 && (utilisateur?.role === 'technicien' || utilisateur?.role === 'tech_invest' || utilisateur?.role === 'investisseur');

@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import Header from '../components/Header';
 import { useProjet } from '../context/ProjetContext';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 const couleurSurvie = (taux) => {
-  if (taux === null || taux === undefined) return { fond: '#F9FAFB', bordure: '#E5E7EB', texte: '#6B7280' };
-  if (taux >= 90) return { fond: '#ECFDF5', bordure: '#A7F3D0', texte: '#047857' };
-  if (taux >= 70) return { fond: '#FFFBEB', bordure: '#FDE68A', texte: '#92400E' };
-  return { fond: '#FEF2F2', bordure: '#FECACA', texte: '#B91C1C' };
+  if (taux === null || taux === undefined) return { fond: '#F9FAFB', bordure: '#E5E7EB', texte: '#6E6E73', accent: '#8E8E93' };
+  if (taux >= 90) return { fond: '#fff', bordure: '#F5F5F7', texte: '#6E6E73', accent: '#2D6A4F' };
+  if (taux >= 70) return { fond: '#fff', bordure: '#F5F5F7', texte: '#6E6E73', accent: '#B08D57' };
+  return { fond: '#fff', bordure: '#F5F5F7', texte: '#6E6E73', accent: '#B54708' };
 };
 
 const progressionTemporelle = (dateDebut, dateFin) => {
@@ -21,9 +22,29 @@ const progressionTemporelle = (dateDebut, dateFin) => {
   return Math.max(0, Math.min(100, Math.round(pct)));
 };
 
+const formatMontant = (m) => new Intl.NumberFormat('fr-FR').format(Math.round(m || 0)) + ' FCFA';
+
 const MesProjetsScreen = ({ onChoisir }) => {
   const { projets, chargement, choisirProjet } = useProjet();
-  const { utilisateur, switchMode } = useAuth();
+  const { utilisateur, switchMode, token } = useAuth();
+  const [lignesInvest, setLignesInvest] = useState(null);
+  const [detailsOuverts, setDetailsOuverts] = useState(false);
+
+  const estInvestisseur = utilisateur?.role === 'investisseur' || utilisateur?.role === 'tech_invest';
+
+  useEffect(() => {
+    if (estInvestisseur && projets.length > 1 && token) {
+      api.get('/utilisateurs/mon-investissement', { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => setLignesInvest(res.data))
+        .catch(() => setLignesInvest(null));
+    }
+  }, [estInvestisseur, projets.length, token]);
+
+  const ensemble = lignesInvest ? {
+    totalMise: lignesInvest.reduce((s, l) => s + parseFloat(l.mise || 0), 0),
+    totalGain: lignesInvest.reduce((s, l) => s + parseFloat(l.mise || 0) * (1 + parseFloat(l.rendement_promis || 0) / 100), 0),
+    nbProjets: lignesInvest.length,
+  } : null;
 
   const ouvrirProjet = (projet) => {
     choisirProjet(projet.uuid_id || projet.id);
@@ -36,6 +57,43 @@ const MesProjetsScreen = ({ onChoisir }) => {
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
       <Header titre="Mes projets" sansRetour masquerSwitch />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.conteneur}>
+        {ensemble && (
+          <View style={styles.carteEnsemble}>
+            <Text style={styles.carteEnsembleLabel}>VOTRE INVESTISSEMENT TOTAL</Text>
+            <Text style={styles.carteEnsembleMontant}>{formatMontant(ensemble.totalMise)}</Text>
+            <View style={styles.ligneDivisoire} />
+            <View style={styles.statsEtalees}>
+              <View>
+                <Text style={styles.statValeurGrande}>{formatMontant(ensemble.totalGain)}</Text>
+                <Text style={styles.statLabel}>Retour attendu</Text>
+              </View>
+              <View style={{ marginLeft: -90 }}>
+                <Text style={styles.statValeurGrande}>{ensemble.nbProjets}</Text>
+                <Text style={styles.statLabel}>Projets</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={() => setDetailsOuverts(prev => !prev)}>
+              <Text style={styles.lienDetails}>{detailsOuverts ? 'Masquer le détail' : 'Voir le détail par projet'}</Text>
+            </TouchableOpacity>
+            {detailsOuverts && (
+              <View style={styles.detailsBloc}>
+                {lignesInvest.map(l => (
+                  <View key={l.id} style={styles.ligneDetailProjet}>
+                    <Text style={styles.detailProjetNom}>{l.projet_nom}</Text>
+                    <View style={styles.ligneEntre}>
+                      <Text style={styles.detailLabel}>Investi</Text>
+                      <Text style={styles.detailValeur}>{formatMontant(l.mise)}</Text>
+                    </View>
+                    <View style={styles.ligneEntre}>
+                      <Text style={styles.detailLabel}>Retour attendu</Text>
+                      <Text style={styles.detailValeur}>{formatMontant(parseFloat(l.mise) * (1 + parseFloat(l.rendement_promis || 0) / 100))}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
         {chargement ? (
           <Text style={styles.vide}>Chargement...</Text>
         ) : projets.length === 0 ? (
@@ -45,17 +103,17 @@ const MesProjetsScreen = ({ onChoisir }) => {
             const couleurs = couleurSurvie(p.taux_survie_reel);
             const progression = progressionTemporelle(p.date_debut, p.date_fin);
             return (
-              <TouchableOpacity key={p.id} style={[styles.carte, { backgroundColor: couleurs.fond, borderColor: couleurs.bordure }]} onPress={() => ouvrirProjet(p)}>
+              <TouchableOpacity key={p.id} style={styles.carteProjet} onPress={() => ouvrirProjet(p)}>
                 <View style={styles.ligneEntre}>
                   <Text style={styles.carteTitre}>{p.nom}</Text>
-                  <View style={[styles.badge, { backgroundColor: p.statut_cloture === 'cloture' ? '#F3F4F6' : '#ECFDF5' }]}>
-                    <Text style={[styles.badgeTexte, { color: p.statut_cloture === 'cloture' ? '#4B5563' : '#047857' }]}>{p.statut_cloture === 'cloture' ? 'Clôturé' : 'Actif'}</Text>
+                  <View style={[styles.pastille, { backgroundColor: couleurs.accent + '1A' }]}>
+                    <Text style={[styles.pastilleTexte, { color: couleurs.accent }]}>{p.statut_cloture === 'cloture' ? 'Clôturé' : 'Actif'}</Text>
                   </View>
                 </View>
-                <Text style={[styles.carteSousTexte, { color: couleurs.texte }]}>{p.type_volaille} · {p.objectif_sujets} sujets{p.taux_survie_reel != null ? ` · ${p.taux_survie_reel}% de survie` : ''}</Text>
+                <Text style={styles.carteSousTexte}>{p.type_volaille} · {p.objectif_sujets} sujets{p.taux_survie_reel != null ? ` · ${p.taux_survie_reel}% de survie` : ''}</Text>
                 {progression !== null && (
-                  <View style={styles.barreProgressionConteneur}>
-                    <View style={[styles.barreProgressionRemplie, { width: `${progression}%` }]} />
+                  <View style={styles.barreFond}>
+                    <View style={[styles.barreRemplie, { width: `${progression}%`, backgroundColor: couleurs.accent }]} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -70,14 +128,30 @@ const MesProjetsScreen = ({ onChoisir }) => {
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16, justifyContent: 'center' },
   vide: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginTop: 40 },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
+
+  carteEnsemble: { backgroundColor: '#fff', borderRadius: 24, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteEnsembleLabel: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 6 },
+  carteEnsembleMontant: { color: '#1D1D1F', fontSize: 28, fontWeight: '700', letterSpacing: -0.5 },
+  carteEnsembleSousTexte: { color: '#6E6E73', fontSize: 12, marginTop: 6 },
+  ligneDivisoire: { height: 1.5, backgroundColor: '#E5E5E7', marginTop: 18 },
+  statsEtalees: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 18 },
+  statValeurGrande: { color: '#1D1D1F', fontSize: 28, fontWeight: '700', letterSpacing: -0.5, marginTop: 6, textAlign: 'left' },
+  statLabel: { color: '#1D1D1F', fontSize: 13, fontWeight: '700', textAlign: 'left' },
+  lienDetails: { color: '#6E6E73', fontSize: 12, marginTop: 14, textDecorationLine: 'underline' },
+  detailsBloc: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F5F5F7', gap: 12 },
+  ligneDetailProjet: { gap: 4 },
+  detailProjetNom: { color: '#1D1D1F', fontSize: 13, fontWeight: '600', marginBottom: 2 },
+  detailLabel: { color: '#6E6E73', fontSize: 11 },
+  detailValeur: { color: '#1D1D1F', fontSize: 11, fontWeight: '600' },
+
+  carteProjet: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  carteTitre: { fontSize: 14, fontWeight: '500', color: '#111827' },
-  carteSousTexte: { fontSize: 12, color: '#6B7280', marginTop: 4 },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  badgeTexte: { fontSize: 10, fontWeight: '600' },
-  barreProgressionConteneur: { height: 4, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 2, marginTop: 8, overflow: 'hidden' },
-  barreProgressionRemplie: { height: 4, backgroundColor: '#111827', borderRadius: 2 },
+  carteTitre: { fontSize: 14, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 12, color: '#6E6E73', marginTop: 4 },
+  pastille: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  pastilleTexte: { fontSize: 10, fontWeight: '600' },
+  barreFond: { height: 3, backgroundColor: '#F5F5F7', borderRadius: 2, marginTop: 10, overflow: 'hidden' },
+  barreRemplie: { height: 3, borderRadius: 2 },
 });
 
 export default MesProjetsScreen;
