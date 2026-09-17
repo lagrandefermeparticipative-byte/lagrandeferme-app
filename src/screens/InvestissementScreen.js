@@ -182,7 +182,7 @@ export const VueRapportInvestisseur = ({ token, rapportId, onBack }) => {
   );
 };
 
-const VueMessages = ({ token }) => {
+export const VueMessages = ({ token }) => {
   const headers = { Authorization: `Bearer ${token}` };
   const [messages, setMessages] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -311,22 +311,7 @@ const InvestissementScreen = ({ token, projetActifId, utilisateurNom }) => {
         <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
-                    <View style={styles.ongletsLigne}>
-            {['investissement', 'rapports', 'messages'].map(t => (
-              <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>
-                    {t === 'investissement' ? 'Mon invest.' : t === 'rapports' ? 'Rapports' : 'Messages'}
-                  </Text>
-                  {t === 'messages' && messagesNonLus > 0 && (
-                    <View style={styles.badgeRouge}><Text style={styles.badgeRougeTexte}>{messagesNonLus}</Text></View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {onglet === 'investissement' && (
+          {
             investissement ? (
               <View style={{ gap: 14 }}>
                 <View style={estilosApple.carteApple}>
@@ -384,23 +369,7 @@ const InvestissementScreen = ({ token, projetActifId, utilisateurNom }) => {
                 </View>
               </View>
             ) : <Text style={styles.vide}>Aucun investissement trouvé</Text>
-          )}
-
-          {onglet === 'rapports' && (
-            rapports.length === 0 ? <Text style={styles.vide}>Aucun rapport diffusé pour l'instant</Text> : rapports.map(r => (
-              <TouchableOpacity key={r.id} style={styles.carte} onPress={() => setRapportOuvertId(r.uuid_id || r.id)}>
-                <View style={styles.ligneEntre}>
-                  <Text style={styles.carteTitre}>Rapport S{r.semaine}</Text>
-                  <View style={[styles.badge, { backgroundColor: r.lu_par_moi ? '#F3F4F6' : '#ECFDF5' }]}>
-                    <Text style={[styles.badgeTexte, { color: r.lu_par_moi ? '#6B7280' : '#047857' }]}>{r.lu_par_moi ? 'Lu ✓' : 'Nouveau'}</Text>
-                  </View>
-                </View>
-                <Text style={styles.carteSousTexte}>{new Date(r.date_rapport).toLocaleDateString('fr-FR')} · Effectif {r.effectif_debut || '—'} · {r.morts_semaine || 0} morts</Text>
-              </TouchableOpacity>
-            ))
-          )}
-
-          {onglet === 'messages' && <VueMessages token={token} />}
+          }
           <View style={{ height: 40 }} />
         </ScrollView>
       )}
