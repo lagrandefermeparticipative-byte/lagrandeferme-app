@@ -29,6 +29,17 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   const [paiementsHistorique, setPaiementsHistorique] = useState([]);
   const [chargementHistorique, setChargementHistorique] = useState(false);
 
+  const [depensePourRepartition, setDepensePourRepartition] = useState(null);
+  const [repartitions, setRepartitions] = useState([]);
+  const [chargementRepartition, setChargementRepartition] = useState(false);
+  const [utilisateursListe, setUtilisateursListe] = useState([]);
+  const [formRepartition, setFormRepartition] = useState({ utilisateur_id: '', montant_du: '' });
+  const [envoiRepartition, setEnvoiRepartition] = useState(false);
+  const [erreurRepartition, setErreurRepartition] = useState('');
+  const [repartitionEnPaiement, setRepartitionEnPaiement] = useState(null);
+  const [montantPaiementRepartition, setMontantPaiementRepartition] = useState('');
+  const [envoiPaiementRepartition, setEnvoiPaiementRepartition] = useState(false);
+
   const [form, setForm] = useState({ libelle: '', categorie: 'Alimentation', montant_prevu: '', montant_reel: '', statut: 'planifiee', date_depense: '', fournisseur: '', note: '' });
   const [paiement, setPaiement] = useState({ depense_id: '', montant: '', description: '' });
 
@@ -94,6 +105,60 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
       setPaiementsHistorique(res.data);
     } catch (error) { Alert.alert('Erreur', "Chargement impossible."); }
     finally { setChargementHistorique(false); }
+  };
+
+  const ouvrirRepartition = async (depense) => {
+    setDepensePourRepartition(depense);
+    setVue('repartition');
+    setFormRepartition({ utilisateur_id: '', montant_du: '' });
+    setErreurRepartition('');
+    setChargementRepartition(true);
+    try {
+      if (utilisateursListe.length === 0) {
+        const usersRes = await api.get('/utilisateurs/liste', { headers });
+        setUtilisateursListe(usersRes.data);
+      }
+      const res = await api.get(`/depenses/${depense.uuid_id || depense.id}/repartition`, { headers });
+      setRepartitions(res.data);
+    } catch (error) { console.log('Erreur répartition:', error.message); }
+    finally { setChargementRepartition(false); }
+  };
+
+  const ajouterRepartition = async () => {
+    if (!formRepartition.utilisateur_id || !formRepartition.montant_du) return;
+    setEnvoiRepartition(true); setErreurRepartition('');
+    try {
+      await api.post(`/depenses/${depensePourRepartition.uuid_id || depensePourRepartition.id}/repartition`, {
+        utilisateur_id: parseInt(formRepartition.utilisateur_id),
+        montant_du: parseFloat(formRepartition.montant_du),
+      }, { headers });
+      setFormRepartition({ utilisateur_id: '', montant_du: '' });
+      const res = await api.get(`/depenses/${depensePourRepartition.uuid_id || depensePourRepartition.id}/repartition`, { headers });
+      setRepartitions(res.data);
+    } catch (error) {
+      setErreurRepartition(error.response?.data?.message || "Erreur lors de l'ajout.");
+    } finally { setEnvoiRepartition(false); }
+  };
+
+  const ouvrirPaiementRepartition = (rep) => {
+    const reste = parseFloat(rep.montant_du || 0) - parseFloat(rep.montant_paye || 0);
+    setRepartitionEnPaiement(rep);
+    setMontantPaiementRepartition(reste > 0 ? String(reste) : '');
+  };
+
+  const confirmerPaiementRepartition = async () => {
+    if (!montantPaiementRepartition || parseFloat(montantPaiementRepartition) <= 0) return;
+    setEnvoiPaiementRepartition(true);
+    try {
+      await api.post(`/depenses/repartition/${repartitionEnPaiement.id}/paiements`, {
+        montant: parseFloat(montantPaiementRepartition),
+      }, { headers });
+      setRepartitionEnPaiement(null); setMontantPaiementRepartition('');
+      const res = await api.get(`/depenses/${depensePourRepartition.uuid_id || depensePourRepartition.id}/repartition`, { headers });
+      setRepartitions(res.data);
+    } catch (error) {
+      Alert.alert('Erreur', error.response?.data?.message || "Enregistrement du paiement impossible.");
+    } finally { setEnvoiPaiementRepartition(false); }
   };
 
   const supprimerDepense = (depense) => {
@@ -246,6 +311,91 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
     );
   }
 
+  // --- PAIEMENT RÉPARTITION ---
+  if (vue === 'repartition' && repartitionEnPaiement) {
+    const reste = parseFloat(repartitionEnPaiement.montant_du || 0) - parseFloat(repartitionEnPaiement.montant_paye || 0);
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Header titre="Enregistrer un paiement" />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.carte}>
+            <Text style={styles.carteTitre}>Part de {repartitionEnPaiement.utilisateur_nom} — {formatMontant(repartitionEnPaiement.montant_du)}</Text>
+            <Text style={styles.carteSousTexte}>Déjà remboursé : {formatMontant(repartitionEnPaiement.montant_paye || 0)} · Reste : {formatMontant(reste)}</Text>
+            <Text style={styles.label}>Montant reçu maintenant (F) *</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={montantPaiementRepartition} onChangeText={setMontantPaiementRepartition} />
+            <Text style={styles.infoTexte}>Ce paiement créditera immédiatement la caisse du projet.</Text>
+          </View>
+          <TouchableOpacity style={styles.boutonPrincipal} onPress={confirmerPaiementRepartition} disabled={envoiPaiementRepartition}>
+            <Text style={styles.boutonPrincipalTexte}>{envoiPaiementRepartition ? 'Enregistrement...' : 'Confirmer le paiement'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => { setRepartitionEnPaiement(null); setMontantPaiementRepartition(''); }}>
+            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // --- RÉPARTITION D'UNE DÉPENSE ---
+  if (vue === 'repartition' && depensePourRepartition) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+        <Header titre={`Répartition · ${depensePourRepartition.libelle}`} />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.carteNoire}>
+            <Text style={styles.carteNoireLabel}>Montant total de la dépense</Text>
+            <Text style={styles.carteNoireMontant}>{formatMontant(depensePourRepartition.montant_reel)}</Text>
+          </View>
+
+          <View style={styles.carte}>
+            <Text style={styles.carteTitre}>Ajouter un financeur</Text>
+            <Text style={styles.label}>Financeur *</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {utilisateursListe.map(u => (
+                <TouchableOpacity key={u.id} onPress={() => setFormRepartition({ ...formRepartition, utilisateur_id: String(u.id) })}
+                  style={[styles.chip, formRepartition.utilisateur_id === String(u.id) && styles.chipActif]}>
+                  <Text style={[styles.chipTexte, formRepartition.utilisateur_id === String(u.id) && styles.chipTexteActif]}>{u.nom}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Text style={styles.label}>Montant à sa charge (F) *</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={formRepartition.montant_du} onChangeText={v => setFormRepartition({ ...formRepartition, montant_du: v })} />
+            {erreurRepartition !== '' && <Text style={styles.erreurTexte}>{erreurRepartition}</Text>}
+            <TouchableOpacity style={styles.boutonSecondaireNoir} onPress={ajouterRepartition} disabled={envoiRepartition}>
+              <Text style={styles.boutonSecondaireNoirTexte}>{envoiRepartition ? 'Ajout...' : 'Ajouter'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {chargementRepartition ? (
+            <ActivityIndicator color="#111827" style={{ marginTop: 12 }} />
+          ) : repartitions.length === 0 ? (
+            <Text style={styles.vide}>Aucune répartition enregistrée</Text>
+          ) : repartitions.map(r => {
+            const restant = parseFloat(r.montant_du || 0) - parseFloat(r.montant_paye || 0);
+            const badge = r.statut_paiement === 'paye' ? { l: 'Remboursé', bg: '#ECFDF5', t: '#047857' } : r.statut_paiement === 'partiel' ? { l: 'Partiel', bg: '#FFF7ED', t: '#C2410C' } : { l: 'En attente', bg: '#F3F4F6', t: '#4B5563' };
+            return (
+              <View style={styles.carte} key={r.id}>
+                <View style={styles.ligneEntre}>
+                  <Text style={styles.carteTitre}>{r.utilisateur_nom}</Text>
+                  <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.t }]}>{badge.l}</Text></View>
+                </View>
+                <Text style={styles.carteSousTexte}>Doit : {formatMontant(r.montant_du)} · Remboursé : {formatMontant(r.montant_paye || 0)} · Reste : {formatMontant(restant)}</Text>
+                {restant > 0 && (
+                  <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirPaiementRepartition(r)}><Text style={styles.actionVerteTexte}>Enregistrer un paiement</Text></TouchableOpacity>
+                )}
+              </View>
+            );
+          })}
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => { setVue('liste'); setDepensePourRepartition(null); }}>
+            <Text style={styles.boutonSecondaireTexte}>← Retour</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </View>
+    );
+  }
+
   // --- VUE PRINCIPALE ---
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
@@ -367,6 +517,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
                         </View>
                         <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
                           <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirHistorique(depense)}><Text style={styles.actionVerteTexte}>Historique</Text></TouchableOpacity>
+                          <TouchableOpacity style={styles.actionIndigo} onPress={() => ouvrirRepartition(depense)}><Text style={styles.actionIndigoTexte}>Répartition</Text></TouchableOpacity>
                           <TouchableOpacity style={styles.actionGrise} onPress={() => { setDepenseSelectionnee(depense); setForm({ libelle: depense.libelle, categorie: depense.categorie, montant_prevu: String(depense.montant_prevu || ''), montant_reel: String(depense.montant_reel || ''), statut: depense.statut, date_depense: depense.date_depense || '', fournisseur: depense.fournisseur || '', note: depense.note || '' }); setVue('modifier'); }}><Text style={styles.actionGriseTexte}>Modifier</Text></TouchableOpacity>
                           <TouchableOpacity style={styles.actionRouge} onPress={() => supprimerDepense(depense)}><Text style={styles.actionRougeTexte}>🗑</Text></TouchableOpacity>
                         </View>
@@ -402,6 +553,9 @@ const styles = StyleSheet.create({
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
   boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
+  boutonSecondaireNoir: { backgroundColor: '#111827', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
+  boutonSecondaireNoirTexte: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  infoTexte: { fontSize: 11, color: '#9CA3AF', backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, marginTop: 8 },
   boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonVertPetit: { backgroundColor: '#059669', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
@@ -444,6 +598,8 @@ const styles = StyleSheet.create({
   miniValeurPetite: { fontSize: 11, fontWeight: '600', color: '#111827' },
   actionVerte: { flex: 1, backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5', borderRadius: 8, paddingVertical: 6, alignItems: 'center' },
   actionVerteTexte: { color: '#047857', fontSize: 10, fontWeight: '600' },
+  actionIndigo: { flex: 1, backgroundColor: '#EEF2FF', borderWidth: 1, borderColor: '#E0E7FF', borderRadius: 8, paddingVertical: 6, alignItems: 'center' },
+  actionIndigoTexte: { color: '#4338CA', fontSize: 10, fontWeight: '600' },
   actionGrise: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 6, alignItems: 'center' },
   actionGriseTexte: { color: '#4B5563', fontSize: 10, fontWeight: '600' },
   actionRouge: { paddingHorizontal: 10, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, justifyContent: 'center' },
