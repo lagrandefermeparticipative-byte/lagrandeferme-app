@@ -18,6 +18,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   const headers = { Authorization: `Bearer ${token}` };
   const [depenses, setDepenses] = useState([]);
   const [lots, setLots] = useState([]);
+  const [investisseurs, setInvestisseurs] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [onglet, setOnglet] = useState('budget');
   const [vue, setVue] = useState('liste'); // liste | nouveau | modifier | payer | historique
@@ -45,12 +46,14 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
 
   const charger = async () => {
     try {
-      const [depensesRes, lotsRes] = await Promise.all([
+      const [depensesRes, lotsRes, investisseursRes] = await Promise.all([
         api.get(`/depenses?projet_id=${projetActifId}`, { headers }),
         api.get(`/lots?projet_id=${projetActifId}`, { headers }),
+        api.get(`/investisseurs/${projetActifId}`, { headers }),
       ]);
       setDepenses(depensesRes.data.filter(d => d.type_depense !== 'ferme'));
       setLots(lotsRes.data);
+      setInvestisseurs(investisseursRes.data);
     } catch (error) { console.log('Erreur gestion:', error.message); }
     finally { setChargement(false); }
   };
@@ -175,8 +178,13 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   const totalPrevu = depenses.reduce((s, d) => s + parseFloat(d.montant_prevu || 0), 0);
   const totalReel = depenses.reduce((s, d) => s + parseFloat(d.montant_reel || 0), 0);
   const ecart = totalReel - totalPrevu;
-  const pourcentageConsomme = totalPrevu > 0 ? Math.round((totalReel / totalPrevu) * 100) : 0;
   const coutParPintade = totalPintades > 0 ? Math.round(totalReel / totalPintades) : 0;
+  // Basé sur l'argent réellement encaissé des investisseurs, pas sur le
+  // montant_prevu saisi ligne par ligne (voir Gestion.js web pour le détail).
+  const totalMiseInvestisseurs = investisseurs.reduce((s, i) => s + parseFloat(i.mise || 0), 0);
+  const totalEncaisse = investisseurs.reduce((s, i) => s + parseFloat(i.montant_paye || 0), 0);
+  const resteACompleter = Math.max(0, totalMiseInvestisseurs - totalEncaisse);
+  const pourcentageConsomme = totalEncaisse > 0 ? Math.round((totalReel / totalEncaisse) * 100) : 0;
 
   const groupParCategorie = () => {
     const groupes = {};
@@ -443,8 +451,11 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
                 </View>
                 <View style={[styles.ligneEntre, { marginTop: 8 }]}>
                   <Text style={styles.carteNoireSousLabel}>{formatMontant(totalReel)} dépensé</Text>
-                  <Text style={styles.carteNoireSousLabel}>{formatMontant(totalPrevu)} prévu</Text>
+                  <Text style={styles.carteNoireSousLabel}>{formatMontant(totalEncaisse)} encaissé</Text>
                 </View>
+                {resteACompleter > 0 && (
+                  <Text style={styles.alerteAmbreTexteSurNoir}>⚠️ {formatMontant(resteACompleter)} restant à compléter par les investisseurs</Text>
+                )}
               </View>
               <View style={styles.grille2mini}>
                 <View style={styles.mini}>
@@ -570,6 +581,7 @@ const styles = StyleSheet.create({
   carteNoireLabel: { color: '#6E6E73', fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
   carteNoireMontant: { color: '#1D1D1F', fontSize: 22, fontWeight: '700', letterSpacing: -0.5 },
   carteNoireSousLabel: { color: '#6E6E73', fontSize: 11, marginTop: 4 },
+  alerteAmbreTexteSurNoir: { color: '#B08D57', fontSize: 11, fontWeight: '600', marginTop: 8 },
   progressFondNoir: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, marginTop: 10, overflow: 'hidden' },
   progressBarreBlanche: { height: '100%', backgroundColor: '#fff', borderRadius: 3 },
   progressFond: { height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, marginVertical: 6, overflow: 'hidden' },
