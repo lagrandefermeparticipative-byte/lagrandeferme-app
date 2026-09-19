@@ -192,10 +192,33 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
     setEditForm({
       mise: String(inv.mise), preference_paiement: inv.preference_paiement || 'Mobile Money',
       numero_mobile_money: inv.numero_mobile_money || '', coordonnees_bancaires: inv.coordonnees_bancaires || '',
-      statut_paiement: inv.statut_paiement || 'en_attente', date_paiement: inv.date_paiement ? inv.date_paiement.split('T')[0] : '',
-      reference_transaction: inv.reference_transaction || '',
     });
     setVue('editInv');
+  };
+
+  const [invEnPaiement, setInvEnPaiement] = useState(null);
+  const [montantPaiementInv, setMontantPaiementInv] = useState('');
+  const [envoiPaiementInv, setEnvoiPaiementInv] = useState(false);
+
+  const ouvrirPaiementInv = (inv) => {
+    const reste = parseFloat(inv.mise || 0) - parseFloat(inv.montant_paye || 0);
+    setInvEnPaiement(inv);
+    setMontantPaiementInv(reste > 0 ? String(reste) : '');
+    setVue('paiementInv');
+  };
+
+  const confirmerPaiementInv = async () => {
+    if (!montantPaiementInv || parseFloat(montantPaiementInv) <= 0) return;
+    setEnvoiPaiementInv(true);
+    try {
+      await api.post(`/investisseurs/${invEnPaiement.uuid_id || invEnPaiement.id}/paiements`, {
+        montant: parseFloat(montantPaiementInv),
+      }, { headers });
+      setVue('liste'); setInvEnPaiement(null); setMontantPaiementInv('');
+      chargerDonnees();
+    } catch (error) {
+      Alert.alert('Erreur', error.response?.data?.message || "Enregistrement du paiement impossible.");
+    } finally { setEnvoiPaiementInv(false); }
   };
 
   const ouvrirEditProjet = () => {
@@ -412,18 +435,9 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
             <TextInput style={styles.champ} placeholder="+228XXXXXXXX" value={editForm.numero_mobile_money} onChangeText={v => setEditForm({ ...editForm, numero_mobile_money: v })} />
             <Text style={styles.label}>Coordonnées bancaires</Text>
             <TextInput style={styles.champ} placeholder="Banque · N° compte" value={editForm.coordonnees_bancaires} onChangeText={v => setEditForm({ ...editForm, coordonnees_bancaires: v })} />
-            <Text style={styles.label}>Statut paiement</Text>
-            <View style={{ flexDirection: 'row', gap: 6 }}>
-              {[{ v: 'en_attente', l: 'En attente' }, { v: 'paye', l: 'Remboursé' }, { v: 'partiel', l: 'Partiel' }].map(s => (
-                <TouchableOpacity key={s.v} onPress={() => setEditForm({ ...editForm, statut_paiement: s.v })} style={[styles.chipFlex, editForm.statut_paiement === s.v && styles.chipActif]}>
-                  <Text style={[styles.chipTexte, editForm.statut_paiement === s.v && styles.chipTexteActif]}>{s.l}</Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.alerteInfo}>
+              <Text style={styles.infoTexte}>Le statut de paiement de la mise n'est plus modifiable ici — il est calculé automatiquement à partir des paiements réels enregistrés (bouton "Paiement" sur la fiche investisseur).</Text>
             </View>
-            <Text style={styles.label}>Date paiement</Text>
-            <TextInput style={styles.champ} placeholder="AAAA-MM-JJ" value={editForm.date_paiement} onChangeText={v => setEditForm({ ...editForm, date_paiement: v })} />
-            <Text style={styles.label}>Référence transaction</Text>
-            <TextInput style={styles.champ} placeholder="N° transaction" value={editForm.reference_transaction} onChangeText={v => setEditForm({ ...editForm, reference_transaction: v })} />
           </View>
 
           <View style={styles.carte}>
@@ -446,6 +460,32 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
             <TouchableOpacity style={[styles.boutonOrange, { backgroundColor: '#FEF2F2', borderColor: '#FECACA', marginTop: 8 }]} onPress={() => supprimerCompte(invSelectionne)}><Text style={[styles.boutonOrangeTexte, { color: '#B91C1C' }]}>Supprimer le compte définitivement</Text></TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}><Text style={styles.boutonSecondaireTexte}>Annuler</Text></TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // ---------- PAIEMENT MISE INVESTISSEUR ----------
+  if (vue === 'paiementInv' && invEnPaiement) {
+    const reste = parseFloat(invEnPaiement.mise || 0) - parseFloat(invEnPaiement.montant_paye || 0);
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Header titre="Enregistrer un paiement" />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.carte}>
+            <Text style={styles.carteTitre}>{invEnPaiement.nom} — Mise : {formatMontant(invEnPaiement.mise)}</Text>
+            <Text style={styles.carteSousTexte}>Déjà encaissé : {formatMontant(invEnPaiement.montant_paye || 0)} · Reste dû : {formatMontant(reste)}</Text>
+            <Text style={styles.label}>Montant reçu maintenant (F) *</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={montantPaiementInv} onChangeText={setMontantPaiementInv} />
+            <Text style={styles.infoTexte}>Ce paiement créditera immédiatement la caisse du projet.</Text>
+          </View>
+          <TouchableOpacity style={styles.boutonPrincipal} onPress={confirmerPaiementInv} disabled={envoiPaiementInv}>
+            <Text style={styles.boutonPrincipalTexte}>{envoiPaiementInv ? 'Enregistrement...' : 'Confirmer le paiement'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => { setVue('liste'); setInvEnPaiement(null); }}>
+            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
+          </TouchableOpacity>
           <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -557,14 +597,22 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
                           <View style={styles.badgeBleu}><Text style={styles.badgeBleuTexte}>{inv.type_investisseur === 'landowner' ? 'Propriétaire terrien' : 'Institutionnel'}</Text></View>
                         )}
                       </View>
-                      <View style={[styles.badge, { backgroundColor: inv.statut_paiement === 'paye' ? '#ECFDF5' : '#F3F4F6' }]}>
-                        <Text style={[styles.badgeTexte, { color: inv.statut_paiement === 'paye' ? '#047857' : '#4B5563' }]}>{inv.statut_paiement === 'paye' ? 'Remboursé' : 'En attente'}</Text>
-                      </View>
+                      {(() => {
+                        const paye = parseFloat(inv.montant_paye || 0);
+                        const mise = parseFloat(inv.mise || 0);
+                        const statut = paye >= mise && mise > 0 ? 'paye' : paye > 0 ? 'partiel' : 'attente';
+                        const couleurs = { paye: ['#ECFDF5', '#047857', 'Mise encaissée'], partiel: ['#FFFBEB', '#B45309', 'Partiellement encaissée'], attente: ['#F3F4F6', '#4B5563', 'En attente'] }[statut];
+                        return (
+                          <View style={[styles.badge, { backgroundColor: couleurs[0] }]}>
+                            <Text style={[styles.badgeTexte, { color: couleurs[1] }]}>{couleurs[2]}</Text>
+                          </View>
+                        );
+                      })()}
                     </View>
                     <View style={styles.grille3}>
                       <View style={styles.miniBox}><Text style={styles.miniLabel}>Mise</Text><Text style={styles.miniValeur}>{formatMontant(inv.mise)}</Text></View>
+                      <View style={styles.miniBox}><Text style={styles.miniLabel}>Encaissé</Text><Text style={styles.miniValeur}>{formatMontant(inv.montant_paye || 0)}</Text></View>
                       <View style={styles.miniBox}><Text style={styles.miniLabel}>Part</Text><Text style={styles.miniValeur}>{pourcentage}%</Text></View>
-                      <View style={styles.miniBox}><Text style={styles.miniLabel}>Dû (20%)</Text><Text style={styles.miniValeur}>{formatMontant(inv.mise * 1.2)}</Text></View>
                     </View>
                     {inv.preference_paiement && <Text style={styles.carteSousTexte}>💳 {inv.preference_paiement}{inv.numero_mobile_money ? ' · ' + inv.numero_mobile_money : ''}</Text>}
                     <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -573,6 +621,9 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
                       ) : <View style={styles.actionDesactivee}><Text style={styles.actionDesactiveeTexte}>Pas de contrat</Text></View>}
                       <TouchableOpacity style={styles.actionGrise} onPress={() => ouvrirEdit(inv)}><Text style={styles.actionGriseTexte}>Modifier</Text></TouchableOpacity>
                     </View>
+                    {parseFloat(inv.montant_paye || 0) < parseFloat(inv.mise || 0) && (
+                      <TouchableOpacity style={[styles.boutonVert, { marginTop: 8 }]} onPress={() => ouvrirPaiementInv(inv)}><Text style={styles.boutonVertTexte}>Enregistrer un paiement</Text></TouchableOpacity>
+                    )}
                   </View>
                 );
               })}
@@ -756,6 +807,9 @@ const styles = StyleSheet.create({
   boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   sousTitreCarte: { fontSize: 13, fontWeight: '500', color: '#111827', marginBottom: 8 },
   infoTexte: { fontSize: 11, color: '#9CA3AF', backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, marginBottom: 8 },
+  alerteInfo: { backgroundColor: '#EFF6FF', borderRadius: 8, padding: 10, marginBottom: 8 },
+  boutonVert: { backgroundColor: '#059669', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  boutonVertTexte: { color: '#fff', fontSize: 12, fontWeight: '600' },
   ligneAssignation: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingBottom: 8, marginBottom: 8 },
   assignationNom: { fontSize: 12, fontWeight: '500', color: '#111827' },
   assignationRole: { fontSize: 10, color: '#9CA3AF', marginTop: 2 },
