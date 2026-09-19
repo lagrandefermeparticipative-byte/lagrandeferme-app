@@ -189,6 +189,11 @@ const CaissesScreen = ({ token }) => {
           ) : (
             <View style={styles.carte}>
               <Text style={styles.carteTitre}>{formAction === 'credit' ? 'Créditer la caisse' : 'Débiter la caisse'}</Text>
+              {formAction === 'credit' && caisseSelectionnee?.type === 'projet' && (
+                <View style={styles.alerteOrangeLegere}>
+                  <Text style={styles.alerteOrangeTexte}>⚠️ N'utilise pas ce formulaire pour une mise investisseur ou une vente : utilise l'écran Investisseurs ou Commerce, sinon l'argent sera compté deux fois dans la caisse.</Text>
+                </View>
+              )}
               <Text style={styles.label}>Montant (F)</Text>
               <TextInput style={styles.champ} keyboardType="numeric" value={values.montant} onChangeText={v => setValues({ ...values, montant: v })} />
               <Text style={styles.label}>Motif</Text>
@@ -283,6 +288,8 @@ const styles = StyleSheet.create({
   carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
   carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 2 },
   label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
+  alerteOrangeLegere: { backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 10, padding: 10, marginTop: 8 },
+  alerteOrangeTexte: { fontSize: 11, color: '#B45309' },
   champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
   vide: { color: '#9CA3AF', fontSize: 13, textAlign: 'center', paddingVertical: 20 },
   sectionTitre: { fontSize: 13, fontWeight: '600', color: '#111827', marginBottom: 8, marginTop: 6 },
