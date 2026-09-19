@@ -286,6 +286,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   };
 
   const totalInvesti = investisseurs.reduce((s, inv) => s + parseFloat(inv.mise || 0), 0);
+  const totalEncaisse = investisseurs.reduce((s, inv) => s + parseFloat(inv.montant_paye || 0), 0);
   const totalPrevu = depenses.reduce((s, d) => s + parseFloat(d.montant_prevu || 0), 0);
   const totalReel = depenses.reduce((s, d) => s + parseFloat(d.montant_reel || 0), 0);
 
@@ -577,7 +578,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
                 <View style={styles.carteNoire}>
                   <Text style={styles.carteNoireLabelSeul}>Total investi</Text>
                   <Text style={styles.carteNoireMontant}>{formatMontant(totalInvesti)}</Text>
-                  <Text style={styles.carteNoireSousLabel}>{investisseurs.length} investisseur{investisseurs.length > 1 ? 's' : ''}</Text>
+                  <Text style={styles.carteNoireSousLabel}>dont encaissé : {formatMontant(totalEncaisse)} · {investisseurs.length} investisseur{investisseurs.length > 1 ? 's' : ''}</Text>
                 </View>
               )}
               {investisseurs.length === 0 ? (
