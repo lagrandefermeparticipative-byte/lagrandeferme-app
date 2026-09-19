@@ -293,7 +293,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   // ---------- FORMULAIRE NOUVELLE DÉPENSE ----------
   if (vue === 'nouvelleDepense') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Nouvelle dépense" action={<TouchableOpacity onPress={() => setVue('liste')}><Text style={styles.lienRetourPetit}>Annuler</Text></TouchableOpacity>} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -337,7 +337,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   // ---------- FORMULAIRE NOUVEL INVESTISSEUR ----------
   if (vue === 'nouvelInv') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Nouvel investisseur" action={<TouchableOpacity onPress={() => setVue('liste')}><Text style={styles.lienRetourPetit}>Annuler</Text></TouchableOpacity>} />
         <ScrollView style={styles.conteneur}>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 12 }}>
@@ -418,7 +418,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   // ---------- FORMULAIRE ÉDITION INVESTISSEUR ----------
   if (vue === 'editInv' && invSelectionne) {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={`Modifier · ${invSelectionne.nom}`} action={<TouchableOpacity onPress={() => setVue('liste')}><Text style={styles.lienRetourPetit}>Annuler</Text></TouchableOpacity>} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -471,7 +471,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   if (vue === 'paiementInv' && invEnPaiement) {
     const reste = parseFloat(invEnPaiement.mise || 0) - parseFloat(invEnPaiement.montant_paye || 0);
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Enregistrer un paiement" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -496,7 +496,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   // ---------- FORMULAIRE ÉDITION PROJET ----------
   if (vue === 'editProjet' && projet) {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Modifier le projet" action={<TouchableOpacity onPress={() => setVue('liste')}><Text style={styles.lienRetourPetit}>Annuler</Text></TouchableOpacity>} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -553,7 +553,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
 
   // ---------- VUE PRINCIPALE ----------
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre={projet?.nom || 'Gestion projet'} sousTitre="Investisseurs & Paramètres"
         action={
           onglet === 'investisseurs' ? <TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('nouvelInv')}><Text style={styles.boutonPetitTexte}>+ Investisseur</Text></TouchableOpacity>
@@ -569,7 +569,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
       </View>
 
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           {onglet === 'investisseurs' && (
@@ -658,7 +658,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
                       <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
                     </View>
                     <View style={[styles.ligneEntre, { marginVertical: 8 }]}>
-                      <Text style={styles.carteSousTexte}>Prévu : <Text style={{ fontWeight: '600', color: '#111827' }}>{formatMontant(depense.montant_prevu)}</Text></Text>
+                      <Text style={styles.carteSousTexte}>Prévu : <Text style={{ fontWeight: '600', color: '#1D1D1F' }}>{formatMontant(depense.montant_prevu)}</Text></Text>
                       {ecart !== 0 && <Text style={{ fontSize: 11, fontWeight: '600', color: ecart > 0 ? '#DC2626' : '#059669' }}>Écart : {ecart > 0 ? '+' : ''}{formatMontant(ecart)}</Text>}
                     </View>
                     <View style={styles.saisieRapideBloc}>
@@ -757,75 +757,75 @@ const styles = StyleSheet.create({
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sousOngletsLigne: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingHorizontal: 16 },
   sousOnglet: { paddingVertical: 12, paddingHorizontal: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  sousOngletActif: { borderBottomColor: '#111827' },
-  sousOngletTexte: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
-  sousOngletTexteActif: { color: '#111827', fontWeight: '600' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280' },
-  carteSousTexteSeul: { fontSize: 11, color: '#6B7280', marginTop: 2 },
-  vide: { textAlign: 'center', color: '#9CA3AF', fontSize: 13, marginBottom: 12 },
-  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E7EB', padding: 24, alignItems: 'center', marginBottom: 12 },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginTop: 12, marginBottom: 12 },
-  carteNoireLabelSeul: { color: '#9CA3AF', fontSize: 11 },
-  carteNoireSousLabel: { color: '#9CA3AF', fontSize: 11, marginTop: 4 },
-  carteNoireMontant: { color: '#fff', fontSize: 20, fontWeight: '600', marginTop: 2 },
+  sousOngletActif: { borderBottomColor: '#1D1D1F' },
+  sousOngletTexte: { fontSize: 13, color: '#6E6E73', fontWeight: '500' },
+  sousOngletTexteActif: { color: '#1D1D1F', fontWeight: '600' },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73' },
+  carteSousTexteSeul: { fontSize: 11, color: '#6E6E73', marginTop: 2 },
+  vide: { textAlign: 'center', color: '#6E6E73', fontSize: 13, marginBottom: 12 },
+  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E5EA', padding: 24, alignItems: 'center', marginBottom: 12 },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 12, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireLabelSeul: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
+  carteNoireSousLabel: { color: '#6E6E73', fontSize: 11, marginTop: 4 },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 20, fontWeight: '700', letterSpacing: -0.5, marginTop: 2 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeTexte: { fontSize: 10, fontWeight: '600' },
   badgeBleu: { backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, marginTop: 4, alignSelf: 'flex-start' },
   badgeBleuTexte: { color: '#1D4ED8', fontSize: 10, fontWeight: '600' },
   grille3: { flexDirection: 'row', gap: 6, marginTop: 8, marginBottom: 8 },
-  miniBox: { flex: 1, backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, alignItems: 'center' },
-  miniLabel: { fontSize: 10, color: '#9CA3AF', marginBottom: 4 },
-  miniValeur: { fontSize: 11, fontWeight: '600', color: '#111827' },
+  miniBox: { flex: 1, backgroundColor: '#F5F5F7', borderRadius: 8, padding: 8, alignItems: 'center' },
+  miniLabel: { fontSize: 10, color: '#6E6E73', marginBottom: 4 },
+  miniValeur: { fontSize: 11, fontWeight: '600', color: '#1D1D1F' },
   actionGrise: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   actionGriseTexte: { color: '#4B5563', fontSize: 11, fontWeight: '600' },
   actionBleue: { flex: 1, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   actionBleueTexte: { color: '#1D4ED8', fontSize: 11, fontWeight: '600' },
-  actionDesactivee: { flex: 1, backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
-  actionDesactiveeTexte: { color: '#9CA3AF', fontSize: 11 },
+  actionDesactivee: { flex: 1, backgroundColor: '#F5F5F7', borderWidth: 1, borderColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  actionDesactiveeTexte: { color: '#6E6E73', fontSize: 11 },
   actionRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12 },
-  actionNoire: { flex: 1, backgroundColor: '#111827', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  actionNoire: { flex: 1, backgroundColor: '#1D1D1F', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   actionNoireTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  saisieRapideBloc: { borderTopWidth: 1, borderTopColor: '#F9FAFB', paddingTop: 10, marginTop: 4 },
-  champPetit: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, fontSize: 12, color: '#111827' },
-  boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  saisieRapideBloc: { borderTopWidth: 1, borderTopColor: '#F5F5F7', paddingTop: 10, marginTop: 4 },
+  champPetit: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 8, fontSize: 12, color: '#1D1D1F' },
+  boutonPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
   boutonGrisPetit: { backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   boutonGrisPetitTexte: { color: '#4B5563', fontSize: 11, fontWeight: '600' },
-  boutonPrincipalPetit: { backgroundColor: '#111827', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
-  aide: { fontSize: 10, color: '#9CA3AF', marginTop: 4 },
+  boutonPrincipalPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
+  aide: { fontSize: 10, color: '#6E6E73', marginTop: 4 },
   chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6', marginRight: 6, marginTop: 4 },
   chipFlex: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: '#F3F4F6', alignItems: 'center' },
-  chipActif: { backgroundColor: '#111827' },
-  chipTexte: { fontSize: 11, color: '#6B7280' },
+  chipActif: { backgroundColor: '#1D1D1F' },
+  chipTexte: { fontSize: 11, color: '#6E6E73' },
   chipTexteActif: { color: '#fff', fontWeight: '600' },
-  lienRetourPetit: { color: '#6B7280', fontSize: 11 },
+  lienRetourPetit: { color: '#6E6E73', fontSize: 11 },
   lienBleu: { color: '#1D4ED8', fontSize: 12, textDecorationLine: 'underline' },
   erreurTexte: { color: '#DC2626', fontSize: 13, marginTop: 8, marginBottom: 8 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
-  sousTitreCarte: { fontSize: 13, fontWeight: '500', color: '#111827', marginBottom: 8 },
-  infoTexte: { fontSize: 11, color: '#9CA3AF', backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, marginBottom: 8 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  sousTitreCarte: { fontSize: 13, fontWeight: '500', color: '#1D1D1F', marginBottom: 8 },
+  infoTexte: { fontSize: 11, color: '#6E6E73', backgroundColor: '#F5F5F7', borderRadius: 8, padding: 8, marginBottom: 8 },
   alerteInfo: { backgroundColor: '#EFF6FF', borderRadius: 8, padding: 10, marginBottom: 8 },
   boutonVert: { backgroundColor: '#059669', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   boutonVertTexte: { color: '#fff', fontSize: 12, fontWeight: '600' },
   ligneAssignation: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingBottom: 8, marginBottom: 8 },
-  assignationNom: { fontSize: 12, fontWeight: '500', color: '#111827' },
-  assignationRole: { fontSize: 10, color: '#9CA3AF', marginTop: 2 },
+  assignationNom: { fontSize: 12, fontWeight: '500', color: '#1D1D1F' },
+  assignationRole: { fontSize: 10, color: '#6E6E73', marginTop: 2 },
   lienRetirer: { fontSize: 11, color: '#DC2626' },
   ligneLibelles: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 8 },
-  pastilleLib: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
-  pastilleLibActive: { backgroundColor: '#111827', borderColor: '#111827' },
+  pastilleLib: { backgroundColor: '#F5F5F7', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
+  pastilleLibActive: { backgroundColor: '#1D1D1F', borderColor: '#1D1D1F' },
   pastilleLibTexte: { fontSize: 10, color: '#4B5563' },
   ligne2: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   bouton2: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
-  bouton2Actif: { backgroundColor: '#111827' },
+  bouton2Actif: { backgroundColor: '#1D1D1F' },
   bouton2Texte: { fontSize: 11, color: '#4B5563', fontWeight: '500' },
   bouton2TexteActif: { color: '#fff' },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
   boutonUpload: { borderWidth: 1, borderStyle: 'dashed', borderColor: '#D1D5DB', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   boutonUploadTexte: { color: '#4B5563', fontSize: 12 },
@@ -833,9 +833,9 @@ const styles = StyleSheet.create({
   zoneDangerLabel: { color: '#DC2626', fontSize: 12, fontWeight: '600', marginBottom: 8 },
   boutonOrange: { backgroundColor: '#FFF7ED', borderWidth: 1, borderColor: '#FED7AA', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   boutonOrangeTexte: { color: '#C2410C', fontSize: 12, fontWeight: '600' },
-  ligneInfo: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F9FAFB' },
-  infoLabel: { fontSize: 11, color: '#6B7280' },
-  infoValeur: { fontSize: 11, fontWeight: '600', color: '#111827' },
+  ligneInfo: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F5F5F7' },
+  infoLabel: { fontSize: 11, color: '#6E6E73' },
+  infoValeur: { fontSize: 11, fontWeight: '600', color: '#1D1D1F' },
 });
 
 export default GestionProjetScreen;

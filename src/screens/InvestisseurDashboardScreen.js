@@ -55,7 +55,7 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Mes investissements" sansRetour />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.conteneur}>
         <View style={styles.ongletsLigne}>
@@ -98,7 +98,7 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
               <View style={styles.ligneEntre}>
                 <Text style={styles.carteTitre}>Rapport S{r.semaine}</Text>
                 <View style={[styles.badge, { backgroundColor: r.lu_par_moi ? '#F3F4F6' : '#ECFDF5' }]}>
-                  <Text style={[styles.badgeTexte, { color: r.lu_par_moi ? '#6B7280' : '#047857' }]}>{r.lu_par_moi ? 'Lu ✓' : 'Nouveau'}</Text>
+                  <Text style={[styles.badgeTexte, { color: r.lu_par_moi ? '#6E6E73' : '#047857' }]}>{r.lu_par_moi ? 'Lu ✓' : 'Nouveau'}</Text>
                 </View>
               </View>
               <Text style={styles.carteSousTexte}>{new Date(r.date_rapport).toLocaleDateString('fr-FR')} · Effectif {r.effectif_debut || '—'} · {r.morts_semaine || 0} morts</Text>
@@ -114,12 +114,12 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
 
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
-  vide: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginTop: 40 },
-  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', marginBottom: 14 },
+  vide: { fontSize: 13, color: '#6E6E73', textAlign: 'center', marginTop: 40 },
+  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', marginBottom: 14 },
   ongletBouton: { paddingVertical: 10, marginRight: 20 },
-  ongletBoutonActif: { borderBottomWidth: 2, borderBottomColor: '#111827' },
-  ongletTexte: { fontSize: 13, color: '#9CA3AF' },
-  ongletTexteActif: { color: '#111827', fontWeight: '600' },
+  ongletBoutonActif: { borderBottomWidth: 2, borderBottomColor: '#1D1D1F' },
+  ongletTexte: { fontSize: 13, color: '#6E6E73' },
+  ongletTexteActif: { color: '#1D1D1F', fontWeight: '600' },
   carteEnsemble: { backgroundColor: '#fff', borderRadius: 24, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   carteEnsembleLabel: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 6 },
   carteEnsembleMontant: { color: '#1D1D1F', fontSize: 28, fontWeight: '700', letterSpacing: -0.5 },

@@ -109,7 +109,7 @@ const GenerationsScreen = ({ token, projetActifId }) => {
   if (vue === 'cout' && generationEnCout) {
     const depenseChoisie = depenses.find(d => d.id === parseInt(coutForm.depense_id));
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={`Affecter un coût · ${generationEnCout.code}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -144,7 +144,7 @@ const GenerationsScreen = ({ token, projetActifId }) => {
 
   if (vue === 'nouvelle') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Nouvelle génération" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -174,11 +174,11 @@ const GenerationsScreen = ({ token, projetActifId }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Générations" action={<TouchableOpacity style={styles.boutonAjout} onPress={() => setVue('nouvelle')}><Text style={styles.boutonAjoutTexte}>+ Génération</Text></TouchableOpacity>} />
       <ScrollView style={styles.conteneur}>
         {chargement ? (
-          <ActivityIndicator style={{ marginTop: 30 }} color="#111827" />
+          <ActivityIndicator style={{ marginTop: 30 }} color="#1D1D1F" />
         ) : generations.length === 0 ? (
           <View style={styles.videCarte}>
             <Text style={styles.vide}>Aucune génération enregistrée pour ce projet</Text>
@@ -220,7 +220,7 @@ const GenerationsScreen = ({ token, projetActifId }) => {
               {generationOuverte === g.id && (
                 <View style={styles.mouvementsBloc}>
                   {chargementMouvements && !mouvementsParGeneration[g.id] ? (
-                    <ActivityIndicator color="#9CA3AF" />
+                    <ActivityIndicator color="#6E6E73" />
                   ) : (mouvementsParGeneration[g.id] || []).length === 0 ? (
                     <Text style={styles.vide}>Aucun mouvement enregistré</Text>
                   ) : mouvementsParGeneration[g.id].map(m => (
@@ -243,43 +243,43 @@ const GenerationsScreen = ({ token, projetActifId }) => {
 
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
-  carte: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#F3F4F6' },
-  carteTitre: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 2, marginBottom: 10 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 14, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73', marginTop: 2, marginBottom: 10 },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   badgeTexte: { fontSize: 10, fontWeight: '600' },
-  grille4: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F9FAFB', marginBottom: 6 },
+  grille4: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F5F5F7', marginBottom: 6 },
   miniBox: { alignItems: 'center', flex: 1 },
-  miniValeur: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  miniLabel: { fontSize: 9, color: '#9CA3AF', marginTop: 2 },
+  miniValeur: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  miniLabel: { fontSize: 9, color: '#6E6E73', marginTop: 2 },
   encartIndigo: { backgroundColor: '#EEF2FF', borderRadius: 10, padding: 8, marginTop: 4, marginBottom: 4 },
   encartIndigoTexte: { fontSize: 11, color: '#4338CA' },
   actionIndigo: { flex: 1, backgroundColor: '#EEF2FF', borderRadius: 10, paddingVertical: 8, alignItems: 'center' },
   actionIndigoTexte: { fontSize: 11, color: '#4338CA', fontWeight: '600' },
   actionGrise: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 10, paddingVertical: 8, alignItems: 'center' },
   actionGriseTexte: { fontSize: 11, color: '#4B5563', fontWeight: '600' },
-  mouvementsBloc: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F9FAFB', gap: 6 },
+  mouvementsBloc: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F5F5F7', gap: 6 },
   ligneMouvement: { flexDirection: 'row', justifyContent: 'space-between' },
   mouvementTexte: { fontSize: 11, color: '#4B5563' },
-  mouvementValeur: { fontSize: 11, fontWeight: '600', color: '#111827' },
-  mouvementDate: { fontSize: 10, color: '#9CA3AF' },
-  vide: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', paddingVertical: 12 },
-  videCarte: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed', padding: 24, alignItems: 'center', marginTop: 12 },
-  boutonPrincipalPetit: { backgroundColor: '#111827', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10, marginTop: 8 },
-  boutonAjout: { backgroundColor: '#111827', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  mouvementValeur: { fontSize: 11, fontWeight: '600', color: '#1D1D1F' },
+  mouvementDate: { fontSize: 10, color: '#6E6E73' },
+  vide: { fontSize: 12, color: '#6E6E73', textAlign: 'center', paddingVertical: 12 },
+  videCarte: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E5E5EA', borderStyle: 'dashed', padding: 24, alignItems: 'center', marginTop: 12 },
+  boutonPrincipalPetit: { backgroundColor: '#1D1D1F', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10, marginTop: 8 },
+  boutonAjout: { backgroundColor: '#1D1D1F', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   boutonAjoutTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  label: { fontSize: 11, color: '#6B7280', marginBottom: 4, marginTop: 8 },
-  champ: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: '#111827' },
+  label: { fontSize: 11, color: '#6E6E73', marginBottom: 4, marginTop: 8 },
+  champ: { borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: '#1D1D1F' },
   chip: { backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginRight: 6, marginBottom: 6 },
-  chipActif: { backgroundColor: '#111827' },
-  chipTexte: { fontSize: 11, color: '#6B7280' },
+  chipActif: { backgroundColor: '#1D1D1F' },
+  chipTexte: { fontSize: 11, color: '#6E6E73' },
   chipTexteActif: { color: '#fff', fontWeight: '600' },
-  infoTexte: { fontSize: 11, color: '#9CA3AF', backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, marginTop: 8, marginBottom: 4 },
+  infoTexte: { fontSize: 11, color: '#6E6E73', backgroundColor: '#F5F5F7', borderRadius: 8, padding: 8, marginTop: 8, marginBottom: 4 },
   erreurTexte: { color: '#DC2626', fontSize: 12, marginBottom: 8 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 13, fontWeight: '600' },
 });
 

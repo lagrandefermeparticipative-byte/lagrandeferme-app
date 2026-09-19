@@ -122,15 +122,15 @@ const BottomNav = () => {
 const styles = StyleSheet.create({
   conteneur: { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingBottom: 20 },
   espaceSwitch: { flexDirection: 'row', paddingTop: 8, marginBottom: 4, position: 'relative', backgroundColor: '#F3F4F6', borderRadius: 10, padding: 4 },
-  espaceFond: { position: 'absolute', top: 4, left: 4, height: 34, backgroundColor: '#111827', borderRadius: 8 },
+  espaceFond: { position: 'absolute', top: 4, left: 4, height: 34, backgroundColor: '#1D1D1F', borderRadius: 8 },
   espaceBouton: { flex: 1, alignItems: 'center', justifyContent: 'center', zIndex: 1, height: 34 },
-  espaceTexte: { fontSize: 12, fontWeight: '600', color: '#6B7280' },
+  espaceTexte: { fontSize: 12, fontWeight: '600', color: '#6E6E73' },
   espaceTexteActif: { color: '#fff' },
   menuLigne: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 8, paddingHorizontal: 8 },
   menuItem: { alignItems: 'center', gap: 2, paddingHorizontal: 4, paddingVertical: 4 },
   icone: { fontSize: 20 },
-  label: { fontSize: 10, color: '#6B7280' },
-  labelActif: { color: '#111827', fontWeight: '600' },
+  label: { fontSize: 10, color: '#6E6E73' },
+  labelActif: { color: '#1D1D1F', fontWeight: '600' },
 });
 
 export default BottomNav;

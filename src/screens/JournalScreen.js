@@ -33,7 +33,7 @@ const JournalScreen = ({ token }) => {
   const activitesFiltrees = filtreModule === 'Tous' ? activites : activites.filter(a => a.module === filtreModule);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Journal d'activité" sousTitre="Tout ce qui se passe sur la ferme" sansRetour />
       <ScrollView style={styles.conteneur}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12, marginBottom: 10 }}>
@@ -45,7 +45,7 @@ const JournalScreen = ({ token }) => {
         </ScrollView>
         <Text style={styles.compteur}>{activitesFiltrees.length} activité{activitesFiltrees.length > 1 ? 's' : ''}</Text>
         {chargement ? (
-          <ActivityIndicator style={{ marginTop: 20 }} color="#111827" />
+          <ActivityIndicator style={{ marginTop: 20 }} color="#1D1D1F" />
         ) : activitesFiltrees.length === 0 ? (
           <Text style={styles.vide}>Aucune activité enregistrée</Text>
         ) : activitesFiltrees.map(a => (
@@ -69,17 +69,17 @@ const JournalScreen = ({ token }) => {
 
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', marginRight: 6 },
-  chipActif: { backgroundColor: '#111827', borderColor: '#111827' },
-  chipTexte: { fontSize: 11, color: '#6B7280', fontWeight: '500' },
+  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', marginRight: 6 },
+  chipActif: { backgroundColor: '#1D1D1F', borderColor: '#1D1D1F' },
+  chipTexte: { fontSize: 11, color: '#6E6E73', fontWeight: '500' },
   chipTexteActif: { color: '#fff' },
-  compteur: { fontSize: 11, color: '#9CA3AF', marginBottom: 8 },
-  vide: { textAlign: 'center', color: '#9CA3AF', fontSize: 13, paddingVertical: 30 },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 8, flexDirection: 'row', gap: 10 },
+  compteur: { fontSize: 11, color: '#6E6E73', marginBottom: 8 },
+  vide: { textAlign: 'center', color: '#6E6E73', fontSize: 13, paddingVertical: 30 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 8, flexDirection: 'row', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   icone: { fontSize: 18, marginTop: 2 },
-  action: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  details: { fontSize: 11, color: '#6B7280', marginTop: 2 },
-  date: { fontSize: 10, color: '#9CA3AF' },
+  action: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  details: { fontSize: 11, color: '#6E6E73', marginTop: 2 },
+  date: { fontSize: 10, color: '#6E6E73' },
 });
 
 export default JournalScreen;

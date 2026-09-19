@@ -140,7 +140,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
   // --- VUE HISTORIQUE ---
   if (vue === 'historique' && lotSelectionne) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
         <Header titre={`Historique · ${lotSelectionne.nom}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carteNoire}>
@@ -169,7 +169,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
   // --- VUE MORTALITÉ ---
   if (vue === 'mortalite' && lotSelectionne) {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={`Mortalité · ${lotSelectionne.nom}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.alerteRouge}>
@@ -200,7 +200,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
   if (vue === 'reproducteurs' && lotSelectionne) {
     const dispo = parseInt(lotSelectionne.vivants || lotSelectionne.quantite_initiale);
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={`Extraire des reproducteurs · ${lotSelectionne.nom}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.alerteOrangeLegere}>
@@ -229,7 +229,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
   // --- VUE MODIFIER ---
   if (vue === 'modifier' && lotSelectionne) {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={`Modifier · ${lotSelectionne.nom}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -268,7 +268,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
   // --- VUE NOUVEAU LOT ---
   if (vue === 'nouveau') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Nouveau lot" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -302,7 +302,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
 
   // --- VUE LISTE (par défaut) ---
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Elevage" sousTitre={`${totalVivants} vivants / ${totalRecus} reçus`}
         action={
           <TouchableOpacity style={styles.boutonPetit} onPress={() => { setForm({ ...form, nom: '', quantite_initiale: '' }); setVue('nouveau'); }}>
@@ -311,7 +311,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
         }
       />
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           <View style={{ marginTop: 8, marginBottom: 16 }}>
@@ -356,7 +356,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
             let badge;
             if (epuise) {
               const toutVendu = vendus > 0 && morts === 0 && reproducteurs === 0;
-              badge = toutVendu ? { label: 'Entièrement vendu', bg: '#F5F3FF', text: '#6D28D9' } : { label: 'Cheptel épuisé', bg: '#E5E7EB', text: '#374151' };
+              badge = toutVendu ? { label: 'Entièrement vendu', bg: '#F5F3FF', text: '#6D28D9' } : { label: 'Cheptel épuisé', bg: '#E5E5EA', text: '#374151' };
             } else {
               badge = BADGES[lot.phase_calculee] || BADGES.demarrage;
             }
@@ -428,61 +428,61 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  progressLabel: { fontSize: 11, color: '#6B7280' },
-  progressFond: { height: 8, backgroundColor: '#E5E7EB', borderRadius: 4, marginTop: 6, overflow: 'hidden' },
-  progressBarre: { height: '100%', backgroundColor: '#111827', borderRadius: 4 },
-  grille3: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  stat: { flex: 1, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 12, alignItems: 'center' },
-  statChiffre: { fontSize: 20, fontWeight: '600', color: '#111827' },
-  statLabel: { fontSize: 11, color: '#9CA3AF', marginTop: 2 },
-  sectionTitre: { fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 10 },
-  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E7EB', padding: 30, alignItems: 'center' },
-  vide: { color: '#9CA3AF', fontSize: 13, marginBottom: 12 },
-  carteLot: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 12, color: '#6B7280', marginTop: 4 },
-  italique: { fontSize: 12, color: '#9CA3AF', fontStyle: 'italic', marginTop: 4 },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  progressLabel: { fontSize: 11, color: '#6E6E73' },
+  progressFond: { height: 5, backgroundColor: '#F5F5F7', borderRadius: 3, marginTop: 8, overflow: 'hidden' },
+  progressBarre: { height: '100%', backgroundColor: '#1D1D1F', borderRadius: 3 },
+  grille3: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  stat: { flex: 1, backgroundColor: '#fff', borderRadius: 20, padding: 14, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  statChiffre: { fontSize: 22, fontWeight: '700', color: '#1D1D1F', letterSpacing: -0.3 },
+  statLabel: { fontSize: 10, color: '#6E6E73', marginTop: 4, fontWeight: '600', letterSpacing: 0.3 },
+  sectionTitre: { fontSize: 12, fontWeight: '600', color: '#6E6E73', marginBottom: 12, letterSpacing: 0.4 },
+  videCarte: { backgroundColor: '#fff', borderRadius: 20, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E5EA', padding: 30, alignItems: 'center' },
+  vide: { color: '#6E6E73', fontSize: 13, marginBottom: 12 },
+  carteLot: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 15, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 13, color: '#6E6E73', marginTop: 4 },
+  italique: { fontSize: 12, color: '#6E6E73', fontStyle: 'italic', marginTop: 4 },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   badgeTexte: { fontSize: 11, fontWeight: '600' },
-  grille4: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10, marginTop: 8, borderTopWidth: 1, borderTopColor: '#F9FAFB' },
+  grille4: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 12, marginTop: 10, borderTopWidth: 1, borderTopColor: '#F5F5F7' },
   miniStat: { alignItems: 'center' },
-  miniStatChiffre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  miniStatLabel: { fontSize: 10, color: '#9CA3AF' },
-  actionRouge: { flex: 1, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
-  actionRougeTexte: { color: '#DC2626', fontSize: 11, fontWeight: '600' },
-  actionBleue: { flex: 1, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  miniStatChiffre: { fontSize: 14, fontWeight: '600', color: '#1D1D1F' },
+  miniStatLabel: { fontSize: 10, color: '#6E6E73' },
+  actionRouge: { flex: 1, backgroundColor: '#FEF2F2', borderRadius: 12, paddingVertical: 9, alignItems: 'center' },
+  actionRougeTexte: { color: '#C0392B', fontSize: 11, fontWeight: '600' },
+  actionBleue: { flex: 1, backgroundColor: '#EFF6FF', borderRadius: 12, paddingVertical: 9, alignItems: 'center' },
   actionBleueTexte: { color: '#1D4ED8', fontSize: 11, fontWeight: '600' },
-  actionGrise: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
-  actionGriseTexte: { color: '#4B5563', fontSize: 11, fontWeight: '600' },
-  boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  actionGrise: { flex: 1, backgroundColor: '#F5F5F7', borderRadius: 12, paddingVertical: 9, alignItems: 'center' },
+  actionGriseTexte: { color: '#6E6E73', fontSize: 11, fontWeight: '600' },
+  boutonPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10 },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
   chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6' },
-  chipActif: { backgroundColor: '#111827' },
-  chipTexte: { fontSize: 12, color: '#6B7280' },
+  chipActif: { backgroundColor: '#1D1D1F' },
+  chipTexte: { fontSize: 12, color: '#6E6E73' },
   chipTexteActif: { color: '#fff', fontWeight: '600' },
   erreurTexte: { color: '#DC2626', fontSize: 13, marginTop: 12 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
   boutonRouge: { backgroundColor: '#DC2626', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
   alerteRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, padding: 10, marginTop: 8 },
   alerteRougeTexte: { color: '#B91C1C', fontSize: 12, fontWeight: '600' },
   mortTitre: { color: '#DC2626', fontSize: 13, fontWeight: '600' },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 12 },
-  carteNoireLabel: { color: '#9CA3AF', fontSize: 12 },
-  carteNoireMontant: { color: '#fff', fontSize: 22, fontWeight: '600' },
-  carteNoireSousLabel: { color: '#9CA3AF', fontSize: 11, marginTop: 4 },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 20, padding: 18, marginTop: 8, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireLabel: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.3, fontWeight: '600', letterSpacing: 0.4 },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 30, fontWeight: '700', letterSpacing: -0.5, marginTop: 4 },
+  carteNoireSousLabel: { color: '#6E6E73', fontSize: 13, marginTop: 6 },
   zoneDanger: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#FECACA', borderRadius: 12, padding: 14, marginTop: 16 },
   zoneDangerLabel: { color: '#DC2626', fontSize: 12, fontWeight: '600', marginBottom: 8 },
   boutonSupprimer: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   boutonSupprimerTexte: { color: '#B91C1C', fontSize: 13, fontWeight: '600' },
-  infoTexte: { fontSize: 11, color: '#9CA3AF', marginTop: 6 },
-  alerteInfo: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, marginBottom: 4 },
-  alerteInfoTexte: { fontSize: 12, color: '#6B7280', fontWeight: '600' },
+  infoTexte: { fontSize: 11, color: '#6E6E73', marginTop: 6 },
+  alerteInfo: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, marginBottom: 4 },
+  alerteInfoTexte: { fontSize: 12, color: '#6E6E73', fontWeight: '600' },
   alerteOrangeLegere: { backgroundColor: '#FFF7ED', borderWidth: 1, borderColor: '#FED7AA', borderRadius: 10, padding: 10, marginTop: 8, marginBottom: 4 },
   alerteOrangeLegereTexte: { color: '#C2410C', fontSize: 12, fontWeight: '600' },
   actionOrange: { backgroundColor: '#FFF7ED', borderWidth: 1, borderColor: '#FED7AA', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8 },

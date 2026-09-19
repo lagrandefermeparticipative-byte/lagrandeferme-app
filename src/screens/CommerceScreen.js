@@ -179,7 +179,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
   // --- FORMULAIRE VENTE ---
   if (vue === 'vente') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Nouvelle vente" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -287,7 +287,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
   if (vue === 'paiement' && venteEnPaiement) {
     const reste = parseFloat(venteEnPaiement.recette_totale || 0) - parseFloat(venteEnPaiement.montant_paye || 0);
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Enregistrer un paiement" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -312,7 +312,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
   // --- FORMULAIRE ACHETEUR ---
   if (vue === 'acheteur') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={acheteurEnEdition ? "Modifier l'acheteur" : 'Nouvel acheteur'} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -355,7 +355,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
 
   // --- VUE PRINCIPALE ---
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Commerce" sousTitre="Acheteurs & Ventes"
         action={
           onglet === 'ventes' ? (
@@ -366,7 +366,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
         }
       />
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           <View style={styles.ongletsLigne}>
@@ -463,42 +463,42 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 2 },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73', marginTop: 2 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
   chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6', marginRight: 6, marginBottom: 6 },
-  chipActif: { backgroundColor: '#111827' },
-  chipTexte: { fontSize: 11, color: '#6B7280' },
+  chipActif: { backgroundColor: '#1D1D1F' },
+  chipTexte: { fontSize: 11, color: '#6E6E73' },
   chipTexteActif: { color: '#fff', fontWeight: '600' },
-  infoTexte: { fontSize: 11, color: '#9CA3AF', marginTop: 6 },
+  infoTexte: { fontSize: 11, color: '#6E6E73', marginTop: 6 },
   alerteRougeLegere: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, padding: 8, marginTop: 10 },
   alerteRougeLegereTexte: { color: '#DC2626', fontSize: 11 },
   encartVert: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5', borderRadius: 10, padding: 12, marginTop: 10 },
   encartVertLabel: { fontSize: 11, color: '#059669' },
   encartVertValeur: { fontSize: 18, fontWeight: '600', color: '#047857' },
   encartVertSous: { fontSize: 10, color: '#059669', marginTop: 4 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
-  boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  boutonPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E7EB', padding: 30, alignItems: 'center' },
-  vide: { color: '#9CA3AF', fontSize: 13, marginBottom: 10 },
-  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', marginBottom: 14, marginTop: 8 },
+  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E5EA', padding: 30, alignItems: 'center' },
+  vide: { color: '#6E6E73', fontSize: 13, marginBottom: 10 },
+  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', marginBottom: 14, marginTop: 8 },
   ongletBouton: { paddingBottom: 8, paddingHorizontal: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  ongletBoutonActif: { borderBottomColor: '#111827' },
-  ongletTexte: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
-  ongletTexteActif: { color: '#111827' },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginBottom: 12 },
-  carteNoireLabel: { color: '#9CA3AF', fontSize: 12 },
-  carteNoireMontant: { color: '#fff', fontSize: 20, fontWeight: '600' },
-  carteNoireSousLabel: { color: '#9CA3AF', fontSize: 11, marginTop: 8 },
+  ongletBoutonActif: { borderBottomColor: '#1D1D1F' },
+  ongletTexte: { fontSize: 13, color: '#6E6E73', fontWeight: '500' },
+  ongletTexteActif: { color: '#1D1D1F' },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireLabel: { color: '#6E6E73', fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 20, fontWeight: '700', letterSpacing: -0.5 },
+  carteNoireSousLabel: { color: '#6E6E73', fontSize: 11, marginTop: 8 },
   grille2noire: { flexDirection: 'row', gap: 8, marginTop: 12 },
   miniNoire: { flex: 1, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: 8 },
-  miniNoireLabel: { color: '#9CA3AF', fontSize: 11 },
+  miniNoireLabel: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
   miniNoireValeur: { color: '#fff', fontSize: 13, fontWeight: '600', marginTop: 2 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeTexte: { fontSize: 10, fontWeight: '600' },

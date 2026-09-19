@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 const couleurSurvie = (taux) => {
-  if (taux === null || taux === undefined) return { fond: '#F9FAFB', bordure: '#E5E7EB', accent: '#8E8E93' };
+  if (taux === null || taux === undefined) return { fond: '#F5F5F7', bordure: '#E5E5EA', accent: '#8E8E93' };
   if (taux >= 90) return { fond: '#fff', bordure: '#F5F5F7', accent: '#2D6A4F' };
   if (taux >= 70) return { fond: '#fff', bordure: '#F5F5F7', accent: '#B08D57' };
   return { fond: '#fff', bordure: '#F5F5F7', accent: '#B54708' };
@@ -43,7 +43,7 @@ const TechnicienProjetsScreen = ({ token, onChoisir }) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Mes projets" sansRetour />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.conteneur}>
         {chargement ? (
@@ -79,7 +79,7 @@ const TechnicienProjetsScreen = ({ token, onChoisir }) => {
 
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16, justifyContent: 'center' },
-  vide: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginTop: 40 },
+  vide: { fontSize: 13, color: '#6E6E73', textAlign: 'center', marginTop: 40 },
   carteProjet: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   carteTitre: { fontSize: 14, fontWeight: '600', color: '#1D1D1F' },

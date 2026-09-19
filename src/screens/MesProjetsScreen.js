@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 const couleurSurvie = (taux) => {
-  if (taux === null || taux === undefined) return { fond: '#F9FAFB', bordure: '#E5E7EB', texte: '#6E6E73', accent: '#8E8E93' };
+  if (taux === null || taux === undefined) return { fond: '#F5F5F7', bordure: '#E5E5EA', texte: '#6E6E73', accent: '#8E8E93' };
   if (taux >= 90) return { fond: '#fff', bordure: '#F5F5F7', texte: '#6E6E73', accent: '#2D6A4F' };
   if (taux >= 70) return { fond: '#fff', bordure: '#F5F5F7', texte: '#6E6E73', accent: '#B08D57' };
   return { fond: '#fff', bordure: '#F5F5F7', texte: '#6E6E73', accent: '#B54708' };
@@ -54,7 +54,7 @@ const MesProjetsScreen = ({ onChoisir }) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Mes projets" sansRetour masquerSwitch />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.conteneur}>
         {ensemble && (
@@ -127,7 +127,7 @@ const MesProjetsScreen = ({ onChoisir }) => {
 
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16, justifyContent: 'center' },
-  vide: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginTop: 40 },
+  vide: { fontSize: 13, color: '#6E6E73', textAlign: 'center', marginTop: 40 },
 
   carteEnsemble: { backgroundColor: '#fff', borderRadius: 24, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   carteEnsembleLabel: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 6 },

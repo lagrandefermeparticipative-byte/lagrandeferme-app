@@ -69,7 +69,7 @@ const EquipementsScreen = ({ token }) => {
   // --- FORMULAIRE (nouveau/modifier) ---
   if (vue === 'nouveau' || vue === 'modifier') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={vue === 'nouveau' ? 'Nouvel équipement' : `Modifier · ${equipementSelectionne?.nom}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -128,12 +128,12 @@ const EquipementsScreen = ({ token }) => {
 
   // --- VUE LISTE ---
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Équipements" sousTitre="Inventaire de la ferme"
         action={<TouchableOpacity style={styles.boutonPetit} onPress={() => { setForm(VIDE); setVue('nouveau'); }}><Text style={styles.boutonPetitTexte}>+ Équipement</Text></TouchableOpacity>}
       />
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           <View style={styles.carteNoire}>
@@ -187,36 +187,36 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 4 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73', marginTop: 4 },
   projetTexte: { fontSize: 11, color: '#4F46E5', marginTop: 4 },
-  noteTexte: { fontSize: 11, color: '#9CA3AF', fontStyle: 'italic', marginTop: 4 },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
+  noteTexte: { fontSize: 11, color: '#6E6E73', fontStyle: 'italic', marginTop: 4 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
   chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6' },
-  chipActif: { backgroundColor: '#111827' },
-  chipTexte: { fontSize: 11, color: '#6B7280' },
+  chipActif: { backgroundColor: '#1D1D1F' },
+  chipTexte: { fontSize: 11, color: '#6E6E73' },
   chipTexteActif: { color: '#fff', fontWeight: '600' },
   optionLigne: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   optionLigneActive: { backgroundColor: '#F3F4F6' },
   optionTexte: { fontSize: 12, color: '#374151' },
-  infoTexte: { fontSize: 10, color: '#9CA3AF', marginTop: 8, lineHeight: 14 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  infoTexte: { fontSize: 10, color: '#6E6E73', marginTop: 8, lineHeight: 14 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
-  boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  boutonPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E7EB', padding: 30, alignItems: 'center' },
-  vide: { color: '#9CA3AF', fontSize: 13, marginBottom: 10 },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 12 },
-  carteNoireLabel: { color: '#9CA3AF', fontSize: 12 },
-  carteNoireMontant: { color: '#fff', fontSize: 22, fontWeight: '600' },
-  carteNoireSousLabel: { color: '#9CA3AF', fontSize: 11, marginTop: 4 },
-  filtreChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', marginRight: 6 },
-  filtreChipActif: { backgroundColor: '#111827', borderColor: '#111827' },
-  filtreChipTexte: { fontSize: 12, color: '#6B7280', fontWeight: '600' },
+  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E5EA', padding: 30, alignItems: 'center' },
+  vide: { color: '#6E6E73', fontSize: 13, marginBottom: 10 },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireLabel: { color: '#6E6E73', fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 22, fontWeight: '700', letterSpacing: -0.5 },
+  carteNoireSousLabel: { color: '#6E6E73', fontSize: 11, marginTop: 4 },
+  filtreChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', marginRight: 6 },
+  filtreChipActif: { backgroundColor: '#1D1D1F', borderColor: '#1D1D1F' },
+  filtreChipTexte: { fontSize: 12, color: '#6E6E73', fontWeight: '600' },
   filtreChipTexteActif: { color: '#fff' },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeTexte: { fontSize: 10, fontWeight: '600' },

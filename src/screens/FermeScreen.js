@@ -116,15 +116,15 @@ const FermeScreen = ({ token }) => {
 
   if (chargement) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
         <Header titre="Ferme" sousTitre="Vue d'ensemble · Associés" sansRetour />
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Ferme" sousTitre="Vue d'ensemble · Associés" sansRetour />
       <ScrollView style={styles.conteneur}>
 
@@ -250,7 +250,7 @@ const FermeScreen = ({ token }) => {
                   <Text style={styles.carteTitre}>{annee}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Text style={styles.carteTitre}>{formatMontant(data.total)}</Text>
-                    <Text style={{ color: '#9CA3AF', fontSize: 12 }}>{estOuverte ? '▲' : '▼'}</Text>
+                    <Text style={{ color: '#6E6E73', fontSize: 12 }}>{estOuverte ? '▲' : '▼'}</Text>
                   </View>
                 </TouchableOpacity>
                 {estOuverte && moisTries.map(([moisIndex, moisData]) => (
@@ -302,20 +302,20 @@ const FermeScreen = ({ token }) => {
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 16 },
-  carteNoireLabel: { color: '#9CA3AF', fontSize: 12, marginBottom: 4 },
-  carteNoireMontant: { color: '#fff', fontSize: 22, fontWeight: '600' },
-  carteNoireSousLabel: { color: '#9CA3AF', fontSize: 12, marginTop: 4 },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireLabel: { color: '#6E6E73', fontSize: 12, fontWeight: '600', letterSpacing: 0.3, marginBottom: 4 },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 22, fontWeight: '700', letterSpacing: -0.5 },
+  carteNoireSousLabel: { color: '#6E6E73', fontSize: 12, marginTop: 4 },
   grille2x2: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  mini: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, width: '47%' },
-  miniLabel: { fontSize: 11, color: '#6B7280', marginBottom: 4 },
-  miniValeur: { fontSize: 15, fontWeight: '600', color: '#111827' },
+  mini: { backgroundColor: '#fff', borderRadius: 20, padding: 14, width: '47%', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  miniLabel: { fontSize: 11, color: '#6E6E73', marginBottom: 4 },
+  miniValeur: { fontSize: 15, fontWeight: '600', color: '#1D1D1F' },
   section: { marginBottom: 16 },
-  sectionTitre: { fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8, marginTop: 8 },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
+  sectionTitre: { fontSize: 14, fontWeight: '600', color: '#1D1D1F', marginBottom: 8, marginTop: 8 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 12, color: '#6E6E73', marginTop: 2 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeVert: { backgroundColor: '#ECFDF5' },
   badgeOrange: { backgroundColor: '#FFF7ED' },
@@ -326,29 +326,29 @@ const styles = StyleSheet.create({
   badgeTexteOrange: { color: '#C2410C' },
   badgeTexteRouge: { color: '#DC2626' },
   badgeTexteGris: { color: '#4B5563' },
-  dateTexte: { fontSize: 11, color: '#9CA3AF', marginTop: 4 },
+  dateTexte: { fontSize: 11, color: '#6E6E73', marginTop: 4 },
   venteTexte: { fontSize: 12, color: '#047857', marginTop: 4 },
   mortTexteFerme: { fontSize: 12, color: '#DC2626', marginTop: 4 },
   boutonReformer: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   boutonReformerTexte: { color: '#4B5563', fontSize: 11, fontWeight: '600' },
   boutonMort: { flex: 1, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   boutonMortTexte: { color: '#DC2626', fontSize: 11, fontWeight: '600' },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13 },
-  boutonConfirmer: { flex: 1, backgroundColor: '#111827', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13 },
+  boutonConfirmer: { flex: 1, backgroundColor: '#1D1D1F', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
   boutonConfirmerTexte: { color: '#fff', fontSize: 12, fontWeight: '600' },
   boutonAnnuler: { paddingHorizontal: 14, backgroundColor: '#F3F4F6', borderRadius: 8, justifyContent: 'center' },
-  boutonAnnulerTexte: { color: '#6B7280', fontSize: 12, fontWeight: '600' },
+  boutonAnnulerTexte: { color: '#6E6E73', fontSize: 12, fontWeight: '600' },
   boutonVendre: { marginTop: 8, backgroundColor: '#ECFDF5', borderRadius: 8, paddingVertical: 8, borderWidth: 1, borderColor: '#D1FAE5', alignItems: 'center' },
   boutonVendreTexte: { color: '#047857', fontSize: 12, fontWeight: '600' },
   progressFond: { height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, marginTop: 6, overflow: 'hidden' },
-  progressBarre: { height: '100%', backgroundColor: '#111827', borderRadius: 3 },
-  vide: { textAlign: 'center', color: '#9CA3AF', fontSize: 13, paddingVertical: 20 },
-  carteAccordeon: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', marginBottom: 8, overflow: 'hidden' },
+  progressBarre: { height: '100%', backgroundColor: '#1D1D1F', borderRadius: 3 },
+  vide: { textAlign: 'center', color: '#6E6E73', fontSize: 13, paddingVertical: 20 },
+  carteAccordeon: { backgroundColor: '#fff', borderRadius: 20, marginBottom: 8, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   accordeonHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  moisBloc: { paddingHorizontal: 14, paddingBottom: 10, borderTopWidth: 1, borderTopColor: '#F9FAFB' },
+  moisBloc: { paddingHorizontal: 14, paddingBottom: 10, borderTopWidth: 1, borderTopColor: '#F5F5F7' },
   moisLabel: { fontSize: 12, fontWeight: '600', color: '#374151', marginTop: 8 },
-  depenseLigne: { fontSize: 12, color: '#6B7280', paddingLeft: 8 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
+  depenseLigne: { fontSize: 12, color: '#6E6E73', paddingLeft: 8 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });
 

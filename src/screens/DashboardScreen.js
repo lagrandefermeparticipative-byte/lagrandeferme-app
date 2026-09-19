@@ -358,7 +358,7 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
             <Text style={styles.label}>Taux de perte appliqué (%)</Text>
             <TextInput style={styles.champ} keyboardType="numeric" value={clotureForm.taux_perte_applique} onChangeText={v => setClotureForm({ ...clotureForm, taux_perte_applique: v })} onBlur={chargerPrevisualisation} />
 
-            {chargementPrevisualisation ? <ActivityIndicator style={{ marginVertical: 10 }} color="#111827" /> : previsualisation && (
+            {chargementPrevisualisation ? <ActivityIndicator style={{ marginVertical: 10 }} color="#1D1D1F" /> : previsualisation && (
               <View style={styles.encartPrevisu}>
                 <Text style={styles.encartPrevisuTitre}>Prévisualisation</Text>
                 {previsualisation.versements?.map((v, i) => (
@@ -472,7 +472,7 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
         </KeyboardAvoidingView>
         </View>
       ) : chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           {onglet === 'dashboard' && (
@@ -634,16 +634,16 @@ const BudgetLigneMontant = ({ label, champ, budget, setBudget }) => (
 const styles = StyleSheet.create({
   barreProgressionConteneur: { height: 5, backgroundColor: '#F5F5F7', borderRadius: 3, marginTop: 10, overflow: 'hidden' },
   barreProgressionRemplie: { height: 5, backgroundColor: '#1D1D1F', borderRadius: 3 },
-  dateSeparateur: { textAlign: "center", fontSize: 11, color: "#9CA3AF", backgroundColor: "#F3F4F6", alignSelf: "center", paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, marginVertical: 10 },
+  dateSeparateur: { textAlign: "center", fontSize: 11, color: "#6E6E73", backgroundColor: "#F3F4F6", alignSelf: "center", paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, marginVertical: 10 },
   messageDate: { fontSize: 9, color: "#B0B7C3", marginTop: 4, alignSelf: "flex-end" },
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sousOngletsLigne: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingHorizontal: 16 },
   sousOnglet: { paddingVertical: 12, paddingHorizontal: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  sousOngletActif: { borderBottomColor: '#111827' },
-  sousOngletTexte: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
-  sousOngletTexteActif: { color: '#111827', fontWeight: '600' },
+  sousOngletActif: { borderBottomColor: '#1D1D1F' },
+  sousOngletTexte: { fontSize: 13, color: '#6E6E73', fontWeight: '500' },
+  sousOngletTexteActif: { color: '#1D1D1F', fontWeight: '600' },
   badgeRouge: { backgroundColor: '#EF4444', borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   badgeRougeTexte: { color: '#fff', fontSize: 9, fontWeight: '700' },
   salutation: { fontSize: 24, fontWeight: '700', color: '#1D1D1F', marginTop: 8, letterSpacing: -0.4 },
@@ -673,52 +673,52 @@ const styles = StyleSheet.create({
   actionGriseTexte: { color: '#4B5563', fontSize: 11, fontWeight: '600' },
   actionIndigo: { flex: 1, backgroundColor: '#EEF2FF', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   actionIndigoTexte: { color: '#4338CA', fontSize: 11, fontWeight: '600' },
-  boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  boutonPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
-  infoTexte: { fontSize: 10, color: '#9CA3AF', marginTop: 12, lineHeight: 14 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
+  infoTexte: { fontSize: 10, color: '#6E6E73', marginTop: 12, lineHeight: 14 },
   erreurTexte: { color: '#DC2626', fontSize: 13, marginTop: 12 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
     budgetLigneLabel: { fontSize: 12, fontWeight: '600', color: '#374151', marginBottom: 6 },
-  budgetSousLabel: { fontSize: 10, color: '#9CA3AF', marginBottom: 4 },
-  champPetit: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, fontSize: 12, color: '#111827' },
-  totalBox: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#F3F4F6' },
-  totalTexte: { fontSize: 12, fontWeight: '600', color: '#111827' },
+  budgetSousLabel: { fontSize: 10, color: '#6E6E73', marginBottom: 4 },
+  champPetit: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 8, fontSize: 12, color: '#1D1D1F' },
+  totalBox: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#F3F4F6' },
+  totalTexte: { fontSize: 12, fontWeight: '600', color: '#1D1D1F' },
     lienAjouter: { color: '#4338CA', fontSize: 12, fontWeight: '600' },
-  investisseurBloc: { backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12, marginBottom: 10 },
-  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', marginRight: 6 },
-  chipActif: { backgroundColor: '#111827', borderColor: '#111827' },
-  chipTexte: { fontSize: 11, color: '#6B7280' },
+  investisseurBloc: { backgroundColor: '#F5F5F7', borderRadius: 10, padding: 12, marginBottom: 10 },
+  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', marginRight: 6 },
+  chipActif: { backgroundColor: '#1D1D1F', borderColor: '#1D1D1F' },
+  chipTexte: { fontSize: 11, color: '#6E6E73' },
   chipTexteActif: { color: '#fff', fontWeight: '600' },
   pourcentageTexte: { fontSize: 11, color: '#4338CA', marginTop: 4 },
   lienSupprimer: { color: '#DC2626', fontSize: 11, marginTop: 8 },
-  encartTotal: { backgroundColor: '#111827', borderRadius: 10, padding: 12, marginTop: 8, flexDirection: 'row', justifyContent: 'space-between' },
-  encartTotalLabel: { color: '#9CA3AF', fontSize: 12 },
+  encartTotal: { backgroundColor: '#1D1D1F', borderRadius: 10, padding: 12, marginTop: 8, flexDirection: 'row', justifyContent: 'space-between' },
+  encartTotalLabel: { color: '#6E6E73', fontSize: 12 },
   encartTotalValeur: { color: '#fff', fontSize: 14, fontWeight: '700' },
-    lienRetourPetit: { color: '#6B7280', fontSize: 11 },
-  succesTitre: { fontSize: 16, fontWeight: '600', color: '#111827', marginTop: 8 },
-  succesTexte: { fontSize: 13, color: '#6B7280', marginTop: 4, textAlign: 'center' },
+    lienRetourPetit: { color: '#6E6E73', fontSize: 11 },
+  succesTitre: { fontSize: 16, fontWeight: '600', color: '#1D1D1F', marginTop: 8 },
+  succesTexte: { fontSize: 13, color: '#6E6E73', marginTop: 4, textAlign: 'center' },
   succesInline: { color: '#047857', fontSize: 12, marginTop: 8 },
-  boutonSecondaireNoir: { backgroundColor: '#111827', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  boutonSecondaireNoir: { backgroundColor: '#1D1D1F', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
   boutonSecondaireNoirTexte: { color: '#fff', fontSize: 13, fontWeight: '600' },
   boutonRouge: { backgroundColor: '#DC2626', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
-  encartPrevisu: { backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12, marginVertical: 10 },
-  encartPrevisuTitre: { fontSize: 12, fontWeight: '600', color: '#111827', marginBottom: 8 },
+  encartPrevisu: { backgroundColor: '#F5F5F7', borderRadius: 10, padding: 12, marginVertical: 10 },
+  encartPrevisuTitre: { fontSize: 12, fontWeight: '600', color: '#1D1D1F', marginBottom: 8 },
   alerteRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, padding: 10, marginTop: 8 },
   alerteRougeTexte: { fontSize: 11, fontWeight: '600', color: '#B91C1C' },
   alerteRougeTexteSecondaire: { fontSize: 10, color: '#DC2626', marginTop: 4 },
   previsuNom: { fontSize: 12, color: '#374151' },
-  previsuMontant: { fontSize: 12, fontWeight: '600', color: '#111827' },
-  lienRetour: { color: '#6B7280', fontSize: 12, marginBottom: 12 },
+  previsuMontant: { fontSize: 12, fontWeight: '600', color: '#1D1D1F' },
+  lienRetour: { color: '#6E6E73', fontSize: 12, marginBottom: 12 },
   messageBulle: { borderRadius: 12, padding: 10, marginBottom: 8, maxWidth: '85%' },
   messageMoi: { backgroundColor: '#F3F4F6', alignSelf: 'flex-end' },
   messageAutre: { backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', alignSelf: 'flex-start' },
-  dateSeparateur: { textAlign: 'center', fontSize: 11, color: '#9CA3AF', backgroundColor: '#F3F4F6', alignSelf: 'center', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, marginVertical: 10 },
-  messageContenu: { fontSize: 16, color: '#111827', fontWeight: '600' },
+  dateSeparateur: { textAlign: 'center', fontSize: 11, color: '#6E6E73', backgroundColor: '#F3F4F6', alignSelf: 'center', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, marginVertical: 10 },
+  messageContenu: { fontSize: 16, color: '#1D1D1F', fontWeight: '600' },
   boutonDiffusionTexte: { color: '#4338CA', fontSize: 13, fontWeight: '600' },
 });
 

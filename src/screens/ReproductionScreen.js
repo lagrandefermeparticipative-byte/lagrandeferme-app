@@ -136,7 +136,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   // --- FORMULAIRE NOUVEAU CYCLE ---
   if (vue === 'cycle') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Nouveau cycle de reproduction" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -170,7 +170,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   // --- FORMULAIRE PONTE ---
   if (vue === 'ponte') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Détails de la ponte" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -198,7 +198,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   // --- FORMULAIRE COUVEUSE ---
   if (vue === 'couveuse') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Détails de la couveuse" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -230,7 +230,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   // --- FORMULAIRE COLLECTE ---
   if (vue === 'collecte') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Collecte d'œufs" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -256,7 +256,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   // --- FORMULAIRE ÉCLOSION ---
   if (vue === 'eclosion') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Résultats d'éclosion" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -289,7 +289,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
 
   // --- VUE PRINCIPALE ---
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Reproduction" sousTitre={cycleActif ? `${cycleActif.generation} · ${cycleActif.nom || ''}` : 'Aucun cycle actif'}
         action={
           <TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('cycle')}>
@@ -298,7 +298,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
         }
       />
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : cycles.length === 0 ? (
         <ScrollView style={styles.conteneur}>
           <View style={styles.videCarte}>
@@ -412,7 +412,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
                 <View style={styles.carte} key={c.id}>
                   <View style={styles.ligneEntre}>
                     <Text style={styles.carteTitre}>{new Date(c.date_collecte).toLocaleDateString('fr-FR')}</Text>
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>{c.nombre_oeufs} 🥚</Text>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#1D1D1F' }}>{c.nombre_oeufs} 🥚</Text>
                   </View>
                 </View>
               ))}
@@ -469,61 +469,61 @@ const LigneInfo = ({ label, value }) => (
 );
 
 const styles = StyleSheet.create({
-  infoWebBloc: { backgroundColor: "#F9FAFB", borderRadius: 8, paddingVertical: 8, alignItems: "center" },
-  infoWebTexte: { color: "#9CA3AF", fontSize: 11 },
+  infoWebBloc: { backgroundColor: "#F5F5F7", borderRadius: 8, paddingVertical: 8, alignItems: "center" },
+  infoWebTexte: { color: "#6E6E73", fontSize: 11 },
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
-  infoTexte: { fontSize: 12, color: '#9CA3AF', marginBottom: 8 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
+  infoTexte: { fontSize: 12, color: '#6E6E73', marginBottom: 8 },
   lienGenerations: { fontSize: 11, color: '#1D4ED8', marginBottom: 12, marginTop: -4 },
   chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6' },
-  chipActif: { backgroundColor: '#111827' },
-  chipTexte: { fontSize: 12, color: '#6B7280' },
+  chipActif: { backgroundColor: '#1D1D1F' },
+  chipTexte: { fontSize: 12, color: '#6E6E73' },
   chipTexteActif: { color: '#fff', fontWeight: '600' },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
-  boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  boutonPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
   boutonVert: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
   boutonVertTexte: { color: '#047857', fontSize: 12, fontWeight: '600' },
   encartVert: { backgroundColor: '#ECFDF5', borderRadius: 10, padding: 12, marginTop: 10 },
   encartVertLabel: { fontSize: 11, color: '#059669' },
   encartVertValeur: { fontSize: 18, fontWeight: '600', color: '#047857' },
-  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E7EB', padding: 30, alignItems: 'center', marginTop: 20 },
-  vide: { color: '#9CA3AF', fontSize: 13, marginBottom: 10, textAlign: 'center' },
-  cycleChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', marginRight: 8 },
-  cycleChipActif: { backgroundColor: '#111827', borderColor: '#111827' },
-  cycleChipTexte: { fontSize: 12, color: '#6B7280', fontWeight: '600' },
+  videCarte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E5EA', padding: 30, alignItems: 'center', marginTop: 20 },
+  vide: { color: '#6E6E73', fontSize: 13, marginBottom: 10, textAlign: 'center' },
+  cycleChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', marginRight: 8 },
+  cycleChipActif: { backgroundColor: '#1D1D1F', borderColor: '#1D1D1F' },
+  cycleChipTexte: { fontSize: 12, color: '#6E6E73', fontWeight: '600' },
   cycleChipTexteActif: { color: '#fff' },
-  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', marginBottom: 14 },
+  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', marginBottom: 14 },
   ongletBouton: { paddingBottom: 8, paddingHorizontal: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  ongletBoutonActif: { borderBottomColor: '#111827' },
-  ongletTexte: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
-  ongletTexteActif: { color: '#111827' },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginBottom: 10 },
+  ongletBoutonActif: { borderBottomColor: '#1D1D1F' },
+  ongletTexte: { fontSize: 13, color: '#6E6E73', fontWeight: '500' },
+  ongletTexteActif: { color: '#1D1D1F' },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   carteNoireTitre: { color: '#fff', fontSize: 13, fontWeight: '600' },
   grille2noire: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   miniNoire: { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, width: '47%' },
-  miniNoireLabel: { color: '#9CA3AF', fontSize: 11 },
+  miniNoireLabel: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
   miniNoireValeur: { color: '#fff', fontSize: 14, fontWeight: '600', marginTop: 2 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeTexte: { fontSize: 11, fontWeight: '600' },
-  progressLabel: { fontSize: 11, color: '#6B7280' },
+  progressLabel: { fontSize: 11, color: '#6E6E73' },
   progressFond: { height: 8, backgroundColor: '#F3F4F6', borderRadius: 4, marginTop: 6, overflow: 'hidden' },
   progressBarreOrange: { height: '100%', backgroundColor: '#FB923C', borderRadius: 4 },
-  sectionTitre: { fontSize: 13, fontWeight: '600', color: '#111827', marginBottom: 8 },
+  sectionTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F', marginBottom: 8 },
   grille2: { flexDirection: 'row', gap: 20, marginTop: 10 },
-  miniLabel: { fontSize: 11, color: '#6B7280' },
-  miniValeurGrande: { fontSize: 20, fontWeight: '600', color: '#111827', marginTop: 2 },
-  lienModifier: { fontSize: 11, color: '#6B7280', backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  infoLabel: { fontSize: 12, color: '#6B7280', paddingVertical: 6 },
-  infoValeur: { fontSize: 12, fontWeight: '600', color: '#111827', paddingVertical: 6 },
+  miniLabel: { fontSize: 11, color: '#6E6E73' },
+  miniValeurGrande: { fontSize: 20, fontWeight: '600', color: '#1D1D1F', marginTop: 2 },
+  lienModifier: { fontSize: 11, color: '#6E6E73', backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  infoLabel: { fontSize: 12, color: '#6E6E73', paddingVertical: 6 },
+  infoValeur: { fontSize: 12, fontWeight: '600', color: '#1D1D1F', paddingVertical: 6 },
   actionRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8 },
   actionRougeTexte: { color: '#DC2626', fontSize: 11, fontWeight: '600' },
 });

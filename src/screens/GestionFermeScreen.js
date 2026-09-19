@@ -90,7 +90,7 @@ const VueDevis = ({ token, depense, onBack }) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre={`Devis · ${depense.libelle}`} action={<TouchableOpacity onPress={onBack}><Text style={styles.lienRetourPetit}>← Retour</Text></TouchableOpacity>} />
       <ScrollView style={styles.conteneur}>
         <View style={styles.carteNoire}>
@@ -102,7 +102,7 @@ const VueDevis = ({ token, depense, onBack }) => {
           </View>
         </View>
 
-        {chargement ? <ActivityIndicator style={{ marginTop: 20 }} color="#111827" /> : lignes.map(ligne => {
+        {chargement ? <ActivityIndicator style={{ marginTop: 20 }} color="#1D1D1F" /> : lignes.map(ligne => {
           const ecartLigne = parseFloat(ligne.montant_reel || 0) - parseFloat(ligne.montant_prevu || 0);
           const depassement = ecartLigne > 0;
           const enEdition = ligneEnEdition === ligne.id;
@@ -179,7 +179,7 @@ const FormDepenseFerme = ({ values, onChange, onSubmit, onCancel, titre, envoi, 
   const supprimerLigne = (i) => setLignesDevis(prev => prev.filter((_, idx) => idx !== i));
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Header titre={titre} action={<TouchableOpacity onPress={onCancel}><Text style={styles.lienRetourPetit}>Annuler</Text></TouchableOpacity>} />
       <ScrollView style={styles.conteneur}>
         <View style={styles.carte}>
@@ -381,11 +381,11 @@ const GestionFermeScreen = ({ token, projetActifId }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Dépenses Ferme" sousTitre="Frais généraux · Associés" sansRetour
         action={<TouchableOpacity style={styles.boutonPetit} onPress={() => setShowForm(true)}><Text style={styles.boutonPetitTexte}>+ Dépense</Text></TouchableOpacity>} />
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           <View style={styles.carteNoire}>
@@ -424,7 +424,7 @@ const GestionFermeScreen = ({ token, projetActifId }) => {
                 <View style={styles.grille3}>
                   <View><Text style={styles.miniLabel}>Prévu</Text><Text style={styles.miniValeur}>{formatMontant(depense.montant_prevu)}</Text></View>
                   <View><Text style={styles.miniLabel}>Réel</Text><Text style={styles.miniValeur}>{formatMontant(depense.montant_reel || 0)}</Text></View>
-                  <View><Text style={styles.miniLabel}>Écart</Text><Text style={[styles.miniValeur, { color: ecartLigne > 0 ? '#DC2626' : ecartLigne < 0 ? '#059669' : '#6B7280' }]}>{ecartLigne > 0 ? '+' : ''}{formatMontant(ecartLigne)}</Text></View>
+                  <View><Text style={styles.miniLabel}>Écart</Text><Text style={[styles.miniValeur, { color: ecartLigne > 0 ? '#DC2626' : ecartLigne < 0 ? '#059669' : '#6E6E73' }]}>{ecartLigne > 0 ? '+' : ''}{formatMontant(ecartLigne)}</Text></View>
                 </View>
                 {avancement > 0 && (
                   <View style={{ marginBottom: 8 }}>
@@ -452,21 +452,21 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 4, marginBottom: 8 },
-  compteur: { fontSize: 11, color: '#9CA3AF', marginBottom: 8 },
-  vide: { textAlign: 'center', color: '#9CA3AF', fontSize: 13, paddingVertical: 30 },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginTop: 12, marginBottom: 12 },
-  carteNoireLabelSeul: { color: '#9CA3AF', fontSize: 11 },
-  carteNoireLabel: { color: '#9CA3AF', fontSize: 11 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73', marginTop: 4, marginBottom: 8 },
+  compteur: { fontSize: 11, color: '#6E6E73', marginBottom: 8 },
+  vide: { textAlign: 'center', color: '#6E6E73', fontSize: 13, paddingVertical: 30 },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 12, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireLabelSeul: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
+  carteNoireLabel: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
   carteNoireValeur: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  carteNoireMontant: { color: '#fff', fontSize: 22, fontWeight: '600' },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 22, fontWeight: '700', letterSpacing: -0.5 },
   carteNoireSepare: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', paddingTop: 8, marginTop: 4 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', marginRight: 6 },
+  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', marginRight: 6 },
   chipFlex: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: '#F3F4F6', alignItems: 'center' },
-  chipActif: { backgroundColor: '#111827', borderColor: '#111827' },
-  chipTexte: { fontSize: 11, color: '#6B7280', fontWeight: '500' },
+  chipActif: { backgroundColor: '#1D1D1F', borderColor: '#1D1D1F' },
+  chipTexte: { fontSize: 11, color: '#6E6E73', fontWeight: '500' },
   chipTexteActif: { color: '#fff' },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeTexte: { fontSize: 10, fontWeight: '600' },
@@ -475,33 +475,33 @@ const styles = StyleSheet.create({
   badgeOrange: { backgroundColor: '#FFF7ED', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeOrangeTexte: { color: '#C2410C', fontSize: 10, fontWeight: '600' },
   grille3: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  miniLabel: { fontSize: 10, color: '#9CA3AF' },
-  miniValeur: { fontSize: 11, fontWeight: '600', color: '#111827' },
+  miniLabel: { fontSize: 10, color: '#6E6E73' },
+  miniValeur: { fontSize: 11, fontWeight: '600', color: '#1D1D1F' },
   barreFond: { height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden', marginTop: 4 },
-  barreRemplie: { height: '100%', backgroundColor: '#111827', borderRadius: 3 },
-  note: { fontSize: 11, color: '#9CA3AF', fontStyle: 'italic', marginBottom: 8 },
+  barreRemplie: { height: '100%', backgroundColor: '#1D1D1F', borderRadius: 3 },
+  note: { fontSize: 11, color: '#6E6E73', fontStyle: 'italic', marginBottom: 8 },
   actionGrise: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   actionGriseTexte: { color: '#4B5563', fontSize: 11, fontWeight: '600' },
   actionRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, alignItems: 'center' },
   actionRougeTexte: { fontSize: 12 },
   actionIndigo: { flex: 1, backgroundColor: '#EEF2FF', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   actionIndigoTexte: { color: '#4338CA', fontSize: 11, fontWeight: '600' },
-  actionNoire: { backgroundColor: '#111827', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8, flex: 1 },
+  actionNoire: { backgroundColor: '#fff', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8, flex: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   actionNoireTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  boutonPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
   boutonGrisPetit: { backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 6 },
   boutonGrisPetitTexte: { color: '#4B5563', fontSize: 11, fontWeight: '600' },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
-  aide: { fontSize: 10, color: '#9CA3AF', marginTop: 4 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
+  aide: { fontSize: 10, color: '#6E6E73', marginTop: 4 },
   motifEcart: { fontSize: 11, color: '#DC2626', marginBottom: 6 },
-  lienRetourPetit: { color: '#6B7280', fontSize: 11 },
+  lienRetourPetit: { color: '#6E6E73', fontSize: 11 },
   boutonImprevue: { backgroundColor: '#FFF7ED', borderWidth: 1, borderColor: '#FED7AA', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   boutonImprevueTexte: { color: '#C2410C', fontSize: 12, fontWeight: '600' },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
 });
 

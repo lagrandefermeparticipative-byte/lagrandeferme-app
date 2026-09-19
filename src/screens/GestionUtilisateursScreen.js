@@ -58,7 +58,7 @@ const GestionUtilisateursScreen = ({ token }) => {
 
   if (utilisateurSelectionne) {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={`Modifier · ${utilisateurSelectionne.nom}`} action={<TouchableOpacity onPress={() => setUtilisateurSelectionne(null)}><Text style={styles.lienRetourPetit}>← Retour</Text></TouchableOpacity>} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -90,10 +90,10 @@ const GestionUtilisateursScreen = ({ token }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Comptes utilisateurs" sousTitre="Gestion globale" sansRetour />
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           <TextInput style={[styles.champ, { marginTop: 12, marginBottom: 12 }]} placeholder="Rechercher par nom ou email..." value={recherche} onChangeText={setRecherche} />
@@ -115,24 +115,24 @@ const GestionUtilisateursScreen = ({ token }) => {
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 2, marginBottom: 6 },
-  compteur: { fontSize: 11, color: '#9CA3AF', marginBottom: 8 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73', marginTop: 2, marginBottom: 6 },
+  compteur: { fontSize: 11, color: '#6E6E73', marginBottom: 8 },
   badgeRole: { backgroundColor: '#F3F4F6', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
   badgeRoleTexte: { fontSize: 10, color: '#4B5563', fontWeight: '600' },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
-  infoRole: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, marginTop: 12 },
-  infoRoleTexte: { fontSize: 11, color: '#6B7280' },
-  lienRetourPetit: { color: '#6B7280', fontSize: 11 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
+  infoRole: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, marginTop: 12 },
+  infoRoleTexte: { fontSize: 11, color: '#6E6E73' },
+  lienRetourPetit: { color: '#6E6E73', fontSize: 11 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
   zoneDanger: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#FECACA', borderRadius: 12, padding: 14, marginTop: 16 },
   zoneDangerLabel: { color: '#DC2626', fontSize: 12, fontWeight: '600', marginBottom: 8 },
   boutonRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   boutonRougeTexte: { color: '#B91C1C', fontSize: 13, fontWeight: '600' },
-  aideDanger: { fontSize: 10, color: '#9CA3AF', marginTop: 6 },
+  aideDanger: { fontSize: 10, color: '#6E6E73', marginTop: 6 },
 });
 
 export default GestionUtilisateursScreen;

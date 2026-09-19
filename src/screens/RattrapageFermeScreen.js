@@ -34,7 +34,7 @@ const RattrapageFermeScreen = ({ token, onTerminer, onPasser }) => {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Header titre="État actuel de votre ferme" sansRetour />
       <ScrollView style={styles.conteneur}>
         <View style={styles.encartBleu}>
@@ -83,18 +83,18 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   encartBleu: { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE', borderRadius: 12, padding: 12, marginTop: 12, marginBottom: 16 },
   encartBleuTexte: { color: '#1D4ED8', fontSize: 12 },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 12 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827', marginBottom: 10 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F', marginBottom: 10 },
   equipementBloc: { borderWidth: 1, borderColor: '#F3F4F6', borderRadius: 10, padding: 10, marginBottom: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
   lienRetirer: { color: '#DC2626', fontSize: 11, marginTop: 6 },
   lienAjouter: { color: '#4B5563', fontSize: 12, fontWeight: '600' },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6 },
-  aide: { fontSize: 10, color: '#9CA3AF', marginTop: 6 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6 },
+  aide: { fontSize: 10, color: '#6E6E73', marginTop: 6 },
   erreurTexte: { color: '#DC2626', fontSize: 13, marginBottom: 8 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
 });
 

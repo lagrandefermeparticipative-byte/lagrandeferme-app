@@ -7,7 +7,7 @@ import Header from '../components/Header';
 const formatMontant = (m) => new Intl.NumberFormat('fr-FR').format(Math.round(m || 0)) + ' F';
 const largeurEcran = Dimensions.get('window').width - 32;
 
-const COULEURS_PIE = ['#111827', '#4B5563', '#9CA3AF', '#D1D5DB', '#E5E7EB', '#F3F4F6'];
+const COULEURS_PIE = ['#1D1D1F', '#4B5563', '#6E6E73', '#D1D5DB', '#E5E5EA', '#F3F4F6'];
 
 const configGraphique = {
   backgroundGradientFrom: '#fff',
@@ -81,7 +81,7 @@ const AnalysesScreen = ({ token, projetActifId }) => {
       acc[cat] = (acc[cat] || 0) + parseFloat(d.montant_reel || 0);
       return acc;
     }, {})
-  ).map(([name, value], i) => ({ name: name.substring(0, 10), population: Math.round(value), color: COULEURS_PIE[i % COULEURS_PIE.length], legendFontColor: '#6B7280', legendFontSize: 10 }))
+  ).map(([name, value], i) => ({ name: name.substring(0, 10), population: Math.round(value), color: COULEURS_PIE[i % COULEURS_PIE.length], legendFontColor: '#6E6E73', legendFontSize: 10 }))
    .filter(d => d.population > 0)
    .sort((a, b) => b.population - a.population);
 
@@ -94,15 +94,15 @@ const AnalysesScreen = ({ token, projetActifId }) => {
 
   if (chargement) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
         <Header titre="Analyses" sousTitre={projet?.nom} />
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Analyses" sousTitre={projet?.nom || 'Pintades 2026'} />
       <ScrollView style={styles.conteneur}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ongletsLigne}>
@@ -260,34 +260,34 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827', marginBottom: 8 },
-  carteSousTexte: { fontSize: 11, color: '#9CA3AF' },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F', marginBottom: 8 },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73' },
   ongletsLigne: { marginTop: 8, marginBottom: 14 },
   ongletBouton: { paddingBottom: 8, paddingHorizontal: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  ongletBoutonActif: { borderBottomColor: '#111827' },
-  ongletTexte: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
-  ongletTexteActif: { color: '#111827' },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginBottom: 12 },
-  carteNoireGrille: { flex: 1, backgroundColor: '#111827', borderRadius: 12, padding: 14 },
+  ongletBoutonActif: { borderBottomColor: '#1D1D1F' },
+  ongletTexte: { fontSize: 13, color: '#6E6E73', fontWeight: '500' },
+  ongletTexteActif: { color: '#1D1D1F' },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireGrille: { flex: 1, backgroundColor: '#1D1D1F', borderRadius: 12, padding: 14 },
   grille2noireIndep: { flexDirection: 'row', gap: 10, marginBottom: 12 },
-  carteNoireLabel: { color: '#9CA3AF', fontSize: 11 },
-  carteNoireMontant: { color: '#fff', fontSize: 20, fontWeight: '600', marginTop: 4 },
-  carteNoireSousLabel: { color: '#9CA3AF', fontSize: 10, marginTop: 4 },
+  carteNoireLabel: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 20, fontWeight: '700', letterSpacing: -0.5, marginTop: 4 },
+  carteNoireSousLabel: { color: '#6E6E73', fontSize: 10, marginTop: 4 },
   grille2noire: { flexDirection: 'row', gap: 8, marginTop: 12 },
   miniNoire: { flex: 1, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: 8 },
-  miniNoireLabel: { color: '#9CA3AF', fontSize: 10 },
+  miniNoireLabel: { color: '#6E6E73', fontSize: 10, fontWeight: '600', letterSpacing: 0.3 },
   miniNoireValeur: { fontSize: 13, fontWeight: '600', marginTop: 2 },
   grille2mini: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
-  mini: { width: '47%', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 12 },
-  miniLabel: { fontSize: 11, color: '#6B7280', marginBottom: 2 },
-  miniValeur: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  infoLabel: { fontSize: 12, color: '#6B7280' },
-  infoValeur: { fontSize: 12, fontWeight: '600', color: '#111827' },
+  mini: { width: '47%', backgroundColor: '#fff', borderRadius: 16, padding: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  miniLabel: { fontSize: 11, color: '#6E6E73', marginBottom: 2 },
+  miniValeur: { fontSize: 14, fontWeight: '600', color: '#1D1D1F' },
+  infoLabel: { fontSize: 12, color: '#6E6E73' },
+  infoValeur: { fontSize: 12, fontWeight: '600', color: '#1D1D1F' },
   lotNom: { fontSize: 11, fontWeight: '600', color: '#374151' },
   lotTaux: { fontSize: 10, fontWeight: '600' },
   progressFond: { height: 8, backgroundColor: '#F3F4F6', borderRadius: 4, marginTop: 4, overflow: 'hidden' },
-  progressBarre: { height: '100%', backgroundColor: '#111827', borderRadius: 4 },
+  progressBarre: { height: '100%', backgroundColor: '#1D1D1F', borderRadius: 4 },
   rapportTexte: { fontSize: 12, color: '#374151', fontWeight: '500' },
   mortsTexte: { fontSize: 11, color: '#EF4444' },
 });

@@ -44,7 +44,7 @@ const LoginScreen = () => {
           <TextInput
             style={styles.champ}
             placeholder="votre@email.com"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#6E6E73"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -57,7 +57,7 @@ const LoginScreen = () => {
             <TextInput
               style={styles.champAvecIconeTexte}
               placeholder="••••••••"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#6E6E73"
               value={motDePasse}
               onChangeText={setMotDePasse}
               secureTextEntry={!motDePasseVisible}
@@ -85,22 +85,22 @@ const LoginScreen = () => {
   );
 };
 const styles = StyleSheet.create({
-  conteneur: { flex: 1, backgroundColor: '#F9FAFB', justifyContent: 'center', paddingHorizontal: 24 },
+  conteneur: { flex: 1, backgroundColor: '#F5F5F7', justifyContent: 'center', paddingHorizontal: 24 },
   contenu: { width: '100%', maxWidth: 380, alignSelf: 'center' },
   logoZone: { alignItems: 'center', marginBottom: 32 },
   logo: { width: 140, height: 140, borderRadius: 20, marginBottom: 12 },
-  sousTitre: { fontSize: 13, color: '#6B7280' },
+  sousTitre: { fontSize: 13, color: '#6E6E73' },
   champGroupe: { marginBottom: 16 },
-  label: { fontSize: 12, fontWeight: '500', color: '#6B7280', marginBottom: 6 },
-  champ: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, fontSize: 14, color: '#111827', backgroundColor: '#fff' },
-    champAvecIcone: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 10, backgroundColor: '#fff', paddingRight: 12 },
-  champAvecIconeTexte: { flex: 1, paddingHorizontal: 12, paddingVertical: 12, fontSize: 14, color: '#111827' },
+  label: { fontSize: 12, fontWeight: '500', color: '#6E6E73', marginBottom: 6 },
+  champ: { borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, fontSize: 14, color: '#1D1D1F', backgroundColor: '#fff' },
+    champAvecIcone: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 10, backgroundColor: '#fff', paddingRight: 12 },
+  champAvecIconeTexte: { flex: 1, paddingHorizontal: 12, paddingVertical: 12, fontSize: 14, color: '#1D1D1F' },
   iconeOeil: { fontSize: 18 },
   erreurBox: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, padding: 10, marginBottom: 12 },
   erreurTexte: { fontSize: 13, color: '#DC2626' },
-  bouton: { backgroundColor: '#111827', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
+  bouton: { backgroundColor: '#1D1D1F', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   boutonTexte: { color: '#fff', fontWeight: '600', fontSize: 14 },
-  lienCentre: { textAlign: 'center', fontSize: 12, color: '#6B7280', marginTop: 16, textDecorationLine: 'underline' },
-  footerTexte: { textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginTop: 24 },
+  lienCentre: { textAlign: 'center', fontSize: 12, color: '#6E6E73', marginTop: 16, textDecorationLine: 'underline' },
+  footerTexte: { textAlign: 'center', fontSize: 11, color: '#6E6E73', marginTop: 24 },
 });
 export default LoginScreen;

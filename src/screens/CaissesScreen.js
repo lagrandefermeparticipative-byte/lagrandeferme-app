@@ -98,12 +98,12 @@ const CaissesScreen = ({ token }) => {
   // --- VUE RÉCONCILIATION ---
   if (vue === 'reconciliation' && caisseSelectionnee) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
         <Header titre="Vérifier la cohérence" sousTitre={caisseSelectionnee.nom} />
         <ScrollView style={styles.conteneur}>
           <TouchableOpacity onPress={() => { setVue('liste'); setReconciliation(null); }}><Text style={styles.lienRetour}>← Retour</Text></TouchableOpacity>
           {!reconciliation ? (
-            <ActivityIndicator style={{ marginTop: 20 }} color="#111827" />
+            <ActivityIndicator style={{ marginTop: 20 }} color="#1D1D1F" />
           ) : reconciliation.coherent ? (
             <View style={styles.encartVert}>
               <Text style={styles.encartVertTexte}>✓ La caisse est cohérente avec les vraies dépenses</Text>
@@ -129,7 +129,7 @@ const CaissesScreen = ({ token }) => {
   // --- VUE VIREMENT ---
   if (vue === 'virement') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Virement entre caisses" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -169,7 +169,7 @@ const CaissesScreen = ({ token }) => {
   // --- VUE DÉTAIL CAISSE ---
   if (vue === 'detail' && caisseSelectionnee) {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={caisseSelectionnee.nom} action={<TouchableOpacity onPress={() => { setVue('liste'); chargerCaisses(); }}><Text style={styles.lienRetourPetit}>← Retour</Text></TouchableOpacity>} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carteNoire}>
@@ -212,7 +212,7 @@ const CaissesScreen = ({ token }) => {
           )}
 
           <Text style={styles.sectionTitre}>Historique des mouvements</Text>
-          {chargementMouvements ? <ActivityIndicator color="#111827" /> : mouvements.length === 0 ? (
+          {chargementMouvements ? <ActivityIndicator color="#1D1D1F" /> : mouvements.length === 0 ? (
             <Text style={styles.vide}>Aucun mouvement pour l'instant</Text>
           ) : mouvements.map(m => (
             <View style={styles.carte} key={m.id}>
@@ -239,10 +239,10 @@ const CaissesScreen = ({ token }) => {
   // --- VUE LISTE ---
   const totalGlobal = caisses.reduce((s, c) => s + (c.solde || 0), 0);
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Caisses" sousTitre="Trésorerie de la ferme et des projets" sansRetour />
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           <View style={styles.carteNoire}>
@@ -284,18 +284,18 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 2 },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73', marginTop: 2 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
   alerteOrangeLegere: { backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 10, padding: 10, marginTop: 8 },
   alerteOrangeTexte: { fontSize: 11, color: '#B45309' },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
-  vide: { color: '#9CA3AF', fontSize: 13, textAlign: 'center', paddingVertical: 20 },
-  sectionTitre: { fontSize: 13, fontWeight: '600', color: '#111827', marginBottom: 8, marginTop: 6 },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 12 },
-  carteNoireLabel: { color: '#9CA3AF', fontSize: 12 },
-  carteNoireMontant: { color: '#fff', fontSize: 22, fontWeight: '600', marginBottom: 8 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
+  vide: { color: '#6E6E73', fontSize: 13, textAlign: 'center', paddingVertical: 20 },
+  sectionTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F', marginBottom: 8, marginTop: 6 },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireLabel: { color: '#6E6E73', fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 22, fontWeight: '700', letterSpacing: -0.5, marginBottom: 8 },
   creditTexte: { color: '#4ADE80', fontSize: 11 },
   debitTexte: { color: '#F87171', fontSize: 11 },
   creditTextePetit: { color: '#059669', fontSize: 11 },
@@ -304,23 +304,23 @@ const styles = StyleSheet.create({
   boutonCrediterTexte: { color: '#047857', fontSize: 13, fontWeight: '600' },
   boutonDebiter: { flex: 1, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   boutonDebiterTexte: { color: '#B91C1C', fontSize: 13, fontWeight: '600' },
-  boutonConfirmer: { flex: 1, backgroundColor: '#111827', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  boutonConfirmer: { flex: 1, backgroundColor: '#1D1D1F', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   boutonConfirmerTexte: { color: '#fff', fontSize: 13, fontWeight: '600' },
   boutonAnnuler: { paddingHorizontal: 16, backgroundColor: '#F3F4F6', borderRadius: 10, justifyContent: 'center' },
-  boutonAnnulerTexte: { color: '#6B7280', fontSize: 12, fontWeight: '600' },
+  boutonAnnulerTexte: { color: '#6E6E73', fontSize: 12, fontWeight: '600' },
   boutonIndigo: { backgroundColor: '#EEF2FF', borderWidth: 1, borderColor: '#C7D2FE', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginBottom: 16 },
   boutonIndigoTexte: { color: '#4338CA', fontSize: 13, fontWeight: '600' },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeTexte: { fontSize: 10, fontWeight: '600' },
-  soldeTexte: { fontSize: 18, fontWeight: '600', color: '#111827', marginTop: 2 },
+  soldeTexte: { fontSize: 18, fontWeight: '600', color: '#1D1D1F', marginTop: 2 },
   avertissementTexte: { color: '#DC2626', fontSize: 11, fontWeight: '600', marginTop: 2 },
   lienCoherence: { color: '#4338CA', fontSize: 11, fontWeight: '600', marginTop: 8 },
-  lienRetour: { color: '#6B7280', fontSize: 12, marginBottom: 12 },
-  lienRetourPetit: { color: '#6B7280', fontSize: 11 },
+  lienRetour: { color: '#6E6E73', fontSize: 12, marginBottom: 12 },
+  lienRetourPetit: { color: '#6E6E73', fontSize: 11 },
   montantMouvement: { fontSize: 13, fontWeight: '600' },
   actionRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8 },
   actionRougeTexte: { color: '#DC2626', fontSize: 11, fontWeight: '600' },

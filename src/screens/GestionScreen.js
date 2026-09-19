@@ -194,7 +194,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   // --- FORMULAIRE (nouveau/modifier partagé) ---
   if (vue === 'nouveau' || vue === 'modifier') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={vue === 'nouveau' ? 'Nouvelle dépense' : `Modifier · ${depenseSelectionnee?.libelle}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -243,7 +243,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
     const depenseChoisie = depenses.find(d => d.id === parseInt(paiement.depense_id));
     const nouveauTotal = depenseChoisie ? (parseFloat(depenseChoisie.montant_reel) || 0) + (parseFloat(paiement.montant) || 0) : 0;
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Payer une dépense prévue" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -283,7 +283,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   // --- HISTORIQUE PAIEMENTS ---
   if (vue === 'historique' && depenseSelectionnee) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
         <Header titre={`Historique · ${depenseSelectionnee.libelle}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carteNoire}>
@@ -291,7 +291,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
             <Text style={styles.carteNoireMontant}>{formatMontant(depenseSelectionnee.montant_reel)}</Text>
             <Text style={styles.carteNoireSousLabel}>Prévu : {formatMontant(depenseSelectionnee.montant_prevu)}</Text>
           </View>
-          {chargementHistorique ? <ActivityIndicator color="#111827" /> : paiementsHistorique.length === 0 ? (
+          {chargementHistorique ? <ActivityIndicator color="#1D1D1F" /> : paiementsHistorique.length === 0 ? (
             <Text style={styles.vide}>Aucun paiement enregistré</Text>
           ) : paiementsHistorique.map(p => (
             <View style={styles.carte} key={p.id}>
@@ -315,7 +315,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   if (vue === 'repartition' && repartitionEnPaiement) {
     const reste = parseFloat(repartitionEnPaiement.montant_du || 0) - parseFloat(repartitionEnPaiement.montant_paye || 0);
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Enregistrer un paiement" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -340,7 +340,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   // --- RÉPARTITION D'UNE DÉPENSE ---
   if (vue === 'repartition' && depensePourRepartition) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
         <Header titre={`Répartition · ${depensePourRepartition.libelle}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carteNoire}>
@@ -368,7 +368,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
           </View>
 
           {chargementRepartition ? (
-            <ActivityIndicator color="#111827" style={{ marginTop: 12 }} />
+            <ActivityIndicator color="#1D1D1F" style={{ marginTop: 12 }} />
           ) : repartitions.length === 0 ? (
             <Text style={styles.vide}>Aucune répartition enregistrée</Text>
           ) : repartitions.map(r => {
@@ -398,7 +398,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
 
   // --- VUE PRINCIPALE ---
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Gestion" sousTitre={`${projetNom || 'Chargement...'} · Projet`}
         action={
           <View style={{ flexDirection: 'row', gap: 6 }}>
@@ -412,7 +412,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
         }
       />
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           {alerteDepassement && (
@@ -467,7 +467,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
                       <Text style={[styles.pctTexte, pct > 100 && { color: '#DC2626' }]}>{pct}%</Text>
                     </View>
                     <View style={styles.progressFond}>
-                      <View style={[styles.progressBarre, { width: `${Math.min(pct, 100)}%`, backgroundColor: pct > 100 ? '#F87171' : '#111827' }]} />
+                      <View style={[styles.progressBarre, { width: `${Math.min(pct, 100)}%`, backgroundColor: pct > 100 ? '#F87171' : '#1D1D1F' }]} />
                     </View>
                     <View style={styles.ligneEntre}>
                       <Text style={styles.carteSousTexte}>Réel : {formatMontant(vals.reel)}</Text>
@@ -513,7 +513,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
                         <View style={styles.grille3mini}>
                           <View><Text style={styles.miniLabelPetit}>Prévu</Text><Text style={styles.miniValeurPetite}>{formatMontant(depense.montant_prevu)}</Text></View>
                           <View><Text style={styles.miniLabelPetit}>Réel</Text><Text style={styles.miniValeurPetite}>{formatMontant(depense.montant_reel || 0)}</Text></View>
-                          <View><Text style={styles.miniLabelPetit}>Écart</Text><Text style={[styles.miniValeurPetite, { color: ecartLigne > 0 ? '#DC2626' : ecartLigne < 0 ? '#059669' : '#6B7280' }]}>{ecartLigne > 0 ? '+' : ''}{formatMontant(ecartLigne)}</Text></View>
+                          <View><Text style={styles.miniLabelPetit}>Écart</Text><Text style={[styles.miniValeurPetite, { color: ecartLigne > 0 ? '#DC2626' : ecartLigne < 0 ? '#059669' : '#6E6E73' }]}>{ecartLigne > 0 ? '+' : ''}{formatMontant(ecartLigne)}</Text></View>
                         </View>
                         <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
                           <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirHistorique(depense)}><Text style={styles.actionVerteTexte}>Historique</Text></TouchableOpacity>
@@ -539,63 +539,63 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 2 },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73', marginTop: 2 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
   chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6' },
-  chipActif: { backgroundColor: '#111827' },
-  chipTexte: { fontSize: 11, color: '#6B7280' },
+  chipActif: { backgroundColor: '#1D1D1F' },
+  chipTexte: { fontSize: 11, color: '#6E6E73' },
   chipTexteActif: { color: '#fff', fontWeight: '600' },
   erreurTexte: { color: '#DC2626', fontSize: 13, marginTop: 12 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
-  boutonSecondaireNoir: { backgroundColor: '#111827', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
+  boutonSecondaireNoir: { backgroundColor: '#1D1D1F', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
   boutonSecondaireNoirTexte: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  infoTexte: { fontSize: 11, color: '#9CA3AF', backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, marginTop: 8 },
-  boutonPetit: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  infoTexte: { fontSize: 11, color: '#6E6E73', backgroundColor: '#F5F5F7', borderRadius: 8, padding: 8, marginTop: 8 },
+  boutonPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonVertPetit: { backgroundColor: '#059669', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
   optionLigne: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   optionLigneActive: { backgroundColor: '#F3F4F6' },
   optionTexte: { fontSize: 12, color: '#374151' },
-  encartGris: { backgroundColor: '#F9FAFB', borderRadius: 10, padding: 10, marginTop: 10 },
-  encartGrisLabel: { fontSize: 11, color: '#6B7280' },
-  encartGrisValeur: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  vide: { textAlign: 'center', color: '#9CA3AF', fontSize: 13, paddingVertical: 20 },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 12 },
-  carteNoireLabel: { color: '#9CA3AF', fontSize: 12 },
-  carteNoireMontant: { color: '#fff', fontSize: 22, fontWeight: '600' },
-  carteNoireSousLabel: { color: '#9CA3AF', fontSize: 11, marginTop: 4 },
+  encartGris: { backgroundColor: '#F5F5F7', borderRadius: 10, padding: 10, marginTop: 10 },
+  encartGrisLabel: { fontSize: 11, color: '#6E6E73' },
+  encartGrisValeur: { fontSize: 15, fontWeight: '600', color: '#1D1D1F' },
+  vide: { textAlign: 'center', color: '#6E6E73', fontSize: 13, paddingVertical: 20 },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireLabel: { color: '#6E6E73', fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 22, fontWeight: '700', letterSpacing: -0.5 },
+  carteNoireSousLabel: { color: '#6E6E73', fontSize: 11, marginTop: 4 },
   progressFondNoir: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, marginTop: 10, overflow: 'hidden' },
   progressBarreBlanche: { height: '100%', backgroundColor: '#fff', borderRadius: 3 },
   progressFond: { height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, marginVertical: 6, overflow: 'hidden' },
   progressBarre: { height: '100%', borderRadius: 3 },
   grille2mini: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  mini: { flex: 1, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 12 },
-  miniLabel: { fontSize: 11, color: '#6B7280', marginBottom: 4 },
-  miniValeur: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  sectionTitre: { fontSize: 13, fontWeight: '600', color: '#111827', marginBottom: 10 },
-  pctTexte: { fontSize: 12, fontWeight: '600', color: '#6B7280' },
+  mini: { flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  miniLabel: { fontSize: 11, color: '#6E6E73', marginBottom: 4 },
+  miniValeur: { fontSize: 15, fontWeight: '600', color: '#1D1D1F' },
+  sectionTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F', marginBottom: 10 },
+  pctTexte: { fontSize: 12, fontWeight: '600', color: '#6E6E73' },
   alerteRouge: { flexDirection: 'row', backgroundColor: '#FEF2F2', borderWidth: 2, borderColor: '#FECACA', borderRadius: 12, padding: 12, marginTop: 8, marginBottom: 12 },
   alerteRougeTitre: { fontSize: 13, fontWeight: '600', color: '#B91C1C' },
   alerteRougeTexte: { fontSize: 11, color: '#DC2626', marginTop: 2 },
-  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', marginBottom: 14, marginTop: 8 },
+  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', marginBottom: 14, marginTop: 8 },
   ongletBouton: { paddingBottom: 8, paddingHorizontal: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  ongletBoutonActif: { borderBottomColor: '#111827' },
-  ongletTexte: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
-  ongletTexteActif: { color: '#111827' },
-  carteAccordeon: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', marginBottom: 8, overflow: 'hidden' },
+  ongletBoutonActif: { borderBottomColor: '#1D1D1F' },
+  ongletTexte: { fontSize: 13, color: '#6E6E73', fontWeight: '500' },
+  ongletTexteActif: { color: '#1D1D1F' },
+  carteAccordeon: { backgroundColor: '#fff', borderRadius: 20, marginBottom: 8, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   accordeonHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  carteDepense: { backgroundColor: '#F9FAFB', margin: 8, borderRadius: 10, padding: 12 },
+  carteDepense: { backgroundColor: '#F5F5F7', margin: 8, borderRadius: 10, padding: 12 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeTexte: { fontSize: 10, fontWeight: '600' },
   grille3mini: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  miniLabelPetit: { fontSize: 10, color: '#9CA3AF' },
-  miniValeurPetite: { fontSize: 11, fontWeight: '600', color: '#111827' },
+  miniLabelPetit: { fontSize: 10, color: '#6E6E73' },
+  miniValeurPetite: { fontSize: 11, fontWeight: '600', color: '#1D1D1F' },
   actionVerte: { flex: 1, backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5', borderRadius: 8, paddingVertical: 6, alignItems: 'center' },
   actionVerteTexte: { color: '#047857', fontSize: 10, fontWeight: '600' },
   actionIndigo: { flex: 1, backgroundColor: '#EEF2FF', borderWidth: 1, borderColor: '#E0E7FF', borderRadius: 8, paddingVertical: 6, alignItems: 'center' },

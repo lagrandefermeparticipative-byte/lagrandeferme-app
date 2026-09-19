@@ -49,20 +49,20 @@ const MotDePasseOublieScreen = ({ onRetourLogin }) => {
 };
 
 const styles = StyleSheet.create({
-  conteneur: { flex: 1, backgroundColor: '#F9FAFB' },
+  conteneur: { flex: 1, backgroundColor: '#F5F5F7' },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
   logo: { width: 80, height: 80, borderRadius: 16, marginBottom: 16 },
-  titre: { fontSize: 17, fontWeight: '600', color: '#111827' },
-  sousTitre: { fontSize: 13, color: '#6B7280', textAlign: 'center', marginTop: 4, marginBottom: 24 },
-  label: { fontSize: 11, fontWeight: '600', color: '#6B7280', marginBottom: 6 },
-  champ: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, padding: 12, fontSize: 13, color: '#111827' },
+  titre: { fontSize: 17, fontWeight: '600', color: '#1D1D1F' },
+  sousTitre: { fontSize: 13, color: '#6E6E73', textAlign: 'center', marginTop: 4, marginBottom: 24 },
+  label: { fontSize: 11, fontWeight: '600', color: '#6E6E73', marginBottom: 6 },
+  champ: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 8, padding: 12, fontSize: 13, color: '#1D1D1F' },
   encartVert: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5', borderRadius: 8, padding: 12 },
   encartVertTexte: { color: '#047857', fontSize: 13, textAlign: 'center' },
   encartRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, padding: 10, marginTop: 10 },
   encartRougeTexte: { color: '#DC2626', fontSize: 13 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 8, paddingVertical: 12, alignItems: 'center', marginTop: 16 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 8, paddingVertical: 12, alignItems: 'center', marginTop: 16 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  lienRetour: { color: '#9CA3AF', fontSize: 12, textDecorationLine: 'underline' },
+  lienRetour: { color: '#6E6E73', fontSize: 12, textDecorationLine: 'underline' },
 });
 
 export default MotDePasseOublieScreen;

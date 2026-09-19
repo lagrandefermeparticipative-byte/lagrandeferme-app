@@ -79,7 +79,7 @@ const ProfilScreen = ({ utilisateur, token, onDeconnecter }) => {
   // --- FORMULAIRE MODIFIER PROFIL ---
   if (vue === 'editer') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Modifier mes informations" masquerSwitch />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -106,7 +106,7 @@ const ProfilScreen = ({ utilisateur, token, onDeconnecter }) => {
   // --- FORMULAIRE CHANGER EMAIL ---
   if (vue === 'email') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Changer l'email" masquerSwitch />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -131,7 +131,7 @@ const ProfilScreen = ({ utilisateur, token, onDeconnecter }) => {
   // --- FORMULAIRE CHANGER MOT DE PASSE ---
   if (vue === 'mdp') {
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre="Changer le mot de passe" masquerSwitch />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -157,7 +157,7 @@ const ProfilScreen = ({ utilisateur, token, onDeconnecter }) => {
 
   // --- VUE PRINCIPALE ---
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Mon profil" masquerSwitch />
       <ScrollView style={styles.conteneur}>
         <View style={styles.avatarZone}>
@@ -212,7 +212,7 @@ const ProfilScreen = ({ utilisateur, token, onDeconnecter }) => {
                   <Text style={styles.notifLabel}>{item.label}</Text>
                   <Text style={styles.notifMeta}>{item.meta}</Text>
                 </View>
-                <Switch value={notifs[item.key]} onValueChange={() => toggleNotif(item.key)} disabled={chargementNotifs} trackColor={{ false: '#E5E7EB', true: '#111827' }} />
+                <Switch value={notifs[item.key]} onValueChange={() => toggleNotif(item.key)} disabled={chargementNotifs} trackColor={{ false: '#E5E5EA', true: '#1D1D1F' }} />
               </View>
             ))}
           </View>
@@ -232,40 +232,40 @@ const LigneInfo = ({ label, value }) => (
 
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
-  ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#F9FAFB' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827', marginBottom: 4 },
-  carteSousTexte: { fontSize: 11, color: '#9CA3AF', marginBottom: 8 },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
+  ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#F5F5F7' },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F', marginBottom: 4 },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73', marginBottom: 8 },
+  label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
   erreurTexte: { color: '#DC2626', fontSize: 13, marginTop: 12 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 14, fontWeight: '600' },
   avatarZone: { alignItems: 'center', paddingVertical: 20 },
-  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#111827', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#1D1D1F', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   avatarTexte: { color: '#fff', fontSize: 20, fontWeight: '600' },
-  nomTexte: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  emailTexte: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  nomTexte: { fontSize: 15, fontWeight: '600', color: '#1D1D1F' },
+  emailTexte: { fontSize: 13, color: '#6E6E73', marginTop: 2 },
   roleBadge: { backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, marginTop: 8 },
   roleBadgeTexte: { fontSize: 11, color: '#4B5563' },
-  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', marginBottom: 14 },
+  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', marginBottom: 14 },
   ongletBouton: { paddingBottom: 8, paddingHorizontal: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  ongletBoutonActif: { borderBottomColor: '#111827' },
-  ongletTexte: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
-  ongletTexteActif: { color: '#111827' },
+  ongletBoutonActif: { borderBottomColor: '#1D1D1F' },
+  ongletTexte: { fontSize: 13, color: '#6E6E73', fontWeight: '500' },
+  ongletTexteActif: { color: '#1D1D1F' },
   encartVert: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5', borderRadius: 10, padding: 10, marginBottom: 10 },
   encartVertTexte: { color: '#047857', fontSize: 12 },
-  infoLabel: { fontSize: 11, color: '#6B7280' },
-  infoValeur: { fontSize: 11, fontWeight: '600', color: '#111827' },
-  boutonAction: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginBottom: 8 },
-  boutonActionTexte: { fontSize: 13, fontWeight: '600', color: '#111827' },
+  infoLabel: { fontSize: 11, color: '#6E6E73' },
+  infoValeur: { fontSize: 11, fontWeight: '600', color: '#1D1D1F' },
+  boutonAction: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginBottom: 8 },
+  boutonActionTexte: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
   boutonDeconnexion: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 4 },
   boutonDeconnexionTexte: { fontSize: 13, fontWeight: '600', color: '#DC2626' },
-  notifLigne: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F9FAFB' },
-  notifLabel: { fontSize: 13, color: '#111827' },
-  notifMeta: { fontSize: 11, color: '#9CA3AF' },
+  notifLigne: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F5F5F7' },
+  notifLabel: { fontSize: 13, color: '#1D1D1F' },
+  notifMeta: { fontSize: 11, color: '#6E6E73' },
 });
 
 export default ProfilScreen;

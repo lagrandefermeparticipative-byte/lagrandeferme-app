@@ -95,12 +95,12 @@ const LiquidationScreen = ({ token, route, navigation }) => {
   };
 
   if (chargement) {
-    return <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}><Header titre="Liquidation / Relance" /><ActivityIndicator style={{ marginTop: 30 }} color="#111827" /></View>;
+    return <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}><Header titre="Liquidation / Relance" /><ActivityIndicator style={{ marginTop: 30 }} color="#1D1D1F" /></View>;
   }
 
   if (resultat) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
         <Header titre="Terminé" sansRetour />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -122,7 +122,7 @@ const LiquidationScreen = ({ token, route, navigation }) => {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Header titre="Liquidation / Relance" sousTitre={projet?.nom || ''} />
       <ScrollView style={styles.conteneur}>
 
@@ -168,7 +168,7 @@ const LiquidationScreen = ({ token, route, navigation }) => {
               )}
 
               {chargementPrevisu ? (
-                <ActivityIndicator style={{ marginVertical: 12 }} color="#111827" />
+                <ActivityIndicator style={{ marginVertical: 12 }} color="#1D1D1F" />
               ) : previsualisation?.bloque ? (
                 <View style={styles.alerteRouge}>
                   {previsualisation.blocages.map((b, i) => <Text key={i} style={styles.alerteRougeTexte}>⚠️ {b}</Text>)}
@@ -247,30 +247,30 @@ const LiquidationScreen = ({ token, route, navigation }) => {
 
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteChoix: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 4 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteChoix: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E5EA', padding: 14, marginBottom: 10 },
+  carteTitre: { fontSize: 14, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73', marginTop: 4 },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3 },
-  encartGris: { backgroundColor: '#F9FAFB', borderRadius: 10, padding: 10, marginTop: 8, marginBottom: 6 },
-  miniLabelPetit: { fontSize: 11, color: '#6B7280' },
-  miniValeurPetite: { fontSize: 11, fontWeight: '600', color: '#111827' },
+  encartGris: { backgroundColor: '#F5F5F7', borderRadius: 10, padding: 10, marginTop: 8, marginBottom: 6 },
+  miniLabelPetit: { fontSize: 11, color: '#6E6E73' },
+  miniValeurPetite: { fontSize: 11, fontWeight: '600', color: '#1D1D1F' },
   alerteAmbre: { backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 10, padding: 10, marginBottom: 10 },
   alerteAmbreTexte: { fontSize: 11, color: '#92400E' },
   alerteRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, padding: 10, marginTop: 8, gap: 4 },
   alerteRougeTexte: { fontSize: 11, color: '#B91C1C' },
-  label: { fontSize: 11, color: '#6B7280', marginBottom: 4, marginTop: 8 },
-  champ: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: '#111827' },
+  label: { fontSize: 11, color: '#6E6E73', marginBottom: 4, marginTop: 8 },
+  champ: { borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: '#1D1D1F' },
   chip: { backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
-  chipActif: { backgroundColor: '#111827' },
-  chipTexte: { fontSize: 11, color: '#6B7280' },
+  chipActif: { backgroundColor: '#1D1D1F' },
+  chipTexte: { fontSize: 11, color: '#6E6E73' },
   chipTexteActif: { color: '#fff', fontWeight: '600' },
-  infoTexte: { fontSize: 11, color: '#9CA3AF', backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, marginTop: 8 },
+  infoTexte: { fontSize: 11, color: '#6E6E73', backgroundColor: '#F5F5F7', borderRadius: 8, padding: 8, marginTop: 8 },
   erreurTexte: { color: '#DC2626', fontSize: 12, marginTop: 8 },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 13, fontWeight: '600' },
   boutonRouge: { backgroundColor: '#DC2626', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
-  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
   boutonSecondaireTexte: { color: '#374151', fontSize: 13, fontWeight: '600' },
   boutonOrangeGrand: { backgroundColor: '#EA580C', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 10 },
   boutonOrangeTexte: { color: '#fff', fontSize: 13, fontWeight: '600' },

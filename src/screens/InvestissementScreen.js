@@ -19,7 +19,7 @@ const couleurPhase = (phase) => {
     finition: { text: '#7C3AED', label: 'Finition' },
     vente: { text: '#059669', label: 'Vente' },
   };
-  return map[phase] || { text: '#6B7280', label: phase };
+  return map[phase] || { text: '#6E6E73', label: phase };
 };
 
 export const VueRapportInvestisseur = ({ token, rapportId, onBack }) => {
@@ -57,9 +57,9 @@ export const VueRapportInvestisseur = ({ token, rapportId, onBack }) => {
 
   if (chargement || !rapport) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
         <Header titre="Rapport" action={<TouchableOpacity onPress={onBack}><Text style={styles.lienRetourPetit}>← Retour</Text></TouchableOpacity>} />
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       </View>
     );
   }
@@ -67,7 +67,7 @@ export const VueRapportInvestisseur = ({ token, rapportId, onBack }) => {
   const monInvestissement = (rapport.investisseurs || [])[0];
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre={`Rapport S${rapport.semaine}`} sousTitre={new Date(rapport.date_rapport).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
         action={<TouchableOpacity onPress={onBack}><Text style={styles.lienRetourPetit}>← Retour</Text></TouchableOpacity>} />
       <ScrollView style={styles.conteneur}>
@@ -95,7 +95,7 @@ export const VueRapportInvestisseur = ({ token, rapportId, onBack }) => {
                   <Text style={[styles.lotSante, { color: c.text }]}>● Santé {l.sante_score}/5</Text>
                 </View>
                 <View style={styles.ligneEntre}>
-                  <Text style={{ fontSize: 11, color: l.vaccination_effectuee ? '#047857' : '#9CA3AF', fontWeight: l.vaccination_effectuee ? '600' : '400' }}>
+                  <Text style={{ fontSize: 11, color: l.vaccination_effectuee ? '#047857' : '#6E6E73', fontWeight: l.vaccination_effectuee ? '600' : '400' }}>
                     {l.vaccination_effectuee ? '✓ Vacciné' : 'Pas de vaccination'}
                   </Text>
                   <Text style={{ fontSize: 11, color: p.text, fontWeight: '600' }}>{p.label}</Text>
@@ -209,7 +209,7 @@ export const VueMessages = ({ token }) => {
     finally { setEnvoi(false); }
   };
 
-  if (chargement) return <ActivityIndicator style={{ marginTop: 20 }} color="#111827" />;
+  if (chargement) return <ActivityIndicator style={{ marginTop: 20 }} color="#1D1D1F" />;
 
   return (
     <View>
@@ -236,7 +236,7 @@ export const VueMessages = ({ token }) => {
 };
 
 const couleurSurvie = (taux) => {
-  if (taux === null || taux === undefined) return { fond: '#F9FAFB', bordure: '#E5E7EB', texte: '#6B7280' };
+  if (taux === null || taux === undefined) return { fond: '#F5F5F7', bordure: '#E5E5EA', texte: '#6E6E73' };
   if (taux >= 90) return { fond: '#ECFDF5', bordure: '#A7F3D0', texte: '#047857' };
   if (taux >= 70) return { fond: '#FFFBEB', bordure: '#FDE68A', texte: '#92400E' };
   return { fond: '#FEF2F2', bordure: '#FECACA', texte: '#B91C1C' };
@@ -305,10 +305,10 @@ const InvestissementScreen = ({ token, projetActifId, utilisateurNom }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre={projetActif?.nom || "Mon investissement"} sousTitre="Mon investissement" sansRetour />
       {chargement ? (
-        <View style={styles.centre}><ActivityIndicator size="large" color="#111827" /></View>
+        <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           {
@@ -381,32 +381,32 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827', marginBottom: 8 },
-  carteSousTexte: { fontSize: 11, color: '#6B7280' },
-  vide: { textAlign: 'center', color: '#9CA3AF', fontSize: 13, paddingVertical: 20 },
-  lienRetourPetit: { color: '#6B7280', fontSize: 11 },
-  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', marginBottom: 14, marginTop: 8 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F', marginBottom: 8 },
+  carteSousTexte: { fontSize: 11, color: '#6E6E73' },
+  vide: { textAlign: 'center', color: '#6E6E73', fontSize: 13, paddingVertical: 20 },
+  lienRetourPetit: { color: '#6E6E73', fontSize: 11 },
+  ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', marginBottom: 14, marginTop: 8 },
   ongletBouton: { paddingBottom: 8, paddingHorizontal: 8, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  ongletBoutonActif: { borderBottomColor: '#111827' },
-  ongletTexte: { fontSize: 12, color: '#9CA3AF', fontWeight: '500' },
-  ongletTexteActif: { color: '#111827' },
+  ongletBoutonActif: { borderBottomColor: '#1D1D1F' },
+  ongletTexte: { fontSize: 12, color: '#6E6E73', fontWeight: '500' },
+  ongletTexteActif: { color: '#1D1D1F' },
   badgeRouge: { backgroundColor: '#EF4444', borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   badgeRougeTexte: { color: '#fff', fontSize: 9, fontWeight: '700' },
-  carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginBottom: 12 },
-  carteNoireLabel: { color: '#9CA3AF', fontSize: 11 },
-  carteNoireMontant: { color: '#fff', fontSize: 22, fontWeight: '600' },
-  carteNoireSousLabel: { color: '#9CA3AF', fontSize: 11, marginTop: 2 },
+  carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteNoireLabel: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
+  carteNoireMontant: { color: '#1D1D1F', fontSize: 22, fontWeight: '700', letterSpacing: -0.5 },
+  carteNoireSousLabel: { color: '#6E6E73', fontSize: 11, marginTop: 2 },
   grille2noire: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   miniNoire: { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, width: '47%' },
-  miniNoireLabel: { color: '#9CA3AF', fontSize: 10 },
+  miniNoireLabel: { color: '#6E6E73', fontSize: 10, fontWeight: '600', letterSpacing: 0.3 },
   miniNoireValeur: { color: '#fff', fontSize: 13, fontWeight: '600', marginTop: 2 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeTexte: { fontSize: 10, fontWeight: '600' },
   grille2: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  miniGris: { flex: 1, backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, alignItems: 'center' },
-  miniGrisLabel: { fontSize: 10, color: '#9CA3AF' },
-  miniGrisValeur: { fontSize: 12, fontWeight: '600', color: '#111827', marginTop: 2 },
+  miniGris: { flex: 1, backgroundColor: '#F5F5F7', borderRadius: 8, padding: 8, alignItems: 'center' },
+  miniGrisLabel: { fontSize: 10, color: '#6E6E73' },
+  miniGrisValeur: { fontSize: 12, fontWeight: '600', color: '#1D1D1F', marginTop: 2 },
   miniRouge: { flex: 1, backgroundColor: '#FEF2F2', borderRadius: 8, padding: 8 },
   miniRougeLabel: { fontSize: 10, color: '#DC2626' },
   miniRougeValeur: { fontSize: 12, fontWeight: '600', color: '#B91C1C' },
@@ -417,9 +417,9 @@ const styles = StyleSheet.create({
   santeLabel: { fontSize: 11, marginBottom: 4 },
   santeValeur: { fontSize: 20, fontWeight: '700' },
   lotCarte: { borderRadius: 10, padding: 10, marginBottom: 8 },
-  lotNom: { fontSize: 12, fontWeight: '600', color: '#111827' },
+  lotNom: { fontSize: 12, fontWeight: '600', color: '#1D1D1F' },
   lotSante: { fontSize: 11, fontWeight: '600' },
-  observationTexte: { fontSize: 11, color: '#6B7280', fontStyle: 'italic', marginTop: 6 },
+  observationTexte: { fontSize: 11, color: '#6E6E73', fontStyle: 'italic', marginTop: 6 },
   journalTexte: { fontSize: 12, color: '#4B5563', lineHeight: 18 },
   photo: { width: '31%', height: 80, borderRadius: 8 },
   margeCarte: { borderRadius: 10, padding: 12, marginTop: 8 },
@@ -435,11 +435,11 @@ const styles = StyleSheet.create({
   messageBulle: { borderRadius: 12, padding: 10, marginBottom: 8, maxWidth: '85%' },
   messageGestionnaire: { backgroundColor: '#F3F4F6', alignSelf: 'flex-start' },
   messageInvestisseur: { backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', alignSelf: 'flex-end' },
-  messageAuteur: { fontSize: 10, fontWeight: '600', color: '#6B7280', marginBottom: 2 },
+  messageAuteur: { fontSize: 10, fontWeight: '600', color: '#6E6E73', marginBottom: 2 },
   messageContenu: { fontSize: 13, color: '#1F2937' },
-  messageDate: { fontSize: 10, color: '#9CA3AF', marginTop: 4 },
-  champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
-  boutonPrincipal: { backgroundColor: '#111827', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
+  messageDate: { fontSize: 10, color: '#6E6E73', marginTop: 4 },
+  champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
+  boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 13, fontWeight: '600' },
 });
 
