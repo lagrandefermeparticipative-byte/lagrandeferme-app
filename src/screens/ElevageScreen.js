@@ -28,8 +28,9 @@ const ElevageScreen = ({ token, projetActifId }) => {
     quantite_initiale: '', prix_unitaire: '1000', enclos: 'Enclos A',
     transport_cout: '0', etat_sanitaire: 'Bon état', observations: '',
   });
-  const [editForm, setEditForm] = useState({ males: '', femelles: '', enclos: '', phase_actuelle: 'demarrage', observations: '' });
+  const [editForm, setEditForm] = useState({ males: '', femelles: '', enclos: '', observations: '' });
   const [mortForm, setMortForm] = useState({ nombre: '', cause: 'Inconnue', observations: '' });
+  const [reproForm, setReproForm] = useState({ nombre_sujets: '', note: '' });
   const charger = async (forcer = false) => {
     const cleCache = `elevage_${projetActifId}`;
     if (!forcer) {
@@ -95,6 +96,28 @@ const ElevageScreen = ({ token, projetActifId }) => {
     finally { setEnvoi(false); }
   };
 
+  const extraireReproducteurs = async () => {
+    if (!reproForm.nombre_sujets) { setErreur('Nombre requis.'); return; }
+    setEnvoi(true); setErreur('');
+    try {
+      await api.post(`/lots/${lotSelectionne.uuid_id || lotSelectionne.id}/reproducteurs`, {
+        nombre_sujets: parseInt(reproForm.nombre_sujets), note: reproForm.note,
+      }, { headers });
+      setVue('liste'); charger(true);
+    } catch (error) { setErreur(error.response?.data?.message || 'Erreur.'); }
+    finally { setEnvoi(false); }
+  };
+
+  const activerVente = (lot) => {
+    Alert.alert('Activer la vente', `Activer la vente pour "${lot.nom}" ? Cette action est définitive.`, [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Activer', onPress: async () => {
+        try { await api.put(`/lots/${lot.uuid_id || lot.id}/activer-vente`, {}, { headers }); charger(true); }
+        catch (error) { Alert.alert('Erreur', error.response?.data?.message || 'Activation impossible.'); }
+      }},
+    ]);
+  };
+
   const supprimerLot = (lot) => {
     Alert.alert('Supprimer', `Supprimer ${lot.nom} ? Action irréversible.`, [
       { text: 'Annuler', style: 'cancel' },
@@ -108,9 +131,11 @@ const ElevageScreen = ({ token, projetActifId }) => {
   const totalRecus = lots.reduce((s, l) => s + parseInt(l.quantite_initiale || 0), 0);
   const totalVivants = lots.reduce((s, l) => s + parseInt(l.vivants || l.quantite_initiale || 0), 0);
   const totalMorts = lots.reduce((s, l) => s + parseInt(l.total_morts || 0), 0);
+  const totalVendus = lots.reduce((s, l) => s + parseInt(l.total_vendus || 0), 0);
   const tauxSurvie = totalRecus > 0 ? ((totalVivants / totalRecus) * 100).toFixed(1) : 100;
   const objectif = projet?.objectif_sujets || 1000;
   const progression = Math.round((totalRecus / objectif) * 100);
+  const projetEntierementVendu = lots.length > 0 && totalVivants === 0 && totalVendus > 0 && totalVendus === totalRecus;
 
   // --- VUE HISTORIQUE ---
   if (vue === 'historique' && lotSelectionne) {
@@ -171,6 +196,36 @@ const ElevageScreen = ({ token, projetActifId }) => {
     );
   }
 
+  // --- VUE EXTRACTION REPRODUCTEURS ---
+  if (vue === 'reproducteurs' && lotSelectionne) {
+    const dispo = parseInt(lotSelectionne.vivants || lotSelectionne.quantite_initiale);
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Header titre={`Extraire des reproducteurs · ${lotSelectionne.nom}`} />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.alerteOrangeLegere}>
+            <Text style={styles.alerteOrangeLegereTexte}>{dispo} sujets disponibles dans ce lot avant cette extraction</Text>
+          </View>
+          <View style={styles.carte}>
+            <Text style={styles.label}>Nombre de sujets à extraire *</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={reproForm.nombre_sujets} onChangeText={v => setReproForm({ ...reproForm, nombre_sujets: v })} />
+            <Text style={styles.label}>Note (optionnel)</Text>
+            <TextInput style={[styles.champ, { height: 70 }]} multiline value={reproForm.note} onChangeText={v => setReproForm({ ...reproForm, note: v })} placeholder="Ex: reproducteurs pour la prochaine génération..." />
+            <Text style={styles.infoTexte}>Ces sujets quittent définitivement le pool disponible à la vente de ce lot, même s'ils changent de statut plus tard.</Text>
+          </View>
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
+          <TouchableOpacity style={styles.boutonOrangeGrand} onPress={extraireReproducteurs} disabled={envoi}>
+            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Extraire les reproducteurs'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
   // --- VUE MODIFIER ---
   if (vue === 'modifier' && lotSelectionne) {
     return (
@@ -178,23 +233,14 @@ const ElevageScreen = ({ token, projetActifId }) => {
         <Header titre={`Modifier · ${lotSelectionne.nom}`} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
-            <Text style={styles.label}>Phase actuelle</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-              {['demarrage', 'croissance', 'finition', 'vente'].map(p => (
-                <TouchableOpacity key={p} onPress={() => setEditForm({ ...editForm, phase_actuelle: p })}
-                  style={[styles.chip, editForm.phase_actuelle === p && styles.chipActif]}>
-                  <Text style={[styles.chipTexte, editForm.phase_actuelle === p && styles.chipTexteActif]}>{BADGES[p].label}</Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.alerteInfo}>
+              <Text style={styles.alerteInfoTexte}>Phase actuelle : {BADGES[lotSelectionne.phase_calculee]?.label || 'Démarrage'}</Text>
+              <Text style={styles.infoTexte}>Calculée automatiquement depuis la date d'arrivée et les durées du projet — plus modifiable à la main.</Text>
             </View>
-            {(editForm.phase_actuelle === 'finition' || editForm.phase_actuelle === 'vente') && (
-              <>
-                <Text style={styles.label}>Mâles</Text>
-                <TextInput style={styles.champ} keyboardType="numeric" value={editForm.males} onChangeText={v => setEditForm({ ...editForm, males: v })} />
-                <Text style={styles.label}>Femelles</Text>
-                <TextInput style={styles.champ} keyboardType="numeric" value={editForm.femelles} onChangeText={v => setEditForm({ ...editForm, femelles: v })} />
-              </>
-            )}
+            <Text style={styles.label}>Mâles</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={editForm.males} onChangeText={v => setEditForm({ ...editForm, males: v })} />
+            <Text style={styles.label}>Femelles</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={editForm.femelles} onChangeText={v => setEditForm({ ...editForm, femelles: v })} />
             <Text style={styles.label}>Enclos</Text>
             <TextInput style={styles.champ} value={editForm.enclos} onChangeText={v => setEditForm({ ...editForm, enclos: v })} />
             <Text style={styles.label}>Observations</Text>
@@ -281,8 +327,15 @@ const ElevageScreen = ({ token, projetActifId }) => {
           <View style={styles.grille3}>
             <View style={styles.stat}><Text style={styles.statChiffre}>{totalRecus}</Text><Text style={styles.statLabel}>Reçus</Text></View>
             <View style={styles.stat}><Text style={[styles.statChiffre, { color: '#DC2626' }]}>{totalMorts}</Text><Text style={styles.statLabel}>Morts</Text></View>
+            <View style={styles.stat}><Text style={styles.statChiffre}>{totalVivants}</Text><Text style={styles.statLabel}>Vivants</Text></View>
             <View style={styles.stat}><Text style={[styles.statChiffre, { color: tauxSurvie >= 90 ? '#059669' : '#EA580C' }]}>{tauxSurvie}%</Text><Text style={styles.statLabel}>Survie</Text></View>
           </View>
+
+          {projetEntierementVendu && (
+            <View style={styles.bandeauViolet}>
+              <Text style={styles.bandeauVioletTexte}>🎉 Tous les sujets de ce projet ont été vendus.</Text>
+            </View>
+          )}
 
           <Text style={styles.sectionTitre}>{lots.length} lot{lots.length > 1 ? 's' : ''} actif{lots.length > 1 ? 's' : ''}</Text>
 
@@ -294,10 +347,20 @@ const ElevageScreen = ({ token, projetActifId }) => {
               </TouchableOpacity>
             </View>
           ) : lots.map(lot => {
-            const badge = BADGES[lot.phase_actuelle] || BADGES.demarrage;
             const vivants = parseInt(lot.vivants || lot.quantite_initiale);
             const morts = parseInt(lot.total_morts || 0);
+            const vendus = parseInt(lot.total_vendus || 0);
+            const reproducteurs = parseInt(lot.total_reproduction || 0);
             const survie = lot.taux_survie || 100;
+            const epuise = vivants <= 0;
+            let badge;
+            if (epuise) {
+              const toutVendu = vendus > 0 && morts === 0 && reproducteurs === 0;
+              badge = toutVendu ? { label: 'Entièrement vendu', bg: '#F5F3FF', text: '#6D28D9' } : { label: 'Cheptel épuisé', bg: '#E5E7EB', text: '#374151' };
+            } else {
+              badge = BADGES[lot.phase_calculee] || BADGES.demarrage;
+            }
+            const peutActiverVente = !epuise && lot.phase_calculee === 'finition' && !lot.vente_activee;
             return (
               <View style={styles.carteLot} key={lot.id}>
                 <View style={styles.ligneEntre}>
@@ -306,7 +369,15 @@ const ElevageScreen = ({ token, projetActifId }) => {
                     <Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text>
                   </View>
                 </View>
+                {epuise && (
+                  <Text style={styles.carteSousTexte}>
+                    {vendus} vendu{vendus > 1 ? 's' : ''}
+                    {reproducteurs > 0 ? ` · ${reproducteurs} en reproduction` : ''}
+                    {morts > 0 ? ` · ${morts} mort${morts > 1 ? 's' : ''}` : ''}
+                  </Text>
+                )}
                 <Text style={styles.carteSousTexte}>{new Date(lot.date_arrivee).toLocaleDateString('fr-FR')} · {lot.fournisseur} · {lot.enclos}</Text>
+                <Text style={styles.italique}>{lot.origine_lot === 'reproduction_interne' ? '🐣 Né sur la ferme' : lot.origine_lot === 'autre' ? 'Autre origine' : '🛒 Acheté'}</Text>
 
                 {(lot.males > 0 || lot.femelles > 0) ? (
                   <Text style={styles.carteSousTexte}>♂ {lot.males} mâles · ♀ {lot.femelles} femelles</Text>
@@ -328,10 +399,21 @@ const ElevageScreen = ({ token, projetActifId }) => {
                   <TouchableOpacity style={styles.actionBleue} onPress={() => { setLotSelectionne(lot); chargerMortalites(lot.uuid_id || lot.id); setVue('historique'); }}>
                     <Text style={styles.actionBleueTexte}>Historique</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionGrise} onPress={() => { setLotSelectionne(lot); setEditForm({ males: lot.males || '', femelles: lot.femelles || '', enclos: lot.enclos || '', phase_actuelle: lot.phase_actuelle || 'demarrage', observations: lot.observations || '' }); setVue('modifier'); }}>
+                  <TouchableOpacity style={styles.actionGrise} onPress={() => { setLotSelectionne(lot); setEditForm({ males: lot.males || '', femelles: lot.femelles || '', enclos: lot.enclos || '', observations: lot.observations || '' }); setVue('modifier'); }}>
                     <Text style={styles.actionGriseTexte}>Modifier</Text>
                   </TouchableOpacity>
                 </View>
+                <TouchableOpacity style={styles.actionOrange} onPress={() => { setLotSelectionne(lot); setReproForm({ nombre_sujets: '', note: '' }); setErreur(''); setVue('reproducteurs'); }}>
+                  <Text style={styles.actionOrangeTexte}>🐔 Extraire des reproducteurs</Text>
+                </TouchableOpacity>
+                {peutActiverVente && (
+                  <TouchableOpacity style={styles.boutonVert} onPress={() => activerVente(lot)}>
+                    <Text style={styles.boutonPrincipalTexte}>✅ Activer la vente</Text>
+                  </TouchableOpacity>
+                )}
+                {lot.vente_activee && !epuise && (
+                  <Text style={styles.venteActiveeTexte}>✅ Vente activée pour ce lot</Text>
+                )}
               </View>
             );
           })}
@@ -398,6 +480,18 @@ const styles = StyleSheet.create({
   zoneDangerLabel: { color: '#DC2626', fontSize: 12, fontWeight: '600', marginBottom: 8 },
   boutonSupprimer: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   boutonSupprimerTexte: { color: '#B91C1C', fontSize: 13, fontWeight: '600' },
+  infoTexte: { fontSize: 11, color: '#9CA3AF', marginTop: 6 },
+  alerteInfo: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, marginBottom: 4 },
+  alerteInfoTexte: { fontSize: 12, color: '#6B7280', fontWeight: '600' },
+  alerteOrangeLegere: { backgroundColor: '#FFF7ED', borderWidth: 1, borderColor: '#FED7AA', borderRadius: 10, padding: 10, marginTop: 8, marginBottom: 4 },
+  alerteOrangeLegereTexte: { color: '#C2410C', fontSize: 12, fontWeight: '600' },
+  actionOrange: { backgroundColor: '#FFF7ED', borderWidth: 1, borderColor: '#FED7AA', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8 },
+  actionOrangeTexte: { color: '#C2410C', fontSize: 11, fontWeight: '600' },
+  boutonOrangeGrand: { backgroundColor: '#EA580C', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  boutonVert: { backgroundColor: '#059669', borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 8 },
+  venteActiveeTexte: { color: '#059669', fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: 8 },
+  bandeauViolet: { backgroundColor: '#F5F3FF', borderWidth: 1, borderColor: '#DDD6FE', borderRadius: 12, padding: 12, marginBottom: 16 },
+  bandeauVioletTexte: { color: '#6D28D9', fontSize: 13, fontWeight: '600' },
 });
 
 export default ElevageScreen;

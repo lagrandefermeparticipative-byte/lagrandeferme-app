@@ -20,6 +20,9 @@ const CommerceScreen = ({ token, projetActifId }) => {
   const [acheteurs, setAcheteurs] = useState([]);
   const [lots, setLots] = useState([]);
   const [projet, setProjet] = useState(null);
+  const [tousProjets, setTousProjets] = useState([]);
+  const [projetVenteId, setProjetVenteId] = useState(projetActifId);
+  const [lotsProjetVente, setLotsProjetVente] = useState([]);
   const [onglet, setOnglet] = useState('ventes');
   const [chargement, setChargement] = useState(true);
   const [vue, setVue] = useState('liste'); // liste | vente | acheteur
@@ -29,9 +32,11 @@ const CommerceScreen = ({ token, projetActifId }) => {
   const [formVente, setFormVente] = useState({
     lot_id: '', date_vente: new Date().toISOString().split('T')[0],
     males_vendus: '', femelles_vendues: '', prix_male: '4200', prix_femelle: '5000',
-    acheteur: '', type_acheteur: 'Particulier', mode_paiement: 'Mobile Money',
-    statut_paiement: 'en_attente', montant_paye: '', notes: '',
+    acheteur: '', type_acheteur: 'Particulier', mode_paiement: 'Mobile Money', notes: '',
   });
+  // Paiement réel d'une vente — seul point d'entrée qui encaisse la caisse.
+  const [venteEnPaiement, setVenteEnPaiement] = useState(null);
+  const [montantPaiement, setMontantPaiement] = useState('');
   const [formAcheteur, setFormAcheteur] = useState({ nom: '', type: 'Particulier', telephone: '', email: '', mode_paiement_prefere: 'Mobile Money', notes: '' });
 
   const charger = async () => {
@@ -64,13 +69,27 @@ const CommerceScreen = ({ token, projetActifId }) => {
     }
   }, [projetActifId]);
 
+  useEffect(() => {
+    api.get('/projets', { headers }).then(res => setTousProjets(res.data)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!projetVenteId) return;
+    api.get(`/lots?projet_id=${projetVenteId}`, { headers })
+      .then(res => {
+        setLotsProjetVente(res.data);
+        setFormVente(prev => ({ ...prev, lot_id: res.data.length > 0 ? String(res.data[0].uuid_id || res.data[0].id) : '' }));
+      })
+      .catch(() => setLotsProjetVente([]));
+  }, [projetVenteId]);
+
   const recetteEstimee = () => {
     const m = parseFloat(formVente.males_vendus) || 0;
     const f = parseFloat(formVente.femelles_vendues) || 0;
     return (m * parseFloat(formVente.prix_male || 0)) + (f * parseFloat(formVente.prix_femelle || 0));
   };
 
-  const lotChoisi = lots.find(l => String(l.uuid_id || l.id) === formVente.lot_id);
+  const lotChoisi = lotsProjetVente.find(l => String(l.uuid_id || l.id) === formVente.lot_id);
   const vivantsDisponibles = lotChoisi ? parseInt(lotChoisi.vivants || lotChoisi.quantite_initiale) : null;
   const totalAVendre = (parseInt(formVente.males_vendus) || 0) + (parseInt(formVente.femelles_vendues) || 0);
   const depasseDisponible = vivantsDisponibles !== null && totalAVendre > vivantsDisponibles;
@@ -79,16 +98,45 @@ const CommerceScreen = ({ token, projetActifId }) => {
     if (!formVente.lot_id) { Alert.alert('Champ manquant', 'Choisis le lot vendu.'); return; }
     setEnvoi(true);
     try {
+      const nomLotVendu = lotChoisi?.nom;
+      const resteApresVente = vivantsDisponibles !== null ? vivantsDisponibles - totalAVendre : null;
       await api.post('/ventes', {
-        ...formVente, projet_id: projetActifId,
+        ...formVente, projet_id: projetVenteId,
         males_vendus: parseInt(formVente.males_vendus) || 0,
         femelles_vendues: parseInt(formVente.femelles_vendues) || 0,
         prix_male: parseFloat(formVente.prix_male), prix_femelle: parseFloat(formVente.prix_femelle),
         recette_totale: recetteEstimee(),
       }, { headers });
       setVue('liste'); charger();
-    } catch (error) { Alert.alert('Erreur', "Enregistrement impossible."); }
-    finally { setEnvoi(false); }
+      if (resteApresVente !== null && resteApresVente <= 0) {
+        Alert.alert('Vente enregistrée', `Le lot "${nomLotVendu}" est maintenant entièrement vendu.`);
+      } else {
+        Alert.alert('Vente enregistrée', 'La vente a bien été enregistrée.');
+      }
+    } catch (error) {
+      Alert.alert('Erreur', error.response?.data?.message || "Enregistrement impossible.");
+    } finally { setEnvoi(false); }
+  };
+
+  const ouvrirPaiement = (vente) => {
+    const reste = parseFloat(vente.recette_totale || 0) - parseFloat(vente.montant_paye || 0);
+    setVenteEnPaiement(vente);
+    setMontantPaiement(reste > 0 ? String(reste) : '');
+    setVue('paiement');
+  };
+
+  const confirmerPaiement = async () => {
+    if (!montantPaiement || parseFloat(montantPaiement) <= 0) return;
+    setEnvoi(true);
+    try {
+      await api.post(`/ventes/${venteEnPaiement.uuid_id || venteEnPaiement.id}/paiements`, {
+        montant: parseFloat(montantPaiement),
+      }, { headers });
+      setVue('liste'); setVenteEnPaiement(null); setMontantPaiement('');
+      charger();
+    } catch (error) {
+      Alert.alert('Erreur', error.response?.data?.message || "Enregistrement du paiement impossible.");
+    } finally { setEnvoi(false); }
   };
 
   const creerOuModifierAcheteur = async () => {
@@ -123,16 +171,9 @@ const CommerceScreen = ({ token, projetActifId }) => {
     ]);
   };
 
-  const marquerVentePayee = async (vente) => {
-    try {
-      await api.put(`/ventes/${vente.uuid_id || vente.id}`, { statut_paiement: 'payee', montant_paye: vente.recette_totale }, { headers });
-      charger();
-    } catch { Alert.alert('Erreur', 'Mise à jour impossible.'); }
-  };
-
   const totalRecettes = ventes.reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
   const totalVendus = ventes.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
-  const totalPayees = ventes.filter(v => v.statut_paiement === 'payee').reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
+  const totalPayees = ventes.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
   const totalEnAttente = totalRecettes - totalPayees;
 
   // --- FORMULAIRE VENTE ---
@@ -142,14 +183,32 @@ const CommerceScreen = ({ token, projetActifId }) => {
         <Header titre="Nouvelle vente" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
-            <Text style={styles.label}>Lot vendu *</Text>
+            <Text style={styles.label}>Projet *</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {lots.map(l => (
-                <TouchableOpacity key={l.id} onPress={() => setFormVente({ ...formVente, lot_id: String(l.uuid_id || l.id) })}
-                  style={[styles.chip, formVente.lot_id === String(l.uuid_id || l.id) && styles.chipActif]}>
-                  <Text style={[styles.chipTexte, formVente.lot_id === String(l.uuid_id || l.id) && styles.chipTexteActif]}>{l.nom}</Text>
+              {tousProjets.map(p => (
+                <TouchableOpacity key={p.id} onPress={() => setProjetVenteId(p.uuid_id || p.id)}
+                  style={[styles.chip, String(projetVenteId) === String(p.uuid_id || p.id) && styles.chipActif]}>
+                  <Text style={[styles.chipTexte, String(projetVenteId) === String(p.uuid_id || p.id) && styles.chipTexteActif]}>{p.nom}</Text>
                 </TouchableOpacity>
               ))}
+            </ScrollView>
+            <Text style={[styles.label, { marginTop: 12 }]}>Lot vendu *</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {lotsProjetVente.map(l => {
+                const vivantsLot = parseInt(l.vivants ?? l.quantite_initiale);
+                const epuise = vivantsLot <= 0;
+                const venteNonActivee = !epuise && !l.vente_activee;
+                const desactive = epuise || venteNonActivee;
+                return (
+                  <TouchableOpacity key={l.id} disabled={desactive}
+                    onPress={() => setFormVente({ ...formVente, lot_id: String(l.uuid_id || l.id) })}
+                    style={[styles.chip, formVente.lot_id === String(l.uuid_id || l.id) && styles.chipActif, desactive && { opacity: 0.4 }]}>
+                    <Text style={[styles.chipTexte, formVente.lot_id === String(l.uuid_id || l.id) && styles.chipTexteActif]}>
+                      {l.nom}{epuise ? ' (épuisé)' : venteNonActivee ? ' (vente non activée)' : ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
             {lotChoisi && <Text style={styles.infoTexte}>{vivantsDisponibles} sujets vivants dans ce lot</Text>}
 
@@ -184,7 +243,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
               <View style={styles.encartVert}>
                 <Text style={styles.encartVertLabel}>Recette totale</Text>
                 <Text style={styles.encartVertValeur}>{formatMontant(recetteEstimee())}</Text>
-                <Text style={styles.encartVertSous}>Sera automatiquement crédité à la caisse du projet.</Text>
+                <Text style={styles.encartVertSous}>Vente créée "en attente" — l'encaissement se fera via un paiement dédié.</Text>
               </View>
             )}
 
@@ -209,23 +268,6 @@ const CommerceScreen = ({ token, projetActifId }) => {
               ))}
             </View>
 
-            <Text style={styles.label}>Statut paiement</Text>
-            <View style={{ flexDirection: 'row', gap: 6 }}>
-              {Object.keys(STATUTS_VENTE).map(s => (
-                <TouchableOpacity key={s} onPress={() => setFormVente({ ...formVente, statut_paiement: s })} style={[styles.chip, formVente.statut_paiement === s && styles.chipActif]}>
-                  <Text style={[styles.chipTexte, formVente.statut_paiement === s && styles.chipTexteActif]}>{STATUTS_VENTE[s].label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {formVente.statut_paiement === 'partielle' && (
-              <>
-                <Text style={styles.label}>Montant déjà payé (F)</Text>
-                <TextInput style={styles.champ} keyboardType="numeric" value={formVente.montant_paye} onChangeText={v => setFormVente({ ...formVente, montant_paye: v })} />
-                <Text style={styles.infoTexte}>Reste à encaisser : {formatMontant(recetteEstimee() - (parseFloat(formVente.montant_paye) || 0))}</Text>
-              </>
-            )}
-
             <Text style={styles.label}>Notes</Text>
             <TextInput style={[styles.champ, { height: 70 }]} multiline value={formVente.notes} onChangeText={v => setFormVente({ ...formVente, notes: v })} />
           </View>
@@ -233,6 +275,32 @@ const CommerceScreen = ({ token, projetActifId }) => {
             <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Enregistrer la vente'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // --- PAIEMENT D'UNE VENTE ---
+  if (vue === 'paiement' && venteEnPaiement) {
+    const reste = parseFloat(venteEnPaiement.recette_totale || 0) - parseFloat(venteEnPaiement.montant_paye || 0);
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Header titre="Enregistrer un paiement" />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.carte}>
+            <Text style={styles.carteTitre}>Vente : {venteEnPaiement.acheteur || 'Acheteur inconnu'} — {formatMontant(venteEnPaiement.recette_totale)}</Text>
+            <Text style={styles.carteSousTexte}>Déjà encaissé : {formatMontant(venteEnPaiement.montant_paye)} · Reste dû : {formatMontant(reste)}</Text>
+            <Text style={styles.label}>Montant reçu maintenant (F) *</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={montantPaiement} onChangeText={setMontantPaiement} />
+            <Text style={styles.infoTexte}>Ce paiement créditera immédiatement la caisse du projet.</Text>
+          </View>
+          <TouchableOpacity style={styles.boutonPrincipal} onPress={confirmerPaiement} disabled={envoi}>
+            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Confirmer le paiement'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => { setVue('liste'); setVenteEnPaiement(null); }}>
             <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
           </TouchableOpacity>
           <View style={{ height: 40 }} />
@@ -342,9 +410,12 @@ const CommerceScreen = ({ token, projetActifId }) => {
                       <View style={styles.statRose}><Text style={styles.statRoseTexte}>{vente.femelles_vendues}</Text><Text style={styles.statRoseLabel}>Femelles</Text></View>
                       <View style={styles.statVerte}><Text style={styles.statVerteTexte}>{formatMontant(vente.recette_totale)}</Text><Text style={styles.statVerteLabel}>Recette</Text></View>
                     </View>
+                    {vente.statut_paiement !== 'en_attente' && (
+                      <Text style={styles.carteSousTexte}>Encaissé : {formatMontant(vente.montant_paye)} · Reste : {formatMontant(vente.recette_totale - vente.montant_paye)}</Text>
+                    )}
                     <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
                       {vente.statut_paiement !== 'payee' && (
-                        <TouchableOpacity style={styles.actionVerte} onPress={() => marquerVentePayee(vente)}><Text style={styles.actionVerteTexte}>Marquer payée</Text></TouchableOpacity>
+                        <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirPaiement(vente)}><Text style={styles.actionVerteTexte}>Enregistrer un paiement</Text></TouchableOpacity>
                       )}
                       <TouchableOpacity style={styles.actionRouge2} onPress={() => supprimerVente(vente)}><Text style={styles.actionRouge2Texte}>Supprimer</Text></TouchableOpacity>
                     </View>
