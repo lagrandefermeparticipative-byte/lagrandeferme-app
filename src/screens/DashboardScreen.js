@@ -362,6 +362,13 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
               </View>
             )}
 
+            {previsualisation?.totaux?.creance_restante > 0 && (
+              <View style={styles.alerteRouge}>
+                <Text style={styles.alerteRougeTexte}>⚠️ {formatMontant(previsualisation.totaux.creance_restante)} de créances non encaissées sur les ventes de ce projet.</Text>
+                <Text style={styles.alerteRougeTexteSecondaire}>Enregistrez les paiements manquants (écran Commerce) avant de pouvoir clôturer.</Text>
+              </View>
+            )}
+
             <Text style={styles.label}>Sujets retenus pour reproduction</Text>
             <TextInput style={styles.champ} keyboardType="numeric" value={clotureForm.sujets_retenus_reproduction} onChangeText={v => setClotureForm({ ...clotureForm, sujets_retenus_reproduction: v })} />
             {parseInt(clotureForm.sujets_retenus_reproduction) > 0 && (
@@ -386,7 +393,7 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
             <TouchableOpacity style={styles.boutonRouge} onPress={() => Alert.alert('Clôturer ce projet ?', 'Cette action est définitive et verrouille les versements.', [
               { text: 'Annuler', style: 'cancel' },
               { text: 'Clôturer', style: 'destructive', onPress: confirmerCloture },
-            ])} disabled={envoiCloture}>
+            ])} disabled={envoiCloture || previsualisation?.totaux?.creance_restante > 0}>
               <Text style={styles.boutonPrincipalTexte}>{envoiCloture ? 'Clôture en cours...' : 'Clôturer définitivement le projet'}</Text>
             </TouchableOpacity>
           </View>
@@ -690,6 +697,9 @@ const styles = StyleSheet.create({
   boutonRouge: { backgroundColor: '#DC2626', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
   encartPrevisu: { backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12, marginVertical: 10 },
   encartPrevisuTitre: { fontSize: 12, fontWeight: '600', color: '#111827', marginBottom: 8 },
+  alerteRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, padding: 10, marginTop: 8 },
+  alerteRougeTexte: { fontSize: 11, fontWeight: '600', color: '#B91C1C' },
+  alerteRougeTexteSecondaire: { fontSize: 10, color: '#DC2626', marginTop: 4 },
   previsuNom: { fontSize: 12, color: '#374151' },
   previsuMontant: { fontSize: 12, fontWeight: '600', color: '#111827' },
   lienRetour: { color: '#6B7280', fontSize: 12, marginBottom: 12 },
