@@ -68,6 +68,26 @@ const FermeScreen = ({ token }) => {
     }
   };
 
+  const reformerSujet = (id) => {
+    Alert.alert('Réformer', 'Réformer ce groupe de reproducteurs ? Ils sortiront définitivement du service, sans vente.', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Réformer', onPress: async () => {
+        try { await api.put(`/clotures/sujets-reproduction/${id}/reformer`, {}, { headers }); charger(true); }
+        catch (error) { Alert.alert('Erreur', error.response?.data?.message || 'Impossible de réformer.'); }
+      }},
+    ]);
+  };
+
+  const declarerMortSujet = (id) => {
+    Alert.alert('Déclarer mort', 'Déclarer ce groupe de reproducteurs mort ? Action irréversible.', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Déclarer mort', style: 'destructive', onPress: async () => {
+        try { await api.put(`/clotures/sujets-reproduction/${id}/mort`, {}, { headers }); charger(true); }
+        catch (error) { Alert.alert('Erreur', error.response?.data?.message || 'Impossible de déclarer.'); }
+      }},
+    ]);
+  };
+
   const totalReel = depenses.reduce((s, d) => s + parseFloat(d.montant_reel || 0), 0);
   const totalPrevu = depenses.reduce((s, d) => s + parseFloat(d.montant_prevu || 0), 0);
   const enCours = depenses.filter(d => d.avancement_pourcentage > 0 && d.avancement_pourcentage < 100);
@@ -143,9 +163,13 @@ const FermeScreen = ({ token }) => {
                     <Text style={styles.carteTitre}>{s.nombre_sujets} sujets</Text>
                     <Text style={styles.carteSousTexte}>Issus de : {s.projet_origine_nom}</Text>
                   </View>
-                  <View style={[styles.badge, s.statut === 'vendu' ? styles.badgeVert : styles.badgeOrange]}>
-                    <Text style={[styles.badgeTexte, s.statut === 'vendu' ? styles.badgeTexteVert : styles.badgeTexteOrange]}>
-                      {s.statut === 'vendu' ? 'Vendu' : 'En reproduction'}
+                  <View style={[styles.badge,
+                    s.statut === 'vendu' ? styles.badgeVert : s.statut === 'mort' ? styles.badgeRouge : s.statut === 'reforme' ? styles.badgeGris : styles.badgeOrange
+                  ]}>
+                    <Text style={[styles.badgeTexte,
+                      s.statut === 'vendu' ? styles.badgeTexteVert : s.statut === 'mort' ? styles.badgeTexteRouge : s.statut === 'reforme' ? styles.badgeTexteGris : styles.badgeTexteOrange
+                    ]}>
+                      {s.statut === 'vendu' ? 'Vendu' : s.statut === 'mort' ? 'Mort' : s.statut === 'reforme' ? 'Réformé' : 'En reproduction'}
                     </Text>
                   </View>
                 </View>
@@ -154,6 +178,15 @@ const FermeScreen = ({ token }) => {
                   <Text style={styles.venteTexte}>
                     Vendus {new Date(s.date_vente).toLocaleDateString('fr-FR')} pour {formatMontant(s.montant_vente)}
                   </Text>
+                ) : s.statut === 'mort' ? (
+                  <Text style={styles.mortTexteFerme}>Décédés le {s.date_fin_service ? new Date(s.date_fin_service).toLocaleDateString('fr-FR') : ''}</Text>
+                ) : s.statut === 'reforme' && sujetVenteId !== s.id ? (
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={styles.dateTexte}>Réformés le {s.date_fin_service ? new Date(s.date_fin_service).toLocaleDateString('fr-FR') : ''}</Text>
+                    <TouchableOpacity style={styles.boutonVendre} onPress={() => setSujetVenteId(s.id)}>
+                      <Text style={styles.boutonVendreTexte}>Marquer comme vendu</Text>
+                    </TouchableOpacity>
+                  </View>
                 ) : sujetVenteId === s.id ? (
                   <View style={{ marginTop: 8, gap: 8 }}>
                     <TextInput style={styles.champ} placeholder="Montant total de la vente (F)" keyboardType="numeric"
@@ -170,9 +203,17 @@ const FermeScreen = ({ token }) => {
                     </View>
                   </View>
                 ) : (
-                  <TouchableOpacity style={styles.boutonVendre} onPress={() => setSujetVenteId(s.id)}>
-                    <Text style={styles.boutonVendreTexte}>Marquer comme vendu</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                    <TouchableOpacity style={[styles.boutonVendre, { flex: 1, marginTop: 0 }]} onPress={() => setSujetVenteId(s.id)}>
+                      <Text style={styles.boutonVendreTexte}>Vendre</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.boutonReformer} onPress={() => reformerSujet(s.id)}>
+                      <Text style={styles.boutonReformerTexte}>Réformer</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.boutonMort} onPress={() => declarerMortSujet(s.id)}>
+                      <Text style={styles.boutonMortTexte}>Déclarer mort</Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
             ))}
@@ -278,11 +319,20 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeVert: { backgroundColor: '#ECFDF5' },
   badgeOrange: { backgroundColor: '#FFF7ED' },
+  badgeRouge: { backgroundColor: '#FEF2F2' },
+  badgeGris: { backgroundColor: '#F3F4F6' },
   badgeTexte: { fontSize: 11, fontWeight: '600' },
   badgeTexteVert: { color: '#047857' },
   badgeTexteOrange: { color: '#C2410C' },
+  badgeTexteRouge: { color: '#DC2626' },
+  badgeTexteGris: { color: '#4B5563' },
   dateTexte: { fontSize: 11, color: '#9CA3AF', marginTop: 4 },
   venteTexte: { fontSize: 12, color: '#047857', marginTop: 4 },
+  mortTexteFerme: { fontSize: 12, color: '#DC2626', marginTop: 4 },
+  boutonReformer: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  boutonReformerTexte: { color: '#4B5563', fontSize: 11, fontWeight: '600' },
+  boutonMort: { flex: 1, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  boutonMortTexte: { color: '#DC2626', fontSize: 11, fontWeight: '600' },
   champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13 },
   boutonConfirmer: { flex: 1, backgroundColor: '#111827', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
   boutonConfirmerTexte: { color: '#fff', fontSize: 12, fontWeight: '600' },
