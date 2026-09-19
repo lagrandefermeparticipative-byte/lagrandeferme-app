@@ -11,10 +11,10 @@ import { VueRapportInvestisseur } from './InvestissementScreen';
 const formatMontant = (m) => new Intl.NumberFormat('fr-FR').format(Math.round(m || 0)) + ' FCFA';
 
 const couleurSurvie = (taux) => {
-  if (taux === null || taux === undefined) return { fond: '#F9FAFB', bordure: '#E5E7EB', texte: '#6B7280' };
-  if (taux >= 90) return { fond: '#ECFDF5', bordure: '#A7F3D0', texte: '#047857' };
-  if (taux >= 70) return { fond: '#FFFBEB', bordure: '#FDE68A', texte: '#92400E' };
-  return { fond: '#FEF2F2', bordure: '#FECACA', texte: '#B91C1C' };
+  if (taux === null || taux === undefined) return { texte: '#6E6E73' };
+  if (taux >= 90) return { texte: '#2D6A4F' };
+  if (taux >= 70) return { texte: '#B08D57' };
+  return { texte: '#C0392B' };
 };
 
 const progressionTemporelle = (dateDebut, dateFin) => {
@@ -314,7 +314,7 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
   if (projetCloture) {
     if (clotureReussie) {
       return (
-        <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+        <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
           <Header titre="Projet clôturé" action={<TouchableOpacity onPress={() => setProjetCloture(null)}><Text style={styles.lienRetourPetit}>← Retour</Text></TouchableOpacity>} />
           <View style={styles.centre}>
             <Text style={{ fontSize: 40, marginBottom: 12 }}>✅</Text>
@@ -328,7 +328,7 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
       );
     }
     return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F9FAFB' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={`Bonus & Clôture · ${projetCloture.nom}`} action={<TouchableOpacity onPress={() => setProjetCloture(null)}><Text style={styles.lienRetourPetit}>← Retour</Text></TouchableOpacity>} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
@@ -422,7 +422,7 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
 
   // --- VUE PRINCIPALE avec sous-onglets ---
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Tableau de bord" sousTitre="Gestionnaire" sansRetour
         action={<TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('nouveauProjet')}><Text style={styles.boutonPetitTexte}>+ Projet</Text></TouchableOpacity>}
       />
@@ -481,27 +481,27 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
               <Text style={styles.dateTexte}>{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</Text>
 
               <View style={styles.grille2}>
-                <View style={styles.carteStat}><Text style={styles.statLabel}>Projets actifs</Text><Text style={styles.statChiffre}>{projets.filter(p => p.statut_cloture !== 'cloture').length}</Text></View>
-                <View style={styles.carteStat}><Text style={styles.statLabel}>Rapports en attente</Text><Text style={[styles.statChiffre, { color: '#EA580C' }]}>{rapportsEnAttente.length}</Text></View>
+                <View style={styles.carteStat}><Text style={styles.statLabel}>PROJETS ACTIFS</Text><Text style={styles.statChiffre}>{projets.filter(p => p.statut_cloture !== 'cloture').length}</Text></View>
+                <View style={styles.carteStat}><Text style={styles.statLabel}>RAPPORTS EN ATTENTE</Text><Text style={[styles.statChiffre, { color: rapportsEnAttente.length > 0 ? '#B08D57' : '#1D1D1F' }]}>{rapportsEnAttente.length}</Text></View>
               </View>
 
-              <Text style={styles.sectionTitre}>Projets en cours</Text>
+              <Text style={styles.sectionTitre}>PROJETS EN COURS</Text>
               {projets.length === 0 ? <Text style={styles.vide}>Aucun projet pour l'instant</Text> : projets.map(p => (
                 (() => {
                   const couleurs = couleurSurvie(p.taux_survie_reel);
                   const progression = progressionTemporelle(p.date_debut, p.date_fin);
                   return (
-                <TouchableOpacity style={[styles.carte, { backgroundColor: couleurs.fond, borderColor: couleurs.bordure }]} key={p.id} onPress={() => { choisirProjet(p.uuid_id || p.id); navigation.navigate("Elevage"); }}>
+                <TouchableOpacity style={styles.carte} key={p.id} onPress={() => { choisirProjet(p.uuid_id || p.id); navigation.navigate("Elevage"); }}>
                   <View style={styles.ligneEntre}>
                     <Text style={styles.carteTitre}>{p.nom}</Text>
-                    <View style={[styles.badge, { backgroundColor: p.statut_cloture === 'cloture' ? '#F3F4F6' : '#ECFDF5' }]}>
-                      <Text style={[styles.badgeTexte, { color: p.statut_cloture === 'cloture' ? '#4B5563' : '#047857' }]}>{p.statut_cloture === 'cloture' ? 'Clôturé' : 'Actif'}</Text>
+                    <View style={[styles.badge, { backgroundColor: p.statut_cloture === 'cloture' ? '#F5F5F7' : 'rgba(45,106,79,0.1)' }]}>
+                      <Text style={[styles.badgeTexte, { color: p.statut_cloture === 'cloture' ? '#6E6E73' : '#2D6A4F' }]}>{p.statut_cloture === 'cloture' ? 'Clôturé' : 'Actif'}</Text>
                     </View>
                   </View>
                   <Text style={[styles.carteSousTexte, { color: couleurs.texte }]}>{p.type_volaille} · {p.objectif_sujets} sujets{p.taux_survie_reel != null ? ` · ${p.taux_survie_reel}% de survie` : ''}</Text>
                   {progression !== null && (
                     <View style={styles.barreProgressionConteneur}>
-                      <View style={[styles.barreProgressionRemplie, { width: `${progression}%` }]} />
+                      <View style={[styles.barreProgressionRemplie, { width: `${progression}%`, backgroundColor: couleurs.texte }]} />
                     </View>
                   )}
                   <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
@@ -632,8 +632,8 @@ const BudgetLigneMontant = ({ label, champ, budget, setBudget }) => (
   </View>
 );
 const styles = StyleSheet.create({
-  barreProgressionConteneur: { height: 4, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 2, marginTop: 8, overflow: 'hidden' },
-  barreProgressionRemplie: { height: 4, backgroundColor: '#111827', borderRadius: 2 },
+  barreProgressionConteneur: { height: 5, backgroundColor: '#F5F5F7', borderRadius: 3, marginTop: 10, overflow: 'hidden' },
+  barreProgressionRemplie: { height: 5, backgroundColor: '#1D1D1F', borderRadius: 3 },
   dateSeparateur: { textAlign: "center", fontSize: 11, color: "#9CA3AF", backgroundColor: "#F3F4F6", alignSelf: "center", paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, marginVertical: 10 },
   messageDate: { fontSize: 9, color: "#B0B7C3", marginTop: 4, alignSelf: "flex-end" },
   conteneur: { flex: 1, padding: 16 },
@@ -646,23 +646,23 @@ const styles = StyleSheet.create({
   sousOngletTexteActif: { color: '#111827', fontWeight: '600' },
   badgeRouge: { backgroundColor: '#EF4444', borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   badgeRougeTexte: { color: '#fff', fontSize: 9, fontWeight: '700' },
-  salutation: { fontSize: 20, fontWeight: '700', color: '#111827', marginTop: 8 },
-  dateTexte: { fontSize: 13, color: '#6B7280', marginBottom: 16 },
-  grille2: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  carteStat: { flex: 1, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 16 },
-  statLabel: { fontSize: 12, color: '#6B7280', marginBottom: 6 },
-  statChiffre: { fontSize: 24, fontWeight: '700', color: '#111827' },
-  sectionTitre: { fontSize: 14, fontWeight: '600', color: '#111827', marginTop: 12, marginBottom: 10 },
-  carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteOrange: { backgroundColor: '#FFF7ED', borderRadius: 12, borderWidth: 1, borderColor: '#FED7AA', padding: 14, marginBottom: 10 },
-  boutonOrangeGrand: { backgroundColor: '#EA580C', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 10 },
+  salutation: { fontSize: 24, fontWeight: '700', color: '#1D1D1F', marginTop: 8, letterSpacing: -0.4 },
+  dateTexte: { fontSize: 13, color: '#6E6E73', marginBottom: 18 },
+  grille2: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  carteStat: { flex: 1, backgroundColor: '#fff', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  statLabel: { fontSize: 11, color: '#6E6E73', marginBottom: 8, fontWeight: '600', letterSpacing: 0.4 },
+  statChiffre: { fontSize: 28, fontWeight: '700', color: '#1D1D1F', letterSpacing: -0.5 },
+  sectionTitre: { fontSize: 12, fontWeight: '600', color: '#6E6E73', marginTop: 14, marginBottom: 12, letterSpacing: 0.4 },
+  carte: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteOrange: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  boutonOrangeGrand: { backgroundColor: '#B08D57', borderRadius: 14, paddingVertical: 13, alignItems: 'center', marginTop: 10 },
   boutonOrangeTexte: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  carteRapport: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
-  carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 4 },
-  vide: { color: '#9CA3AF', fontSize: 13, marginBottom: 10 },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
-  badgeTexte: { fontSize: 10, fontWeight: '600' },
+  carteRapport: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  carteTitre: { fontSize: 15, fontWeight: '600', color: '#1D1D1F' },
+  carteSousTexte: { fontSize: 13, color: '#6E6E73', marginTop: 4 },
+  vide: { color: '#6E6E73', fontSize: 13, marginBottom: 10 },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  badgeTexte: { fontSize: 11, fontWeight: '600' },
   badgeAttente: { backgroundColor: '#FFF7ED', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeAttenteTexte: { color: '#C2410C', fontSize: 10, fontWeight: '600' },
   actionVerte: { flex: 1, backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
