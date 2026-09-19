@@ -343,6 +343,14 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
             </TouchableOpacity>
           </View>
 
+          <View style={styles.carteOrange}>
+            <Text style={styles.carteTitre}>Le projet a échoué en cours de route ?</Text>
+            <Text style={styles.carteSousTexte}>Si le capital ne peut pas être garanti, utilise la Liquidation (remboursement au prorata) ou la Relance (report vers un nouveau projet) plutôt que la clôture normale ci-dessous.</Text>
+            <TouchableOpacity style={styles.boutonOrangeGrand} onPress={() => navigation.navigate('Liquidation', { projetId: projetCloture.uuid_id || projetCloture.id })}>
+              <Text style={styles.boutonOrangeTexte}>Liquider ou relancer ce projet</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.carte}>
             <Text style={styles.carteTitre}>Clôturer le projet</Text>
             <Text style={styles.label}>Taux de perte réel (%)</Text>
@@ -646,6 +654,9 @@ const styles = StyleSheet.create({
   statChiffre: { fontSize: 24, fontWeight: '700', color: '#111827' },
   sectionTitre: { fontSize: 14, fontWeight: '600', color: '#111827', marginTop: 12, marginBottom: 10 },
   carte: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
+  carteOrange: { backgroundColor: '#FFF7ED', borderRadius: 12, borderWidth: 1, borderColor: '#FED7AA', padding: 14, marginBottom: 10 },
+  boutonOrangeGrand: { backgroundColor: '#EA580C', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 10 },
+  boutonOrangeTexte: { color: '#fff', fontSize: 13, fontWeight: '600' },
   carteRapport: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', padding: 14, marginBottom: 10 },
   carteTitre: { fontSize: 13, fontWeight: '600', color: '#111827' },
   carteSousTexte: { fontSize: 11, color: '#6B7280', marginTop: 4 },
