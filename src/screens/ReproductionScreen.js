@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
 import Header from '../components/Header';
 
@@ -13,6 +14,7 @@ const STATUTS = {
 };
 
 const ReproductionScreen = ({ token, projetActifId }) => {
+  const navigation = useNavigation();
   const headers = { Authorization: `Bearer ${token}` };
   const [cycles, setCycles] = useState([]);
   const [cycleActif, setCycleActif] = useState(null);
@@ -147,6 +149,9 @@ const ReproductionScreen = ({ token, projetActifId }) => {
                 </TouchableOpacity>
               ))}
             </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Generations')}>
+              <Text style={styles.lienGenerations}>Voir/gérer les générations existantes →</Text>
+            </TouchableOpacity>
             <Text style={styles.label}>Nom du cycle</Text>
             <TextInput style={styles.champ} placeholder="Ex: Cycle Nov. 2026" value={formCycle.nom} onChangeText={v => setFormCycle({ ...formCycle, nom: v })} />
           </View>
@@ -474,6 +479,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, color: '#6B7280', marginBottom: 6, marginTop: 10 },
   champ: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, fontSize: 13, color: '#111827' },
   infoTexte: { fontSize: 12, color: '#9CA3AF', marginBottom: 8 },
+  lienGenerations: { fontSize: 11, color: '#1D4ED8', marginBottom: 12, marginTop: -4 },
   chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6' },
   chipActif: { backgroundColor: '#111827' },
   chipTexte: { fontSize: 12, color: '#6B7280' },

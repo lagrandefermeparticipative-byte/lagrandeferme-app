@@ -20,6 +20,7 @@ import AccueilRouteur from './src/screens/AccueilRouteur';
 import NouveauProjetScreen from './src/screens/NouveauProjetScreen';
 import ElevageScreen from './src/screens/ElevageScreen';
 import ReproductionScreen from './src/screens/ReproductionScreen';
+import GenerationsScreen from './src/screens/GenerationsScreen';
 import GestionScreen from './src/screens/GestionScreen';
 import CommerceScreen from './src/screens/CommerceScreen';
 import AnalysesScreen from './src/screens/AnalysesScreen';
@@ -60,6 +61,7 @@ const AppNavigator = () => {
       <Stack.Screen name="Elevage">{() => <AvecNav><ElevageScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="GestionProjet">{({ route, navigation }) => <AvecNav><GestionProjetScreen token={token} projetId={route.params?.projetId} onRetour={() => navigation.goBack()} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Reproduction">{() => <AvecNav><ReproductionScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="Generations">{() => <AvecNav><GenerationsScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Gestion">{() => <AvecNav><GestionScreen token={token} projetActifId={projetActifId} projetNom={projetNom} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Commerce">{() => <AvecNav><CommerceScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Analyses">{() => <AvecNav><AnalysesScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
