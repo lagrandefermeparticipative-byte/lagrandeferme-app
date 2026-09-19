@@ -107,7 +107,7 @@ const BilanScreen = ({ token }) => {
             <View style={styles.grille2mini}>
               <View style={styles.mini}><Text style={styles.miniLabel}>Dépenses réelles</Text><Text style={[styles.miniValeur, { color: '#DC2626' }]}>{formatMontant(bilan.resume.total_depenses_reelles)}</Text><Text style={styles.carteSousTexte}>Prévu : {formatMontant(bilan.resume.total_depenses_prevues)}</Text></View>
               <View style={styles.mini}><Text style={styles.miniLabel}>Ventes réelles</Text><Text style={[styles.miniValeur, { color: '#059669' }]}>{formatMontant(bilan.resume.total_ventes_reelles)}</Text><Text style={styles.carteSousTexte}>{bilan.resume.total_sujets_vendus} sujets vendus</Text></View>
-              <View style={styles.mini}><Text style={styles.miniLabel}>Mises investisseurs</Text><Text style={styles.miniValeur}>{formatMontant(bilan.resume.total_mises_investisseurs)}</Text><Text style={styles.carteSousTexte}>{bilan.resume.nombre_investisseurs} investisseur(s)</Text></View>
+              <View style={styles.mini}><Text style={styles.miniLabel}>Mises investisseurs</Text><Text style={styles.miniValeur}>{formatMontant(bilan.resume.total_mises_investisseurs)}</Text><Text style={styles.carteSousTexte}>dont encaissé : {formatMontant(bilan.resume.total_mises_encaissees)}</Text></View>
               <View style={styles.mini}><Text style={styles.miniLabel}>Versé aux investisseurs</Text><Text style={styles.miniValeur}>{formatMontant(bilan.resume.total_verse_investisseurs)}</Text><Text style={styles.carteSousTexte}>Payé : {formatMontant(bilan.resume.total_verse_paye)}</Text></View>
             </View>
 
