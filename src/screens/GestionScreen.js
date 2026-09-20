@@ -19,6 +19,8 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   const [depenses, setDepenses] = useState([]);
   const [lots, setLots] = useState([]);
   const [investisseurs, setInvestisseurs] = useState([]);
+  const [typeVolaille, setTypeVolaille] = useState(null);
+  const labelAnimal = (typeVolaille || 'sujet').toLowerCase();
   const [chargement, setChargement] = useState(true);
   const [onglet, setOnglet] = useState('budget');
   const [vue, setVue] = useState('liste'); // liste | nouveau | modifier | payer | historique
@@ -46,14 +48,16 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
 
   const charger = async () => {
     try {
-      const [depensesRes, lotsRes, investisseursRes] = await Promise.all([
+      const [depensesRes, lotsRes, investisseursRes, projetRes] = await Promise.all([
         api.get(`/depenses?projet_id=${projetActifId}`, { headers }),
         api.get(`/lots?projet_id=${projetActifId}`, { headers }),
         api.get(`/investisseurs/${projetActifId}`, { headers }),
+        api.get(`/projets/${projetActifId}`, { headers }),
       ]);
       setDepenses(depensesRes.data.filter(d => d.type_depense !== 'ferme'));
       setLots(lotsRes.data);
       setInvestisseurs(investisseursRes.data);
+      setTypeVolaille(projetRes.data.type_volaille);
     } catch (error) { console.log('Erreur gestion:', error.message); }
     finally { setChargement(false); }
   };
@@ -463,7 +467,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
                   <Text style={[styles.miniValeur, { color: ecart > 0 ? '#DC2626' : '#059669' }]}>{ecart > 0 ? '+' : ''}{formatMontant(ecart)}</Text>
                 </View>
                 <View style={styles.mini}>
-                  <Text style={styles.miniLabel}>Coût / pintade</Text>
+                  <Text style={styles.miniLabel}>Coût / {labelAnimal}</Text>
                   <Text style={styles.miniValeur}>{formatMontant(coutParPintade)}</Text>
                   <Text style={styles.carteSousTexte}>{totalPintades} vivantes</Text>
                 </View>
