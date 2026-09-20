@@ -97,27 +97,29 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
               ))
             )}
 
-            {projetsAVenir.length > 0 && (
-              <View style={{ marginTop: 20 }}>
-                <Text style={styles.labelSection}>PROCHAINS PROJETS</Text>
-                {projetsAVenir.map(p => {
-                  const objectif = parseFloat(p.objectif_collecte || 0);
-                  const reserve = parseFloat(p.total_reserve || 0);
-                  const pct = objectif > 0 ? Math.min(100, Math.round((reserve / objectif) * 100)) : null;
-                  return (
-                    <TouchableOpacity key={p.id} style={styles.carteProjet} onPress={() => navigation.navigate('ProjetsAVenir')}>
-                      <Text style={styles.carteTitre}>{p.nom}</Text>
-                      <Text style={styles.carteSousTexte}>{p.type_volaille} · {p.objectif_sujets} sujets visés</Text>
-                      {objectif > 0 && (
-                        <View style={styles.barreFond}>
-                          <View style={[styles.barreRemplie, { width: `${pct}%` }]} />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
+            <View style={{ marginTop: 20 }}>
+              <Text style={styles.labelSection}>PROCHAINS PROJETS</Text>
+              {projetsAVenir.length === 0 ? (
+                <TouchableOpacity style={styles.carteProjet} onPress={() => navigation.navigate('ProjetsAVenir')}>
+                  <Text style={styles.carteSousTexte}>Rien à réserver pour l'instant — reviens régulièrement, un nouveau projet peut s'ouvrir à tout moment.</Text>
+                </TouchableOpacity>
+              ) : projetsAVenir.map(p => {
+                const objectif = parseFloat(p.objectif_collecte || 0);
+                const reserve = parseFloat(p.total_reserve || 0);
+                const pct = objectif > 0 ? Math.min(100, Math.round((reserve / objectif) * 100)) : null;
+                return (
+                  <TouchableOpacity key={p.id} style={styles.carteProjet} onPress={() => navigation.navigate('ProjetsAVenir')}>
+                    <Text style={styles.carteTitre}>{p.nom}</Text>
+                    <Text style={styles.carteSousTexte}>{p.type_volaille} · {p.objectif_sujets} sujets visés</Text>
+                    {objectif > 0 && (
+                      <View style={styles.barreFond}>
+                        <View style={[styles.barreRemplie, { width: `${pct}%` }]} />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         )}
 
