@@ -173,6 +173,10 @@ const CommerceScreen = ({ token, projetActifId }) => {
 
   const totalRecettes = ventes.reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
   const totalVendus = ventes.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
+  const labelAnimalPluriel = (() => {
+    const l = (projet?.type_volaille || 'sujet').toLowerCase();
+    return l.endsWith('s') ? l : l + 's';
+  })();
   const totalPayees = ventes.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
   const totalEnAttente = totalRecettes - totalPayees;
 
@@ -386,7 +390,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
                   <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Encaissé</Text><Text style={styles.miniNoireValeur}>{formatMontant(totalPayees)}</Text></View>
                   <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>En attente</Text><Text style={styles.miniNoireValeur}>{formatMontant(totalEnAttente)}</Text></View>
                 </View>
-                <Text style={styles.carteNoireSousLabel}>{totalVendus} pintades vendues</Text>
+                <Text style={styles.carteNoireSousLabel}>{totalVendus} {labelAnimalPluriel} vendus</Text>
               </View>
 
               {ventes.length === 0 ? (

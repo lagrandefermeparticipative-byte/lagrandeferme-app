@@ -64,6 +64,8 @@ const AnalysesScreen = ({ token, projetActifId }) => {
   const totalVendus = ventes.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
   const totalMorts = totalSujetsInitiaux - totalVivants;
   const tauxSurvie = totalSujetsInitiaux > 0 ? ((totalVivants / totalSujetsInitiaux) * 100).toFixed(1) : 0;
+  const labelAnimal = (projet?.type_volaille || 'sujet').toLowerCase();
+  const labelAnimalPluriel = labelAnimal.endsWith('s') ? labelAnimal : labelAnimal + 's';
 
   const profitNet = totalRecettes - totalDepensesReelles;
   const rendementReel = totalDepensesReelles > 0 ? ((profitNet / totalDepensesReelles) * 100).toFixed(1) : 0;
@@ -118,9 +120,9 @@ const AnalysesScreen = ({ token, projetActifId }) => {
         {onglet === 'bilan' && (
           <View>
             <View style={styles.carteNoire}>
-              <Text style={styles.carteNoireLabel}>Coût de revient / pintade</Text>
+              <Text style={styles.carteNoireLabel}>Coût de revient / {labelAnimal}</Text>
               <Text style={styles.carteNoireMontant}>{formatMontant(coutRevient)}</Text>
-              <Text style={styles.carteNoireSousLabel}>Prévu : {formatMontant(coutRevientPrevu)} / pintade</Text>
+              <Text style={styles.carteNoireSousLabel}>Prévu : {formatMontant(coutRevientPrevu)} / {labelAnimal}</Text>
               <View style={styles.grille2noire}>
                 <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Rendement réel</Text><Text style={[styles.miniNoireValeur, { color: rendementReel >= 20 ? '#4ADE80' : '#FB923C' }]}>{rendementReel}%</Text></View>
                 <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Rendement projeté</Text><Text style={[styles.miniNoireValeur, { color: rendementProjecte >= 20 ? '#4ADE80' : '#FB923C' }]}>{rendementProjecte}%</Text></View>
@@ -221,7 +223,7 @@ const AnalysesScreen = ({ token, projetActifId }) => {
             </View>
             <View style={styles.carte}>
               <Text style={styles.carteTitre}>Projection finale</Text>
-              <LigneInfo label="Pintades restantes" value={totalVivants - totalVendus} />
+              <LigneInfo label={`${labelAnimalPluriel.charAt(0).toUpperCase()}${labelAnimalPluriel.slice(1)} restantes`} value={totalVivants - totalVendus} />
               <LigneInfo label="Prix moyen estimé" value={formatMontant((prixMale + prixFemelle) / 2)} />
               <LigneInfo label="Recette projetée" value={formatMontant(recetteProjetee)} />
               <LigneInfo label="Recette déjà réalisée" value={formatMontant(totalRecettes)} />

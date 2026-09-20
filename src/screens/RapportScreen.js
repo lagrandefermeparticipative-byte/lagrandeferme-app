@@ -23,6 +23,11 @@ const RapportScreen = ({ token, projetActifId }) => {
   const { getCache, setCache } = useCache();
   const headers = { Authorization: `Bearer ${token}` };
   const [dateDebutProjet, setDateDebutProjet] = useState(null);
+  const [typeVolaille, setTypeVolaille] = useState(null);
+  const labelAnimalPluriel = (() => {
+    const l = (typeVolaille || 'sujet').toLowerCase();
+    return l.endsWith('s') ? l : l + 's';
+  })();
   const semaine = getSemaineEnCours(dateDebutProjet);
   const [etape, setEtape] = useState('cheptel');
   const [lots, setLots] = useState([]);
@@ -79,7 +84,7 @@ const RapportScreen = ({ token, projetActifId }) => {
   useEffect(() => {
     if (projetActifId) {
       chargerTout();
-      api.get(`/projets/${projetActifId}`, { headers }).then(res => setDateDebutProjet(res.data.date_debut)).catch(() => {});
+      api.get(`/projets/${projetActifId}`, { headers }).then(res => { setDateDebutProjet(res.data.date_debut); setTypeVolaille(res.data.type_volaille); }).catch(() => {});
     }
   }, [projetActifId]);
 
@@ -172,7 +177,7 @@ const RapportScreen = ({ token, projetActifId }) => {
                 <View style={styles.effectifBloc}>
                   <Text style={styles.effectifLabel}>Effectif total actuel</Text>
                   <Text style={styles.effectifValeur}>{effectifTotal}</Text>
-                  <Text style={styles.effectifSous}>pintades vivantes · {lots.length} lot{lots.length > 1 ? 's' : ''}</Text>
+                  <Text style={styles.effectifSous}>{labelAnimalPluriel} vivants · {lots.length} lot{lots.length > 1 ? 's' : ''}</Text>
                 </View>
                 {lots.length > 1 && (
                   <>
