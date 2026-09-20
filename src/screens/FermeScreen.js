@@ -20,8 +20,14 @@ const FermeScreen = ({ token }) => {
   const [montantVente, setMontantVente] = useState('');
   const [noteVente, setNoteVente] = useState('');
   const [envoiVente, setEnvoiVente] = useState(false);
+  const [projetsAVenir, setProjetsAVenir] = useState([]);
 
   const headers = { Authorization: `Bearer ${token}` };
+
+  useEffect(() => {
+    api.get('/projets/a-venir', { headers }).then(res => setProjetsAVenir(res.data)).catch(() => setProjetsAVenir([]));
+  }, [token]);
+
   const charger = async (forcer = false) => {
     const cleCache = "ferme_depenses";
     if (!forcer) {
@@ -127,8 +133,7 @@ const FermeScreen = ({ token }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
-      <Header titre="Ferme" sousTitre="Vue d'ensemble · Associés" sansRetour
-        action={<TouchableOpacity style={styles.boutonProchains} onPress={() => navigation.navigate('ProjetsAVenir')}><Text style={styles.boutonProchainsTexte}>Prochains projets</Text></TouchableOpacity>} />
+      <Header titre="Ferme" sousTitre="Vue d'ensemble · Associés" sansRetour />
       <ScrollView style={styles.conteneur}>
 
         <View style={styles.carteNoire}>
@@ -154,6 +159,34 @@ const FermeScreen = ({ token }) => {
             <Text style={styles.miniLabel}>📖 Journal</Text>
             <Text style={styles.miniValeur}>Toute l'activité →</Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.ligneEntre}>
+            <Text style={styles.sectionTitre}>Prochains projets</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('NouveauProjetAVenir')}><Text style={styles.lienAjouter}>+ Nouveau</Text></TouchableOpacity>
+          </View>
+          {projetsAVenir.length === 0 ? (
+            <TouchableOpacity style={styles.videCarte} onPress={() => navigation.navigate('NouveauProjetAVenir')}>
+              <Text style={styles.vide}>Aucun projet à venir — en créer un</Text>
+            </TouchableOpacity>
+          ) : projetsAVenir.map(p => {
+            const objectif = parseFloat(p.objectif_collecte || 0);
+            const reserve = parseFloat(p.total_reserve || 0);
+            const pct = objectif > 0 ? Math.min(100, Math.round((reserve / objectif) * 100)) : null;
+            return (
+              <TouchableOpacity key={p.id} style={styles.carte} onPress={() => navigation.navigate('ProjetsAVenir')}>
+                <Text style={styles.carteTitre}>{p.nom}</Text>
+                <Text style={styles.carteSousTexte}>{p.type_volaille} · {p.objectif_sujets} sujets visés</Text>
+                {objectif > 0 && (
+                  <>
+                    <View style={styles.barreFondClaire}><View style={[styles.barreRemplieVerte, { width: `${pct}%` }]} /></View>
+                    <Text style={styles.carteSousTexte}>{formatMontant(reserve)} réservés sur {formatMontant(objectif)} ({pct}%)</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {sujetsReproduction.length > 0 && (
@@ -303,8 +336,10 @@ const FermeScreen = ({ token }) => {
 };
 
 const styles = StyleSheet.create({
-  boutonProchains: { backgroundColor: '#F5F5F7', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  boutonProchainsTexte: { color: '#1D1D1F', fontSize: 11, fontWeight: '600' },
+  lienAjouter: { color: '#4338CA', fontSize: 12, fontWeight: '600' },
+  videCarte: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E5EA', padding: 16 },
+  barreFondClaire: { height: 4, backgroundColor: '#F5F5F7', borderRadius: 2, marginTop: 8, marginBottom: 4, overflow: 'hidden' },
+  barreRemplieVerte: { height: 4, borderRadius: 2, backgroundColor: '#2D6A4F' },
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
