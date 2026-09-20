@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
 import Header from '../components/Header';
 import { useCache } from '../context/CacheContext';
@@ -9,6 +10,7 @@ const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 
 const formatMontant = (m) => new Intl.NumberFormat('fr-FR').format(Math.round(m || 0)) + ' F';
 
 const FermeScreen = ({ token }) => {
+  const navigation = useNavigation();
   const { getCache, setCache } = useCache();
   const [depenses, setDepenses] = useState([]);
   const [sujetsReproduction, setSujetsReproduction] = useState([]);
@@ -125,7 +127,8 @@ const FermeScreen = ({ token }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
-      <Header titre="Ferme" sousTitre="Vue d'ensemble · Associés" sansRetour />
+      <Header titre="Ferme" sousTitre="Vue d'ensemble · Associés" sansRetour
+        action={<TouchableOpacity style={styles.boutonProchains} onPress={() => navigation.navigate('ProjetsAVenir')}><Text style={styles.boutonProchainsTexte}>Prochains projets</Text></TouchableOpacity>} />
       <ScrollView style={styles.conteneur}>
 
         <View style={styles.carteNoire}>
@@ -300,6 +303,8 @@ const FermeScreen = ({ token }) => {
 };
 
 const styles = StyleSheet.create({
+  boutonProchains: { backgroundColor: '#F5F5F7', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  boutonProchainsTexte: { color: '#1D1D1F', fontSize: 11, fontWeight: '600' },
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   carteNoire: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 8, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },

@@ -20,6 +20,7 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
   const [onglet, setOnglet] = useState('investissement');
   const [rapports, setRapports] = useState([]);
   const [rapportOuvertId, setRapportOuvertId] = useState(null);
+  const [projetsAVenir, setProjetsAVenir] = useState([]);
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
@@ -27,6 +28,10 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
       .then(res => setProjets(res.data))
       .catch(() => setProjets([]))
       .finally(() => setChargement(false));
+  }, [token]);
+
+  useEffect(() => {
+    api.get('/projets/a-venir', { headers }).then(res => setProjetsAVenir(res.data)).catch(() => setProjetsAVenir([]));
   }, [token]);
 
   useEffect(() => {
@@ -58,8 +63,7 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
-      <Header titre="Mes investissements" sansRetour
-        action={<TouchableOpacity onPress={() => navigation.navigate('ProjetsAVenir')}><Text style={styles.lienProchains}>Prochains projets</Text></TouchableOpacity>} />
+      <Header titre="Mes investissements" sansRetour />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.conteneur}>
         <View style={styles.ongletsLigne}>
           {['investissement', 'rapports', 'messages'].map(t => (
@@ -92,6 +96,28 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
                 </TouchableOpacity>
               ))
             )}
+
+            {projetsAVenir.length > 0 && (
+              <View style={{ marginTop: 20 }}>
+                <Text style={styles.labelSection}>PROCHAINS PROJETS</Text>
+                {projetsAVenir.map(p => {
+                  const objectif = parseFloat(p.objectif_collecte || 0);
+                  const reserve = parseFloat(p.total_reserve || 0);
+                  const pct = objectif > 0 ? Math.min(100, Math.round((reserve / objectif) * 100)) : null;
+                  return (
+                    <TouchableOpacity key={p.id} style={styles.carteProjet} onPress={() => navigation.navigate('ProjetsAVenir')}>
+                      <Text style={styles.carteTitre}>{p.nom}</Text>
+                      <Text style={styles.carteSousTexte}>{p.type_volaille} · {p.objectif_sujets} sujets visés</Text>
+                      {objectif > 0 && (
+                        <View style={styles.barreFond}>
+                          <View style={[styles.barreRemplie, { width: `${pct}%` }]} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
           </View>
         )}
 
@@ -116,8 +142,10 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
 };
 
 const styles = StyleSheet.create({
-  lienProchains: { color: '#1D4ED8', fontSize: 12, fontWeight: '600' },
   conteneur: { flex: 1, padding: 16 },
+  labelSection: { color: '#6E6E73', fontSize: 11, fontWeight: '600', letterSpacing: 0.4, marginBottom: 10 },
+  barreFond: { height: 4, backgroundColor: '#F5F5F7', borderRadius: 2, marginTop: 8, overflow: 'hidden' },
+  barreRemplie: { height: 4, borderRadius: 2, backgroundColor: '#2D6A4F' },
   vide: { fontSize: 13, color: '#6E6E73', textAlign: 'center', marginTop: 40 },
   ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', marginBottom: 14 },
   ongletBouton: { paddingVertical: 10, marginRight: 20 },

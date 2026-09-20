@@ -424,10 +424,7 @@ const DashboardScreen = ({ token, projetActifId, utilisateurNom }) => {
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Tableau de bord" sousTitre="Gestionnaire" sansRetour
-        action={<View style={{ flexDirection: 'row', gap: 6 }}>
-          <TouchableOpacity style={styles.boutonGrisPetit} onPress={() => navigation.navigate('ProjetsAVenir')}><Text style={styles.boutonGrisPetitTexte}>Prochains</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('nouveauProjet')}><Text style={styles.boutonPetitTexte}>+ Projet</Text></TouchableOpacity>
-        </View>}
+        action={<TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('nouveauProjet')}><Text style={styles.boutonPetitTexte}>+ Projet</Text></TouchableOpacity>}
       />
       <View style={styles.sousOngletsLigne}>
         {['dashboard', 'rapports', 'messages'].map(t => (
@@ -677,8 +674,6 @@ const styles = StyleSheet.create({
   actionIndigo: { flex: 1, backgroundColor: '#EEF2FF', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   actionIndigoTexte: { color: '#4338CA', fontSize: 11, fontWeight: '600' },
   boutonPetit: { backgroundColor: '#1D1D1F', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  boutonGrisPetit: { backgroundColor: '#F5F5F7', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  boutonGrisPetitTexte: { color: '#1D1D1F', fontSize: 11, fontWeight: '600' },
   boutonPetitTexte: { color: '#fff', fontSize: 11, fontWeight: '600' },
   label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
   champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
