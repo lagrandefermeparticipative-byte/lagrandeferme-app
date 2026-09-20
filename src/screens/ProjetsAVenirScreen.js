@@ -120,7 +120,7 @@ const ProjetsAVenirScreen = ({ token }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
-      <Header titre="Prochains projets" sansRetour
+      <Header titre="Prochains projets"
         action={estGestionnaire ? (
           <TouchableOpacity style={styles.boutonAjout} onPress={() => navigation.navigate('NouveauProjetAVenir')}>
             <Text style={styles.boutonAjoutTexte}>+ Projet</Text>
