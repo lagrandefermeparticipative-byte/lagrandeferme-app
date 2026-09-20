@@ -42,7 +42,7 @@ const MesProjetsScreen = ({ onChoisir }) => {
 
   const ensemble = lignesInvest ? {
     totalMise: lignesInvest.reduce((s, l) => s + parseFloat(l.mise || 0), 0),
-    totalGain: lignesInvest.reduce((s, l) => s + parseFloat(l.mise || 0) * (1 + parseFloat(l.rendement_promis || 0) / 100), 0),
+    totalGain: lignesInvest.reduce((s, l) => s + (l.montant_estime != null ? parseFloat(l.montant_estime) : parseFloat(l.mise || 0)), 0),
     nbProjets: lignesInvest.length,
   } : null;
 
@@ -65,7 +65,7 @@ const MesProjetsScreen = ({ onChoisir }) => {
             <View style={styles.statsEtalees}>
               <View>
                 <Text style={styles.statValeurGrande}>{formatMontant(ensemble.totalGain)}</Text>
-                <Text style={styles.statLabel}>Retour attendu</Text>
+                <Text style={styles.statLabel}>Estimé à date</Text>
               </View>
               <View style={{ marginLeft: -90 }}>
                 <Text style={styles.statValeurGrande}>{ensemble.nbProjets}</Text>
@@ -85,8 +85,8 @@ const MesProjetsScreen = ({ onChoisir }) => {
                       <Text style={styles.detailValeur}>{formatMontant(l.mise)}</Text>
                     </View>
                     <View style={styles.ligneEntre}>
-                      <Text style={styles.detailLabel}>Retour attendu</Text>
-                      <Text style={styles.detailValeur}>{formatMontant(parseFloat(l.mise) * (1 + parseFloat(l.rendement_promis || 0) / 100))}</Text>
+                      <Text style={styles.detailLabel}>Estimé à date</Text>
+                      <Text style={styles.detailValeur}>{formatMontant(l.montant_estime != null ? l.montant_estime : l.mise)}</Text>
                     </View>
                   </View>
                 ))}

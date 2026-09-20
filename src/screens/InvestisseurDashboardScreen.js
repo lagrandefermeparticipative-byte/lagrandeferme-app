@@ -21,6 +21,7 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
   const [rapports, setRapports] = useState([]);
   const [rapportOuvertId, setRapportOuvertId] = useState(null);
   const [projetsAVenir, setProjetsAVenir] = useState([]);
+  const [estimations, setEstimations] = useState({});
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
@@ -28,6 +29,15 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
       .then(res => setProjets(res.data))
       .catch(() => setProjets([]))
       .finally(() => setChargement(false));
+    // Montants réels basés sur la caisse actuelle de chaque projet, pas la
+    // promesse de départ — même calcul que la Liquidation.
+    api.get('/utilisateurs/mon-investissement', { headers })
+      .then(res => {
+        const parProjet = {};
+        res.data.forEach(l => { parProjet[l.projet_id] = l; });
+        setEstimations(parProjet);
+      })
+      .catch(() => setEstimations({}));
   }, [token]);
 
   useEffect(() => {
@@ -49,7 +59,10 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
 
   const ensemble = projets.length > 0 ? {
     totalMise: projets.reduce((s, p) => s + parseFloat(p.mise || 0), 0),
-    totalGain: projets.reduce((s, p) => s + parseFloat(p.mise || 0) * (1 + parseFloat(p.rendement_promis || 0) / 100), 0),
+    totalGain: projets.reduce((s, p) => {
+      const est = estimations[p.id];
+      return s + (est && est.montant_estime != null ? est.montant_estime : parseFloat(p.mise || 0));
+    }, 0),
   } : null;
 
   const ouvrirProjet = (projet) => {
@@ -81,7 +94,7 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
               <View style={styles.carteEnsemble}>
                 <Text style={styles.carteEnsembleLabel}>VOTRE INVESTISSEMENT TOTAL</Text>
                 <Text style={styles.carteEnsembleMontant}>{formatMontant(ensemble.totalMise)}</Text>
-                <Text style={styles.carteEnsembleSousTexte}>{projets.length} projet{projets.length > 1 ? 's' : ''} · {formatMontant(ensemble.totalGain)} attendus au total</Text>
+                <Text style={styles.carteEnsembleSousTexte}>{projets.length} projet{projets.length > 1 ? 's' : ''} · {formatMontant(ensemble.totalGain)} estimés au total à date</Text>
               </View>
             )}
             {chargement ? (
@@ -89,12 +102,18 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
             ) : projets.length === 0 ? (
               <Text style={styles.vide}>Aucun investissement pour l'instant.</Text>
             ) : (
-              projets.map(p => (
-                <TouchableOpacity key={p.id} style={styles.carteProjet} onPress={() => ouvrirProjet(p)}>
-                  <Text style={styles.carteTitre}>{p.projet_nom || p.nom}</Text>
-                  <Text style={styles.carteSousTexte}>Investi : {formatMontant(p.mise)}</Text>
-                </TouchableOpacity>
-              ))
+              projets.map(p => {
+                const est = estimations[p.id];
+                return (
+                  <TouchableOpacity key={p.id} style={styles.carteProjet} onPress={() => ouvrirProjet(p)}>
+                    <Text style={styles.carteTitre}>{p.projet_nom || p.nom}</Text>
+                    <Text style={styles.carteSousTexte}>
+                      Investi : {formatMontant(p.mise)}
+                      {est && est.montant_estime != null ? ` · Estimé : ${formatMontant(est.montant_estime)}` : ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
             )}
 
             <View style={{ marginTop: 20 }}>

@@ -315,15 +315,21 @@ const InvestissementScreen = ({ token, projetActifId, utilisateurNom }) => {
             investissement ? (
               <View style={{ gap: 14 }}>
                 <View style={estilosApple.carteApple}>
-                  <Text style={estilosApple.labelApple}>CE QUE VOUS ALLEZ RECEVOIR</Text>
-                  <Text style={estilosApple.montantApple}>{formatMontant(investissement.mise * (1 + investissement.rendement_promis / 100))}</Text>
+                  <Text style={estilosApple.labelApple}>{investissement.estimation_type === 'liquide_final' ? 'MONTANT FINAL REÇU' : 'CE QUE VOUS POUVEZ ESPÉRER RECEVOIR'}</Text>
+                  <Text style={estilosApple.montantApple}>{investissement.montant_estime != null ? formatMontant(investissement.montant_estime) : '—'}</Text>
                   <Text style={estilosApple.sousTexteApple}>Sur votre mise de {formatMontant(investissement.mise)} · {((investissement.mise / investissement.total_investi) * 100).toFixed(1)}% du projet</Text>
+                  {investissement.estimation_type === 'estimation_live' && (
+                    <Text style={estilosApple.sousTexteApple}>Estimation en direct, basée sur ce qu'il reste réellement dans la caisse du projet aujourd'hui — elle évolue avec la santé du cheptel et les ventes.</Text>
+                  )}
+                  {investissement.reporte && (
+                    <Text style={estilosApple.sousTexteApple}>Ce projet a été relancé : votre capital a été reporté sur le nouveau projet, c'est là que continue l'estimation.</Text>
+                  )}
                   <TouchableOpacity onPress={() => setDetailsOuverts(prev => !prev)}>
                     <Text style={estilosApple.lienDetails}>{detailsOuverts ? 'Masquer les détails' : 'Voir les détails'}</Text>
                   </TouchableOpacity>
                   {detailsOuverts && (
                     <View style={estilosApple.detailsBloc}>
-                      <View style={estilosApple.ligneDetail}><Text style={estilosApple.detailLabel}>Rendement promis</Text><Text style={estilosApple.detailValeur}>{investissement.rendement_promis}%</Text></View>
+                      <View style={estilosApple.ligneDetail}><Text style={estilosApple.detailLabel}>Rendement promis (objectif initial)</Text><Text style={estilosApple.detailValeur}>{investissement.rendement_promis}%</Text></View>
                       <View style={estilosApple.ligneDetail}><Text style={estilosApple.detailLabel}>Coût total du projet</Text><Text style={estilosApple.detailValeur}>{formatMontant(investissement.total_investi)}</Text></View>
                     </View>
                   )}
