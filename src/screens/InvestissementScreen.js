@@ -331,6 +331,9 @@ const InvestissementScreen = ({ token, projetActifId, utilisateurNom }) => {
                     <View style={estilosApple.detailsBloc}>
                       <View style={estilosApple.ligneDetail}><Text style={estilosApple.detailLabel}>Rendement promis (objectif initial)</Text><Text style={estilosApple.detailValeur}>{investissement.rendement_promis}%</Text></View>
                       <View style={estilosApple.ligneDetail}><Text style={estilosApple.detailLabel}>Coût total du projet</Text><Text style={estilosApple.detailValeur}>{formatMontant(investissement.total_investi)}</Text></View>
+                      {investissement.estimation_type === 'estimation_live' && investissement.vivants > 0 && (
+                        <View style={estilosApple.ligneDetail}><Text style={estilosApple.detailLabel}>Cheptel vivant compté</Text><Text style={estilosApple.detailValeur}>{investissement.vivants} sujets · {formatMontant(investissement.valeur_cheptel_vivant)}</Text></View>
+                      )}
                     </View>
                   )}
                 </View>

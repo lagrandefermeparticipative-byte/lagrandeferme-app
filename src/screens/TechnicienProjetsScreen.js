@@ -25,7 +25,7 @@ const progressionTemporelle = (dateDebut, dateFin) => {
 // Écran dédié au technicien : liste directe de ses projets assignés, sans
 // switch ni information d'investissement — un clic mène droit à la mise à
 // jour du cheptel de ce projet.
-const TechnicienProjetsScreen = ({ token, onChoisir }) => {
+const TechnicienProjetsScreen = ({ token, onChoisir, onRetour }) => {
   const { choisirProjet } = useProjet();
   const [projets, setProjets] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -44,7 +44,12 @@ const TechnicienProjetsScreen = ({ token, onChoisir }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
-      <Header titre="Mes projets" sansRetour />
+      <Header titre="Mes projets" sansRetour
+        action={onRetour ? (
+          <TouchableOpacity onPress={onRetour}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#1D1D1F' }}>← Dashboard</Text>
+          </TouchableOpacity>
+        ) : null} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.conteneur}>
         {chargement ? (
           <Text style={styles.vide}>Chargement...</Text>

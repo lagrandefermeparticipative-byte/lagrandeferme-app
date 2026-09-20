@@ -54,7 +54,7 @@ const AccueilRouteur = (props) => {
 
   if (modeTechnicien) {
     if (projetChoisi) return <GestionInvestScreen {...props} />;
-    if (vueTechnicien === 'liste') return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} />;
+    if (vueTechnicien === 'liste') return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} onRetour={() => setVueTechnicien('dashboard')} />;
     return <DashboardTechnicienScreen token={token} onVoirProjets={() => setVueTechnicien('liste')} onOuvrirProjet={() => setProjetChoisi(true)} />;
   }
 
@@ -64,7 +64,7 @@ const AccueilRouteur = (props) => {
   if (role === 'technicien') {
     if (chargement) return null;
     if (projetChoisi) return <GestionInvestScreen {...props} />;
-    if (vueTechnicien === 'liste') return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} />;
+    if (vueTechnicien === 'liste') return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} onRetour={() => setVueTechnicien('dashboard')} />;
     return <DashboardTechnicienScreen token={token} onVoirProjets={() => setVueTechnicien('liste')} onOuvrirProjet={() => setProjetChoisi(true)} />;
   }
 
