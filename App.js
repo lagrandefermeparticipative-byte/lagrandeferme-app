@@ -22,6 +22,8 @@ import ElevageScreen from './src/screens/ElevageScreen';
 import ReproductionScreen from './src/screens/ReproductionScreen';
 import GenerationsScreen from './src/screens/GenerationsScreen';
 import LiquidationScreen from './src/screens/LiquidationScreen';
+import ProjetsAVenirScreen from './src/screens/ProjetsAVenirScreen';
+import NouveauProjetAVenirScreen from './src/screens/NouveauProjetAVenirScreen';
 import GestionScreen from './src/screens/GestionScreen';
 import CommerceScreen from './src/screens/CommerceScreen';
 import AnalysesScreen from './src/screens/AnalysesScreen';
@@ -64,6 +66,8 @@ const AppNavigator = () => {
       <Stack.Screen name="Reproduction">{() => <AvecNav><ReproductionScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Generations">{() => <AvecNav><GenerationsScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Liquidation">{({ route, navigation }) => <AvecNav><LiquidationScreen token={token} route={route} navigation={navigation} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="ProjetsAVenir">{() => <AvecNav><ProjetsAVenirScreen token={token} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="NouveauProjetAVenir">{() => <AvecNav><NouveauProjetAVenirScreen token={token} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Gestion">{() => <AvecNav><GestionScreen token={token} projetActifId={projetActifId} projetNom={projetNom} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Commerce">{() => <AvecNav><CommerceScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Analyses">{() => <AvecNav><AnalysesScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>

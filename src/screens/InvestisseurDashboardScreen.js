@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
 import { useProjet } from '../context/ProjetContext';
 import api from '../services/api';
@@ -12,6 +13,7 @@ const formatMontant = (m) => new Intl.NumberFormat('fr-FR').format(Math.round(m 
 // désormais des onglets ici, au niveau global — ils ne concernent pas un
 // seul projet à la fois, contrairement à l'investissement lui-même.
 const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
+  const navigation = useNavigation();
   const { choisirProjet } = useProjet();
   const [projets, setProjets] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -56,7 +58,8 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
-      <Header titre="Mes investissements" sansRetour />
+      <Header titre="Mes investissements" sansRetour
+        action={<TouchableOpacity onPress={() => navigation.navigate('ProjetsAVenir')}><Text style={styles.lienProchains}>Prochains projets</Text></TouchableOpacity>} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.conteneur}>
         <View style={styles.ongletsLigne}>
           {['investissement', 'rapports', 'messages'].map(t => (
@@ -113,6 +116,7 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
 };
 
 const styles = StyleSheet.create({
+  lienProchains: { color: '#1D4ED8', fontSize: 12, fontWeight: '600' },
   conteneur: { flex: 1, padding: 16 },
   vide: { fontSize: 13, color: '#6E6E73', textAlign: 'center', marginTop: 40 },
   ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', marginBottom: 14 },

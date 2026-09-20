@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import GestionInvestScreen from './GestionInvestScreen';
 import TechnicienProjetsScreen from './TechnicienProjetsScreen';
+import DashboardTechnicienScreen from './DashboardTechnicienScreen';
 import InvestisseurDashboardScreen from './InvestisseurDashboardScreen';
 import InvestissementScreen from './InvestissementScreen';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +17,7 @@ const AccueilRouteur = (props) => {
   const { utilisateur, modeVue, token } = useAuth();
   const { projets, chargement, projetActifId } = useProjet();
   const [projetChoisi, setProjetChoisi] = useState(false);
+  const [vueTechnicien, setVueTechnicien] = useState('dashboard'); // 'dashboard' | 'liste'
   const { setOnRetourProjets, setProjetChoisiGlobal } = useNavigationProjets();
 
   const role = utilisateur?.role;
@@ -33,6 +35,7 @@ const AccueilRouteur = (props) => {
 
   useEffect(() => {
     if (!estGestionnairePur) setProjetChoisi(false);
+    setVueTechnicien('dashboard');
   }, [modeVue]);
 
   useEffect(() => {
@@ -50,17 +53,19 @@ const AccueilRouteur = (props) => {
   }
 
   if (modeTechnicien) {
-    if (!projetChoisi) return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} />;
-    return <GestionInvestScreen {...props} />;
+    if (projetChoisi) return <GestionInvestScreen {...props} />;
+    if (vueTechnicien === 'liste') return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} />;
+    return <DashboardTechnicienScreen token={token} onVoirProjets={() => setVueTechnicien('liste')} onOuvrirProjet={() => setProjetChoisi(true)} />;
   }
 
-  // Technicien pur (aucun rôle cumulé) : même liste, mais sans switch —
-  // useMesRoles n'a pas de sens hors contexte projet, donc on ne bascule
-  // jamais entre modes ici.
+  // Technicien pur (aucun rôle cumulé) : même parcours dashboard -> liste ->
+  // projet, mais sans switch — useMesRoles n'a pas de sens hors contexte
+  // projet, donc on ne bascule jamais entre modes ici.
   if (role === 'technicien') {
     if (chargement) return null;
-    if (!projetChoisi && projets.length > 1) return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} />;
-    return <GestionInvestScreen {...props} />;
+    if (projetChoisi) return <GestionInvestScreen {...props} />;
+    if (vueTechnicien === 'liste') return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} />;
+    return <DashboardTechnicienScreen token={token} onVoirProjets={() => setVueTechnicien('liste')} onOuvrirProjet={() => setProjetChoisi(true)} />;
   }
 
   // Mode gestion (gestionnaire pur, ou gestion_invest en mode gestion) —
