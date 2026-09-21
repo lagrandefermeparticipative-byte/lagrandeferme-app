@@ -45,7 +45,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
   const charger = async () => {
     try {
       const [ventesRes, acheteursRes, projetRes, lotsRes] = await Promise.all([
-        api.get(`/ventes?projet_id=${projetActifId}`, { headers }),
+        api.get('/ventes', { headers }),
         api.get('/acheteurs', { headers }),
         api.get(`/projets/${projetActifId}`, { headers }),
         api.get(`/lots?projet_id=${projetActifId}`, { headers }),
@@ -73,7 +73,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
   }, [projetActifId]);
 
   useEffect(() => {
-    api.get('/projets', { headers }).then(res => setTousProjets(res.data)).catch(() => {});
+    api.get('/projets', { headers }).then(res => setTousProjets(res.data)).catch(error => console.log('Erreur chargement projets:', error.message));
   }, []);
 
   useEffect(() => {
@@ -98,7 +98,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
         .then(res => res.data
           .filter(l => l.vente_activee && parseInt(l.vivants ?? l.quantite_initiale) > 0)
           .map(l => ({ ...l, projet_nom: p.nom, projet_id: p.uuid_id || p.id })))
-        .catch(() => [])
+        .catch(error => { console.log(`Erreur lots disponibles (projet ${p.nom}):`, error.message); return []; })
     )).then(listes => setLotsDisponibles(listes.flat()))
       .finally(() => setChargementDisponibles(false));
   }, [tousProjets]);
@@ -456,6 +456,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
                       <Text style={styles.carteTitre}>{vente.acheteur || 'Acheteur inconnu'}</Text>
                       <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
                     </View>
+                    <Text style={[styles.carteSousTexte, { fontWeight: '600', color: '#8E8E93' }]}>{vente.projet_nom}</Text>
                     <Text style={styles.carteSousTexte}>{new Date(vente.date_vente).toLocaleDateString('fr-FR')} · {vente.lot_nom || 'Lot inconnu'} · {vente.type_acheteur}</Text>
                     <View style={styles.grille3}>
                       <View style={styles.statBleue}><Text style={styles.statBleueTexte}>{vente.males_vendus}</Text><Text style={styles.statBleueLabel}>Mâles</Text></View>
