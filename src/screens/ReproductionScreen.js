@@ -28,7 +28,12 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   const [formPonte, setFormPonte] = useState({ nb_femelles: '', nb_males: '', date_debut_ponte: '', date_fin_ponte: '' });
   const [formCouveuse, setFormCouveuse] = useState({ prestataire_couveuse: '', date_envoi_couveuse: '', oeufs_envoyes: '', cout_couveuse: '', duree_incubation: '28', date_eclosion_prevue: '' });
   const [formCollecte, setFormCollecte] = useState({ date_collecte: new Date().toISOString().split('T')[0], nombre_oeufs: '', observations: '' });
-  const [formEclosion, setFormEclosion] = useState({ date_eclosion_reelle: new Date().toISOString().split('T')[0], poussins_eclos: '', poussins_viables: '', observations: '' });
+  const [formEclosion, setFormEclosion] = useState({ date_eclosion_reelle: new Date().toISOString().split('T')[0], poussins_eclos: '', poussins_viables: '', observations: '', projet_suivant_id: '' });
+  const [tousProjets, setTousProjets] = useState([]);
+
+  useEffect(() => {
+    api.get('/projets', { headers }).then(res => setTousProjets(res.data)).catch(() => setTousProjets([]));
+  }, []);
 
   const charger = async () => {
     try {
@@ -110,6 +115,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
       const tauxEclosion = cycleActif.oeufs_envoyes > 0 ? ((poussinsEclos / cycleActif.oeufs_envoyes) * 100).toFixed(1) : 0;
       await api.put(`/reproduction/${cycleActif.uuid_id || cycleActif.id}`, {
         ...formEclosion, poussins_eclos: poussinsEclos, poussins_viables: poussinsViables, taux_eclosion: tauxEclosion, statut: 'termine',
+        projet_suivant_id: formEclosion.projet_suivant_id || null,
       }, { headers });
       setVue('liste'); charger();
     } catch (error) { Alert.alert('Erreur', "Enregistrement impossible."); }
@@ -272,6 +278,20 @@ const ReproductionScreen = ({ token, projetActifId }) => {
                 <Text style={styles.encartVertValeur}>{((parseInt(formEclosion.poussins_eclos) / cycleActif.oeufs_envoyes) * 100).toFixed(1)}%</Text>
               </View>
             )}
+            <Text style={styles.label}>Projet où placer les poussins viables (optionnel)</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <TouchableOpacity onPress={() => setFormEclosion({ ...formEclosion, projet_suivant_id: '' })}
+                style={[styles.chip, formEclosion.projet_suivant_id === '' && styles.chipActif, { marginRight: 6 }]}>
+                <Text style={[styles.chipTexte, formEclosion.projet_suivant_id === '' && styles.chipTexteActif]}>Aucun</Text>
+              </TouchableOpacity>
+              {tousProjets.map(p => (
+                <TouchableOpacity key={p.id} onPress={() => setFormEclosion({ ...formEclosion, projet_suivant_id: p.uuid_id || p.id })}
+                  style={[styles.chip, formEclosion.projet_suivant_id === (p.uuid_id || p.id) && styles.chipActif, { marginRight: 6 }]}>
+                  <Text style={[styles.chipTexte, formEclosion.projet_suivant_id === (p.uuid_id || p.id) && styles.chipTexteActif]}>{p.nom}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Text style={styles.infoTexte}>Si choisi, un lot "Reproduction interne" est créé automatiquement dans ce projet avec les poussins viables.</Text>
             <Text style={styles.label}>Observations</Text>
             <TextInput style={[styles.champ, { height: 70 }]} multiline value={formEclosion.observations} onChangeText={v => setFormEclosion({ ...formEclosion, observations: v })} />
           </View>

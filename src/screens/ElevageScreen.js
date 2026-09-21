@@ -31,6 +31,16 @@ const ElevageScreen = ({ token, projetActifId }) => {
   const [editForm, setEditForm] = useState({ males: '', femelles: '', enclos: '', observations: '' });
   const [mortForm, setMortForm] = useState({ nombre: '', cause: 'Inconnue', observations: '' });
   const [reproForm, setReproForm] = useState({ nombre_sujets: '', note: '' });
+  const [tousProjets, setTousProjets] = useState([]);
+  const [transfertForm, setTransfertForm] = useState({
+    projet_destination_id: '', males_transferes: '', femelles_transferes: '',
+    valorise: false, valeur: '', acheteur_note: '',
+  });
+  const [sexageForm, setSexageForm] = useState({ males: '', femelles: '' });
+
+  useEffect(() => {
+    api.get('/projets', { headers }).then(res => setTousProjets(res.data)).catch(() => setTousProjets([]));
+  }, []);
   const charger = async (forcer = false) => {
     const cleCache = `elevage_${projetActifId}`;
     if (!forcer) {
@@ -105,6 +115,36 @@ const ElevageScreen = ({ token, projetActifId }) => {
       }, { headers });
       setVue('liste'); charger(true);
     } catch (error) { setErreur(error.response?.data?.message || 'Erreur.'); }
+    finally { setEnvoi(false); }
+  };
+
+  const soumettreTransfert = async () => {
+    const malesNum = parseInt(transfertForm.males_transferes) || 0;
+    const femellesNum = parseInt(transfertForm.femelles_transferes) || 0;
+    if (!transfertForm.projet_destination_id) { setErreur('Choisis le projet de destination.'); return; }
+    if (malesNum + femellesNum <= 0) { setErreur('Indique au moins un sujet à transférer.'); return; }
+    if (transfertForm.valorise && (!transfertForm.valeur || parseFloat(transfertForm.valeur) <= 0)) { setErreur('Une valeur positive est requise pour un transfert valorisé.'); return; }
+    setEnvoi(true); setErreur('');
+    try {
+      await api.post(`/lots/${lotSelectionne.uuid_id || lotSelectionne.id}/transferer`, {
+        ...transfertForm, males_transferes: malesNum, femelles_transferes: femellesNum,
+        valeur: transfertForm.valorise ? parseFloat(transfertForm.valeur) : null,
+      }, { headers });
+      setVue('liste'); charger(true);
+      Alert.alert('Transfert effectué', 'Le lot a bien été transféré.');
+    } catch (error) { setErreur(error.response?.data?.message || 'Erreur lors du transfert.'); }
+    finally { setEnvoi(false); }
+  };
+
+  const soumettreSexage = async () => {
+    const malesNum = parseInt(sexageForm.males) || 0;
+    const femellesNum = parseInt(sexageForm.femelles) || 0;
+    if (malesNum + femellesNum <= 0) { setErreur('Indique au moins un sujet.'); return; }
+    setEnvoi(true); setErreur('');
+    try {
+      await api.put(`/lots/${lotSelectionne.uuid_id || lotSelectionne.id}/sexer`, { males: malesNum, femelles: femellesNum }, { headers });
+      setVue('liste'); charger(true);
+    } catch (error) { setErreur(error.response?.data?.message || 'Erreur lors du sexage.'); }
     finally { setEnvoi(false); }
   };
 
@@ -216,6 +256,94 @@ const ElevageScreen = ({ token, projetActifId }) => {
           {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
           <TouchableOpacity style={styles.boutonOrangeGrand} onPress={extraireReproducteurs} disabled={envoi}>
             <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Extraire les reproducteurs'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // --- VUE TRANSFÉRER ---
+  if (vue === 'transfert' && lotSelectionne) {
+    const vivantsLot = parseInt(lotSelectionne.vivants || lotSelectionne.quantite_initiale);
+    const totalTransfere = (parseInt(transfertForm.males_transferes) || 0) + (parseInt(transfertForm.femelles_transferes) || 0);
+    const projetsDestination = tousProjets.filter(p => (p.uuid_id || p.id) !== projetActifId);
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Header titre={`Transférer · ${lotSelectionne.nom}`} />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.alerteOrangeLegere}>
+            <Text style={styles.alerteOrangeLegereTexte}>{vivantsLot} sujets disponibles dans ce lot avant ce transfert</Text>
+          </View>
+          <View style={styles.carte}>
+            <Text style={styles.label}>Projet de destination *</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {projetsDestination.map(p => (
+                <TouchableOpacity key={p.id} onPress={() => setTransfertForm({ ...transfertForm, projet_destination_id: p.uuid_id || p.id })}
+                  style={[styles.chip, transfertForm.projet_destination_id === (p.uuid_id || p.id) && styles.chipActif, { marginRight: 6, marginBottom: 6 }]}>
+                  <Text style={[styles.chipTexte, transfertForm.projet_destination_id === (p.uuid_id || p.id) && styles.chipTexteActif]}>{p.nom}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Text style={styles.label}>Mâles à transférer</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={transfertForm.males_transferes} onChangeText={v => setTransfertForm({ ...transfertForm, males_transferes: v })} />
+            <Text style={styles.label}>Femelles à transférer</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={transfertForm.femelles_transferes} onChangeText={v => setTransfertForm({ ...transfertForm, femelles_transferes: v })} />
+            <TouchableOpacity style={styles.ligneCheckboxTransfert} onPress={() => setTransfertForm({ ...transfertForm, valorise: !transfertForm.valorise })}>
+              <View style={[styles.checkbox, transfertForm.valorise && styles.checkboxCoche]}>{transfertForm.valorise && <Text style={styles.checkboxTexte}>✓</Text>}</View>
+              <Text style={styles.checkboxLabel}>Valoriser ce transfert (le projet de destination a d'autres investisseurs)</Text>
+            </TouchableOpacity>
+            {transfertForm.valorise && (
+              <View>
+                <Text style={styles.label}>Valeur du transfert (F) *</Text>
+                <TextInput style={styles.champ} keyboardType="numeric" value={transfertForm.valeur} onChangeText={v => setTransfertForm({ ...transfertForm, valeur: v })} />
+                <Text style={styles.infoTexte}>Enregistré comme une vente payée pour ce projet, et comme un achat de sujets pour le projet de destination.</Text>
+              </View>
+            )}
+          </View>
+          {totalTransfere > vivantsLot && (
+            <View style={styles.alerteOrangeLegere}>
+              <Text style={styles.alerteOrangeLegereTexte}>⚠️ Tu essaies de transférer {totalTransfere} sujets mais ce lot n'en a que {vivantsLot} de disponibles.</Text>
+            </View>
+          )}
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
+          <TouchableOpacity style={styles.boutonPrincipal} onPress={soumettreTransfert} disabled={envoi}>
+            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Transférer'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // --- VUE SEXAGE ---
+  if (vue === 'sexage' && lotSelectionne) {
+    const vivantsLot = parseInt(lotSelectionne.vivants || lotSelectionne.quantite_initiale);
+    const totalSexe = (parseInt(sexageForm.males) || 0) + (parseInt(sexageForm.femelles) || 0);
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Header titre={`Sexer · ${lotSelectionne.nom}`} />
+        <ScrollView style={styles.conteneur}>
+          <View style={styles.alerteOrangeLegere}>
+            <Text style={styles.alerteOrangeLegereTexte}>{vivantsLot} sujets vivants dans ce lot — le total mâles + femelles doit correspondre exactement à ce nombre.</Text>
+          </View>
+          <View style={styles.carte}>
+            <Text style={styles.label}>Mâles *</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={sexageForm.males} onChangeText={v => setSexageForm({ ...sexageForm, males: v })} />
+            <Text style={styles.label}>Femelles *</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={sexageForm.femelles} onChangeText={v => setSexageForm({ ...sexageForm, femelles: v })} />
+            <Text style={styles.infoTexte}>Total saisi : {totalSexe} {totalSexe !== vivantsLot ? `(devrait être ${vivantsLot})` : '✓'}</Text>
+            <Text style={styles.infoTexte}>Une fois enregistré, le sexage de ce lot est définitif et ne pourra plus être refait.</Text>
+          </View>
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
+          <TouchableOpacity style={styles.boutonViolet} onPress={soumettreSexage} disabled={envoi}>
+            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Enregistrer le sexage'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
             <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
@@ -361,6 +489,8 @@ const ElevageScreen = ({ token, projetActifId }) => {
               badge = BADGES[lot.phase_calculee] || BADGES.demarrage;
             }
             const peutActiverVente = !epuise && lot.phase_calculee === 'finition' && !lot.vente_activee;
+            const especeSexageDifferable = ['Pintade', 'Poulet de chair', 'Dinde', 'Canard'].includes(projet?.type_volaille);
+            const peutSexer = especeSexageDifferable && !epuise && lot.phase_calculee !== 'demarrage' && !lot.date_sexage;
             return (
               <View style={styles.carteLot} key={lot.id}>
                 <View style={styles.ligneEntre}>
@@ -379,11 +509,11 @@ const ElevageScreen = ({ token, projetActifId }) => {
                 <Text style={styles.carteSousTexte}>{new Date(lot.date_arrivee).toLocaleDateString('fr-FR')} · {lot.fournisseur} · {lot.enclos}</Text>
                 <Text style={styles.italique}>{lot.origine_lot === 'reproduction_interne' ? '🐣 Né sur la ferme' : lot.origine_lot === 'autre' ? 'Autre origine' : '🛒 Acheté'}</Text>
 
-                {(lot.males > 0 || lot.femelles > 0) ? (
+                {(lot.date_sexage || lot.males > 0 || lot.femelles > 0) ? (
                   <Text style={styles.carteSousTexte}>♂ {lot.males} mâles · ♀ {lot.femelles} femelles</Text>
-                ) : (
-                  <Text style={styles.italique}>Sexage non encore effectué</Text>
-                )}
+                ) : especeSexageDifferable ? (
+                  <Text style={styles.italique}>{lot.phase_calculee === 'demarrage' ? 'Sexage pas encore possible (sujets trop jeunes)' : 'Sexage non encore effectué'}</Text>
+                ) : null}
 
                 <View style={styles.grille4}>
                   <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.quantite_initiale}</Text><Text style={styles.miniStatLabel}>Reçus</Text></View>
@@ -406,6 +536,16 @@ const ElevageScreen = ({ token, projetActifId }) => {
                 <TouchableOpacity style={styles.actionOrange} onPress={() => { setLotSelectionne(lot); setReproForm({ nombre_sujets: '', note: '' }); setErreur(''); setVue('reproducteurs'); }}>
                   <Text style={styles.actionOrangeTexte}>🐔 Extraire des reproducteurs</Text>
                 </TouchableOpacity>
+                {!epuise && (
+                  <TouchableOpacity style={styles.actionBleueLarge} onPress={() => { setLotSelectionne(lot); setTransfertForm({ projet_destination_id: '', males_transferes: '', femelles_transferes: '', valorise: false, valeur: '', acheteur_note: '' }); setErreur(''); setVue('transfert'); }}>
+                    <Text style={styles.actionBleueLargeTexte}>↔️ Transférer vers un autre projet</Text>
+                  </TouchableOpacity>
+                )}
+                {peutSexer && (
+                  <TouchableOpacity style={styles.actionVioletLarge} onPress={() => { setLotSelectionne(lot); setSexageForm({ males: '', femelles: '' }); setErreur(''); setVue('sexage'); }}>
+                    <Text style={styles.actionVioletLargeTexte}>♂♀ Sexer ce lot</Text>
+                  </TouchableOpacity>
+                )}
                 {peutActiverVente && (
                   <TouchableOpacity style={styles.boutonVert} onPress={() => activerVente(lot)}>
                     <Text style={styles.boutonPrincipalTexte}>✅ Activer la vente</Text>
@@ -492,6 +632,16 @@ const styles = StyleSheet.create({
   venteActiveeTexte: { color: '#059669', fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: 8 },
   bandeauViolet: { backgroundColor: '#F5F3FF', borderWidth: 1, borderColor: '#DDD6FE', borderRadius: 12, padding: 12, marginBottom: 16 },
   bandeauVioletTexte: { color: '#6D28D9', fontSize: 13, fontWeight: '600' },
+  ligneCheckboxTransfert: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
+  checkbox: { width: 18, height: 18, borderRadius: 4, borderWidth: 1.5, borderColor: '#D1D5DB', alignItems: 'center', justifyContent: 'center' },
+  checkboxCoche: { backgroundColor: '#1D1D1F', borderColor: '#1D1D1F' },
+  checkboxTexte: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  checkboxLabel: { fontSize: 12, color: '#1D1D1F', flex: 1 },
+  actionBleueLarge: { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#DBEAFE', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8 },
+  actionBleueLargeTexte: { color: '#1D4ED8', fontSize: 11, fontWeight: '600' },
+  actionVioletLarge: { backgroundColor: '#F5F3FF', borderWidth: 1, borderColor: '#DDD6FE', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8 },
+  actionVioletLargeTexte: { color: '#6D28D9', fontSize: 11, fontWeight: '600' },
+  boutonViolet: { backgroundColor: '#6D28D9', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
 });
 
 export default ElevageScreen;

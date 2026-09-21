@@ -18,9 +18,11 @@ const GestionAccesScreen = ({ token }) => {
   const [compteOuvertId, setCompteOuvertId] = useState(null);
   const [selectionParCompte, setSelectionParCompte] = useState({});
   const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState('');
 
   const charger = () => {
     setChargement(true);
+    setErreur('');
     Promise.all([
       api.get('/apercu-ferme/comptes', { headers }),
       api.get('/projets', { headers }),
@@ -30,7 +32,10 @@ const GestionAccesScreen = ({ token }) => {
       const initial = {};
       comptesRes.data.forEach(c => { initial[c.id] = c.projets_ids || []; });
       setSelectionParCompte(initial);
-    }).catch(() => {}).finally(() => setChargement(false));
+    }).catch((error) => {
+      console.log('Erreur chargement Gestion accès:', error.message);
+      setErreur(error.response?.data?.message || 'Erreur lors du chargement des comptes.');
+    }).finally(() => setChargement(false));
   };
 
   useEffect(() => { charger(); }, []);
@@ -73,6 +78,8 @@ const GestionAccesScreen = ({ token }) => {
       <Header titre="Gérer les accès" sousTitre='Capacité "Aperçu ferme"' />
       {chargement ? (
         <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
+      ) : erreur ? (
+        <View style={styles.conteneur}><Text style={styles.erreurTexte}>{erreur}</Text></View>
       ) : (
         <ScrollView style={styles.conteneur}>
           <View style={styles.carteInfo}>
@@ -130,6 +137,7 @@ const GestionAccesScreen = ({ token }) => {
 };
 
 const styles = StyleSheet.create({
+  erreurTexte: { color: '#DC2626', fontSize: 13 },
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   carteInfo: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 14 },
