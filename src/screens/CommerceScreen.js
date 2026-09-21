@@ -89,23 +89,21 @@ const CommerceScreen = ({ token, projetActifId }) => {
   }, [projetVenteId]);
 
   // Ce qui change concrètement quand un lot passe en "vente activée" : il
-  // apparaît ici, groupé par projet, prêt à être vendu en un clic.
-  useEffect(() => {
-    if (tousProjets.length === 0) return;
+  // apparaît ici, groupé par projet, prêt à être vendu en un clic. Un seul
+  // aller-retour serveur (au lieu d'un fetch par projet).
+  const chargerLotsDisponibles = () => {
     setChargementDisponibles(true);
-    Promise.all(tousProjets.map(p =>
-      api.get(`/lots?projet_id=${p.uuid_id || p.id}`, { headers })
-        .then(res => res.data
-          .filter(l => l.vente_activee && parseInt(l.vivants ?? l.quantite_initiale) > 0)
-          .map(l => ({ ...l, projet_nom: p.nom, projet_id: p.uuid_id || p.id })))
-        .catch(error => { console.log(`Erreur lots disponibles (projet ${p.nom}):`, error.message); return []; })
-    )).then(listes => setLotsDisponibles(listes.flat()))
+    api.get('/lots/disponibles-vente', { headers })
+      .then(res => setLotsDisponibles(res.data))
+      .catch(error => { console.log('Erreur lots disponibles à la vente:', error.message); setLotsDisponibles([]); })
       .finally(() => setChargementDisponibles(false));
-  }, [tousProjets]);
+  };
+
+  useEffect(() => { chargerLotsDisponibles(); }, []);
 
   const demarrerVenteLot = (lot) => {
     lotSouhaiteRef.current = String(lot.uuid_id || lot.id);
-    setProjetVenteId(lot.projet_id);
+    setProjetVenteId(lot.projet_uuid_id || lot.projet_id);
     setVue('vente');
   };
 
@@ -133,7 +131,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
         prix_male: parseFloat(formVente.prix_male), prix_femelle: parseFloat(formVente.prix_femelle),
         recette_totale: recetteEstimee(),
       }, { headers });
-      setVue('liste'); charger();
+      setVue('liste'); charger(); chargerLotsDisponibles();
       if (resteApresVente !== null && resteApresVente <= 0) {
         Alert.alert('Vente enregistrée', `Le lot "${nomLotVendu}" est maintenant entièrement vendu.`);
       } else {
@@ -181,7 +179,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
     Alert.alert('Supprimer', 'Supprimer cette vente ? La caisse et le stock du lot seront ajustés.', [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Supprimer', style: 'destructive', onPress: async () => {
-        try { await api.delete(`/ventes/${vente.uuid_id || vente.id}`, { headers }); charger(); }
+        try { await api.delete(`/ventes/${vente.uuid_id || vente.id}`, { headers }); charger(); chargerLotsDisponibles(); }
         catch { Alert.alert('Erreur', 'Suppression impossible.'); }
       }},
     ]);
@@ -205,6 +203,15 @@ const CommerceScreen = ({ token, projetActifId }) => {
   })();
   const totalPayees = ventes.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
   const totalEnAttente = totalRecettes - totalPayees;
+
+  // Chaque projet a sa propre caisse — voir l'argent qui rentre mélangé
+  // entre tous les projets n'a pas de sens, d'où ce regroupement.
+  const ventesParProjet = ventes.reduce((acc, v) => {
+    const nom = v.projet_nom || 'Projet inconnu';
+    if (!acc[nom]) acc[nom] = [];
+    acc[nom].push(v);
+    return acc;
+  }, {});
 
   // --- FORMULAIRE VENTE ---
   if (vue === 'vente') {
@@ -448,30 +455,41 @@ const CommerceScreen = ({ token, projetActifId }) => {
                     <Text style={styles.boutonPrincipalTexte}>Enregistrer une vente</Text>
                   </TouchableOpacity>
                 </View>
-              ) : ventes.map(vente => {
-                const badge = STATUTS_VENTE[vente.statut_paiement] || STATUTS_VENTE.en_attente;
+              ) : Object.entries(ventesParProjet).map(([nomProjet, ventesProjet]) => {
+                const recetteProjet = ventesProjet.reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
+                const payeeProjet = ventesProjet.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
                 return (
-                  <View style={styles.carte} key={vente.id}>
-                    <View style={styles.ligneEntre}>
-                      <Text style={styles.carteTitre}>{vente.acheteur || 'Acheteur inconnu'}</Text>
-                      <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
+                  <View key={nomProjet} style={{ marginBottom: 16 }}>
+                    <View style={[styles.ligneEntre, { marginBottom: 8, paddingHorizontal: 2 }]}>
+                      <Text style={styles.groupeTitre}>{nomProjet}</Text>
+                      <Text style={styles.groupeSousTexte}>{formatMontant(payeeProjet)} encaissé / {formatMontant(recetteProjet)}</Text>
                     </View>
-                    <Text style={[styles.carteSousTexte, { fontWeight: '600', color: '#8E8E93' }]}>{vente.projet_nom}</Text>
-                    <Text style={styles.carteSousTexte}>{new Date(vente.date_vente).toLocaleDateString('fr-FR')} · {vente.lot_nom || 'Lot inconnu'} · {vente.type_acheteur}</Text>
-                    <View style={styles.grille3}>
-                      <View style={styles.statBleue}><Text style={styles.statBleueTexte}>{vente.males_vendus}</Text><Text style={styles.statBleueLabel}>Mâles</Text></View>
-                      <View style={styles.statRose}><Text style={styles.statRoseTexte}>{vente.femelles_vendues}</Text><Text style={styles.statRoseLabel}>Femelles</Text></View>
-                      <View style={styles.statVerte}><Text style={styles.statVerteTexte}>{formatMontant(vente.recette_totale)}</Text><Text style={styles.statVerteLabel}>Recette</Text></View>
-                    </View>
-                    {vente.statut_paiement !== 'en_attente' && (
-                      <Text style={styles.carteSousTexte}>Encaissé : {formatMontant(vente.montant_paye)} · Reste : {formatMontant(vente.recette_totale - vente.montant_paye)}</Text>
-                    )}
-                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
-                      {vente.statut_paiement !== 'payee' && (
-                        <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirPaiement(vente)}><Text style={styles.actionVerteTexte}>Enregistrer un paiement</Text></TouchableOpacity>
-                      )}
-                      <TouchableOpacity style={styles.actionRouge2} onPress={() => supprimerVente(vente)}><Text style={styles.actionRouge2Texte}>Supprimer</Text></TouchableOpacity>
-                    </View>
+                    {ventesProjet.map(vente => {
+                      const badge = STATUTS_VENTE[vente.statut_paiement] || STATUTS_VENTE.en_attente;
+                      return (
+                        <View style={styles.carte} key={vente.id}>
+                          <View style={styles.ligneEntre}>
+                            <Text style={styles.carteTitre}>{vente.acheteur || 'Acheteur inconnu'}</Text>
+                            <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
+                          </View>
+                          <Text style={styles.carteSousTexte}>{new Date(vente.date_vente).toLocaleDateString('fr-FR')} · {vente.lot_nom || 'Lot inconnu'} · {vente.type_acheteur}</Text>
+                          <View style={styles.grille3}>
+                            <View style={styles.statBleue}><Text style={styles.statBleueTexte}>{vente.males_vendus}</Text><Text style={styles.statBleueLabel}>Mâles</Text></View>
+                            <View style={styles.statRose}><Text style={styles.statRoseTexte}>{vente.femelles_vendues}</Text><Text style={styles.statRoseLabel}>Femelles</Text></View>
+                            <View style={styles.statVerte}><Text style={styles.statVerteTexte}>{formatMontant(vente.recette_totale)}</Text><Text style={styles.statVerteLabel}>Recette</Text></View>
+                          </View>
+                          {vente.statut_paiement !== 'en_attente' && (
+                            <Text style={styles.carteSousTexte}>Encaissé : {formatMontant(vente.montant_paye)} · Reste : {formatMontant(vente.recette_totale - vente.montant_paye)}</Text>
+                          )}
+                          <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
+                            {vente.statut_paiement !== 'payee' && (
+                              <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirPaiement(vente)}><Text style={styles.actionVerteTexte}>Enregistrer un paiement</Text></TouchableOpacity>
+                            )}
+                            <TouchableOpacity style={styles.actionRouge2} onPress={() => supprimerVente(vente)}><Text style={styles.actionRouge2Texte}>Supprimer</Text></TouchableOpacity>
+                          </View>
+                        </View>
+                      );
+                    })}
                   </View>
                 );
               })}
@@ -559,6 +577,8 @@ const styles = StyleSheet.create({
   badgeBleuTexte: { color: '#1D4ED8', fontSize: 10, fontWeight: '600' },
   badge2Vert: { backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badge2VertTexte: { color: '#047857', fontSize: 10, fontWeight: '600' },
+  groupeTitre: { fontSize: 14, fontWeight: '700', color: '#1D1D1F' },
+  groupeSousTexte: { fontSize: 11, color: '#6E6E73' },
   grille3: { flexDirection: 'row', gap: 6, marginTop: 8 },
   statBleue: { flex: 1, backgroundColor: '#EFF6FF', borderRadius: 8, padding: 8, alignItems: 'center' },
   statBleueTexte: { color: '#1D4ED8', fontSize: 13, fontWeight: '600' },
