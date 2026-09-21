@@ -6,10 +6,16 @@ const EspaceContext = createContext();
 export const EspaceProvider = ({ children }) => {
   const [espaceActif, setEspaceActif] = useState('projet');
   const [animationDirection, setAnimationDirection] = useState('none');
+  // Bascule dédiée à la capacité "Aperçu ferme" — un vrai espace à part,
+  // jamais mélangé au menu habituel de la personne.
+  const [vueApercuFerme, setVueApercuFermeState] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem('espaceActif').then(val => {
       if (val) setEspaceActif(val);
+    });
+    AsyncStorage.getItem('vueApercuFerme').then(val => {
+      if (val) setVueApercuFermeState(val === '1');
     });
   }, []);
 
@@ -18,8 +24,13 @@ export const EspaceProvider = ({ children }) => {
     await AsyncStorage.setItem('espaceActif', espace);
   };
 
+  const setVueApercuFerme = async (valeur) => {
+    setVueApercuFermeState(valeur);
+    await AsyncStorage.setItem('vueApercuFerme', valeur ? '1' : '0');
+  };
+
   return (
-    <EspaceContext.Provider value={{ espaceActif, switchEspace, animationDirection, setAnimationDirection }}>
+    <EspaceContext.Provider value={{ espaceActif, switchEspace, animationDirection, setAnimationDirection, vueApercuFerme, setVueApercuFerme }}>
       {children}
     </EspaceContext.Provider>
   );
