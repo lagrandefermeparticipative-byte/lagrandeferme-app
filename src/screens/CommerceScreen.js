@@ -195,15 +195,6 @@ const CommerceScreen = ({ token, projetActifId }) => {
     ]);
   };
 
-  const totalRecettes = ventes.reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
-  const totalVendus = ventes.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
-  const labelAnimalPluriel = (() => {
-    const l = (projet?.type_volaille || 'sujet').toLowerCase();
-    return l.endsWith('s') ? l : l + 's';
-  })();
-  const totalPayees = ventes.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
-  const totalEnAttente = totalRecettes - totalPayees;
-
   // Chaque projet a sa propre caisse — voir l'argent qui rentre mélangé
   // entre tous les projets n'a pas de sens, d'où ce regroupement.
   const ventesParProjet = ventes.reduce((acc, v) => {
@@ -438,16 +429,6 @@ const CommerceScreen = ({ token, projetActifId }) => {
 
           {onglet === 'ventes' && (
             <View>
-              <View style={styles.carteNoire}>
-                <Text style={styles.carteNoireLabel}>Total recettes</Text>
-                <Text style={styles.carteNoireMontant}>{formatMontant(totalRecettes)}</Text>
-                <View style={styles.grille2noire}>
-                  <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Encaissé</Text><Text style={styles.miniNoireValeur}>{formatMontant(totalPayees)}</Text></View>
-                  <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>En attente</Text><Text style={styles.miniNoireValeur}>{formatMontant(totalEnAttente)}</Text></View>
-                </View>
-                <Text style={styles.carteNoireSousLabel}>{totalVendus} {labelAnimalPluriel} vendus</Text>
-              </View>
-
               {ventes.length === 0 ? (
                 <View style={styles.videCarte}>
                   <Text style={styles.vide}>Aucune vente enregistrée</Text>
@@ -458,11 +439,19 @@ const CommerceScreen = ({ token, projetActifId }) => {
               ) : Object.entries(ventesParProjet).map(([nomProjet, ventesProjet]) => {
                 const recetteProjet = ventesProjet.reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
                 const payeeProjet = ventesProjet.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
+                const enAttenteProjet = recetteProjet - payeeProjet;
+                const vendusProjet = ventesProjet.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
                 return (
                   <View key={nomProjet} style={{ marginBottom: 16 }}>
-                    <View style={[styles.ligneEntre, { marginBottom: 8, paddingHorizontal: 2 }]}>
-                      <Text style={styles.groupeTitre}>{nomProjet}</Text>
-                      <Text style={styles.groupeSousTexte}>{formatMontant(payeeProjet)} encaissé / {formatMontant(recetteProjet)}</Text>
+                    <Text style={[styles.groupeTitre, { marginBottom: 8, paddingHorizontal: 2 }]}>{nomProjet}</Text>
+                    <View style={styles.carteNoire}>
+                      <Text style={styles.carteNoireLabel}>Total recettes</Text>
+                      <Text style={styles.carteNoireMontant}>{formatMontant(recetteProjet)}</Text>
+                      <View style={styles.grille2noire}>
+                        <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Encaissé</Text><Text style={styles.miniNoireValeur}>{formatMontant(payeeProjet)}</Text></View>
+                        <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>En attente</Text><Text style={styles.miniNoireValeur}>{formatMontant(enAttenteProjet)}</Text></View>
+                      </View>
+                      <Text style={styles.carteNoireSousLabel}>{vendusProjet} sujets vendus</Text>
                     </View>
                     {ventesProjet.map(vente => {
                       const badge = STATUTS_VENTE[vente.statut_paiement] || STATUTS_VENTE.en_attente;
