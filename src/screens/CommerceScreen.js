@@ -23,6 +23,9 @@ const CommerceScreen = ({ token, projetActifId }) => {
   const [tousProjets, setTousProjets] = useState([]);
   const [projetVenteId, setProjetVenteId] = useState(projetActifId);
   const [lotsProjetVente, setLotsProjetVente] = useState([]);
+  const [lotsDisponibles, setLotsDisponibles] = useState([]);
+  const [chargementDisponibles, setChargementDisponibles] = useState(true);
+  const lotSouhaiteRef = useRef(null);
   const [onglet, setOnglet] = useState('ventes');
   const [chargement, setChargement] = useState(true);
   const [vue, setVue] = useState('liste'); // liste | vente | acheteur
@@ -78,10 +81,33 @@ const CommerceScreen = ({ token, projetActifId }) => {
     api.get(`/lots?projet_id=${projetVenteId}`, { headers })
       .then(res => {
         setLotsProjetVente(res.data);
-        setFormVente(prev => ({ ...prev, lot_id: res.data.length > 0 ? String(res.data[0].uuid_id || res.data[0].id) : '' }));
+        const lotVoulu = lotSouhaiteRef.current;
+        lotSouhaiteRef.current = null;
+        setFormVente(prev => ({ ...prev, lot_id: lotVoulu || (res.data.length > 0 ? String(res.data[0].uuid_id || res.data[0].id) : '') }));
       })
       .catch(() => setLotsProjetVente([]));
   }, [projetVenteId]);
+
+  // Ce qui change concrètement quand un lot passe en "vente activée" : il
+  // apparaît ici, groupé par projet, prêt à être vendu en un clic.
+  useEffect(() => {
+    if (tousProjets.length === 0) return;
+    setChargementDisponibles(true);
+    Promise.all(tousProjets.map(p =>
+      api.get(`/lots?projet_id=${p.uuid_id || p.id}`, { headers })
+        .then(res => res.data
+          .filter(l => l.vente_activee && parseInt(l.vivants ?? l.quantite_initiale) > 0)
+          .map(l => ({ ...l, projet_nom: p.nom, projet_id: p.uuid_id || p.id })))
+        .catch(() => [])
+    )).then(listes => setLotsDisponibles(listes.flat()))
+      .finally(() => setChargementDisponibles(false));
+  }, [tousProjets]);
+
+  const demarrerVenteLot = (lot) => {
+    lotSouhaiteRef.current = String(lot.uuid_id || lot.id);
+    setProjetVenteId(lot.projet_id);
+    setVue('vente');
+  };
 
   const recetteEstimee = () => {
     const m = parseFloat(formVente.males_vendus) || 0;
@@ -364,9 +390,9 @@ const CommerceScreen = ({ token, projetActifId }) => {
         action={
           onglet === 'ventes' ? (
             <TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('vente')}><Text style={styles.boutonPetitTexte}>+ Vente</Text></TouchableOpacity>
-          ) : (
+          ) : onglet === 'acheteurs' ? (
             <TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('acheteur')}><Text style={styles.boutonPetitTexte}>+ Acheteur</Text></TouchableOpacity>
-          )
+          ) : null
         }
       />
       {chargement ? (
@@ -374,12 +400,34 @@ const CommerceScreen = ({ token, projetActifId }) => {
       ) : (
         <ScrollView style={styles.conteneur}>
           <View style={styles.ongletsLigne}>
-            {['ventes', 'acheteurs'].map(t => (
+            {['a_vendre', 'ventes', 'acheteurs'].map(t => (
               <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
-                <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>{t.charAt(0).toUpperCase() + t.slice(1)}</Text>
+                <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>{t === 'a_vendre' ? 'À vendre' : t.charAt(0).toUpperCase() + t.slice(1)}</Text>
               </TouchableOpacity>
             ))}
           </View>
+
+          {onglet === 'a_vendre' && (
+            chargementDisponibles ? (
+              <View style={styles.centre}><ActivityIndicator size="small" color="#1D1D1F" /></View>
+            ) : lotsDisponibles.length === 0 ? (
+              <View style={styles.videCarte}>
+                <Text style={styles.vide}>Aucun lot n'est actuellement ouvert à la vente.</Text>
+                <Text style={[styles.infoTexte, { textAlign: 'center' }]}>Active la vente d'un lot depuis l'écran Élevage d'un projet pour qu'il apparaisse ici.</Text>
+              </View>
+            ) : lotsDisponibles.map(lot => (
+              <View style={styles.carte} key={lot.id}>
+                <View style={styles.ligneEntre}>
+                  <Text style={styles.carteTitre}>{lot.projet_nom}</Text>
+                  <View style={styles.badge2Vert}><Text style={styles.badge2VertTexte}>Vente activée</Text></View>
+                </View>
+                <Text style={styles.carteSousTexte}>{lot.nom} · {parseInt(lot.vivants ?? lot.quantite_initiale)} sujets vivants disponibles</Text>
+                <TouchableOpacity style={[styles.boutonPrincipal, { marginTop: 10 }]} onPress={() => demarrerVenteLot(lot)}>
+                  <Text style={styles.boutonPrincipalTexte}>Vendre depuis ce lot</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
 
           {onglet === 'ventes' && (
             <View>
@@ -508,6 +556,8 @@ const styles = StyleSheet.create({
   badgeTexte: { fontSize: 10, fontWeight: '600' },
   badgeBleu: { backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeBleuTexte: { color: '#1D4ED8', fontSize: 10, fontWeight: '600' },
+  badge2Vert: { backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  badge2VertTexte: { color: '#047857', fontSize: 10, fontWeight: '600' },
   grille3: { flexDirection: 'row', gap: 6, marginTop: 8 },
   statBleue: { flex: 1, backgroundColor: '#EFF6FF', borderRadius: 8, padding: 8, alignItems: 'center' },
   statBleueTexte: { color: '#1D4ED8', fontSize: 13, fontWeight: '600' },
