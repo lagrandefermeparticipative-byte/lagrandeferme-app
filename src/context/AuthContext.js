@@ -23,6 +23,17 @@ export const AuthProvider = ({ children }) => {
           setUtilisateur(user);
           if (user.role === 'tech_invest') setModeVue(m || 'technicien');
           else if (user.role === 'gestion_invest') setModeVue(m || 'gestion');
+
+          // Rafraîchit en arrière-plan depuis le serveur — sans ça, un droit
+          // accordé après coup (ex: capacité "Aperçu ferme") ne serait
+          // visible qu'après une déconnexion/reconnexion complète.
+          api.get('/auth/moi', { headers: { Authorization: `Bearer ${t}` } })
+            .then(async (res) => {
+              const utilisateurFrais = { ...user, ...res.data };
+              await AsyncStorage.setItem('utilisateur', JSON.stringify(utilisateurFrais));
+              setUtilisateur(utilisateurFrais);
+            })
+            .catch(() => {});
         }
       } catch (e) {
         console.log('Erreur restauration session:', e.message);

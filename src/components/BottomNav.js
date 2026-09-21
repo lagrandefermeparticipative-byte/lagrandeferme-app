@@ -70,7 +70,12 @@ const BottomNav = () => {
     return menuInvestisseur(projetChoisi);
   };
 
-  const menu = getMenu();
+  // Capacité additionnelle greffée sur n'importe quel rôle — jamais pour le
+  // gestionnaire/gestion_invest qui a déjà accès à tout par ailleurs.
+  const menuBase = getMenu();
+  const menu = (utilisateur?.apercu_ferme_actif && !['gestionnaire', 'gestion_invest'].includes(utilisateur?.role))
+    ? [...menuBase, { nom: 'ApercuFerme', icone: '🔍', label: 'Aperçu ferme' }]
+    : menuBase;
   const LARGEUR_TOTALE = 320; // largeur totale du sélecteur (ajustable selon ton écran)
   const PADDING = 4;
   const largeurBouton = (LARGEUR_TOTALE - PADDING * 2) / 2;

@@ -38,6 +38,9 @@ import ProfilScreen from './src/screens/ProfilScreen';
 import JournalScreen from './src/screens/JournalScreen';
 import GestionProjetScreen from './src/screens/GestionProjetScreen';
 import GestionUtilisateursScreen from './src/screens/GestionUtilisateursScreen';
+import ApercuFermeScreen from './src/screens/ApercuFermeScreen';
+import ApercuFermeProjetScreen from './src/screens/ApercuFermeProjetScreen';
+import GestionAccesScreen from './src/screens/GestionAccesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -78,6 +81,9 @@ const AppNavigator = () => {
       <Stack.Screen name="Bilan">{() => <AvecNav><BilanScreen token={token} /></AvecNav>}</Stack.Screen>
             <Stack.Screen name="Journal">{() => <AvecNav><JournalScreen token={token} /></AvecNav>}</Stack.Screen>
                   <Stack.Screen name="GestionUtilisateurs">{() => <AvecNav><GestionUtilisateursScreen token={token} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="ApercuFerme">{({ navigation }) => <AvecNav><ApercuFermeScreen token={token} onOuvrirProjet={(id) => navigation.navigate('ApercuFermeProjet', { projetId: id })} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="ApercuFermeProjet">{({ route, navigation }) => <AvecNav><ApercuFermeProjetScreen token={token} projetId={route.params?.projetId} onRetour={() => navigation.goBack()} /></AvecNav>}</Stack.Screen>
+      <Stack.Screen name="GestionAcces">{() => <AvecNav><GestionAccesScreen token={token} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Rapport">{() => <AvecNav><RapportScreen token={token} projetActifId={projetActifId} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Investissement">{() => <AvecNav><InvestissementScreen token={token} projetActifId={projetActifId} utilisateurNom={utilisateur?.nom} /></AvecNav>}</Stack.Screen>
       <Stack.Screen name="Profil">{() => <AvecNav><ProfilScreen utilisateur={{ utilisateur }} token={token} onDeconnecter={useAuth().logout} /></AvecNav>}</Stack.Screen>

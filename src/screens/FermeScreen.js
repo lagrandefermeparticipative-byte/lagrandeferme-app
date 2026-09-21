@@ -189,6 +189,11 @@ const FermeScreen = ({ token }) => {
           })}
         </View>
 
+        <TouchableOpacity style={styles.carte} onPress={() => navigation.navigate('GestionAcces')}>
+          <Text style={styles.carteSousTexte}>🔍 Accès en lecture seule</Text>
+          <Text style={styles.carteTitre}>Gérer "Aperçu ferme" →</Text>
+        </TouchableOpacity>
+
         {sujetsReproduction.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitre}>Sujets retenus pour la reproduction</Text>
