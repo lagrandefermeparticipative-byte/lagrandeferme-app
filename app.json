@@ -7,7 +7,13 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lagrandefermeparticipative.lagrandefermeapp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "L'application utilise l'appareil photo pour ajouter des photos aux rapports et documents du projet.",
+        "NSPhotoLibraryUsageDescription": "L'application accède à vos photos pour joindre des images aux rapports et documents du projet.",
+        "NSPhotoLibraryAddUsageDescription": "L'application enregistre des documents et images dans votre photothèque."
+      }
     },
     "android": {
       "googleServicesFile": "./google-services.json",
