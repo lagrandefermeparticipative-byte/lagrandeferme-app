@@ -6,7 +6,7 @@ import { useProjet } from '../context/ProjetContext';
 
 // Vue d'ensemble pour un technicien qui supervise plusieurs projets : les
 // données agrégées d'abord, la liste détaillée "Mes projets" ensuite.
-const DashboardTechnicienScreen = ({ token, onVoirProjets, onOuvrirProjet }) => {
+const DashboardTechnicienScreen = ({ token, onVoirProjets, onOuvrirProjet, onEnregistrerVente }) => {
   const headers = { Authorization: `Bearer ${token}` };
   const { choisirProjet } = useProjet();
   const [donnees, setDonnees] = useState(null);
@@ -72,6 +72,9 @@ const DashboardTechnicienScreen = ({ token, onVoirProjets, onOuvrirProjet }) => 
             <TouchableOpacity style={styles.boutonPrincipal} onPress={onVoirProjets}>
               <Text style={styles.boutonPrincipalTexte}>Voir mes projets</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.boutonSecondaire} onPress={onEnregistrerVente}>
+              <Text style={styles.boutonSecondaireTexte}>Enregistrer une vente</Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
@@ -98,6 +101,8 @@ const styles = StyleSheet.create({
   alerteValeur: { fontSize: 12, fontWeight: '600' },
   boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 16, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  boutonSecondaire: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 16, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  boutonSecondaireTexte: { color: '#1D1D1F', fontSize: 14, fontWeight: '600' },
 });
 
 export default DashboardTechnicienScreen;

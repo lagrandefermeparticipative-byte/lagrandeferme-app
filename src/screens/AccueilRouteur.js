@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import GestionInvestScreen from './GestionInvestScreen';
 import TechnicienProjetsScreen from './TechnicienProjetsScreen';
 import DashboardTechnicienScreen from './DashboardTechnicienScreen';
+import VenteTechnicienScreen from './VenteTechnicienScreen';
 import InvestisseurDashboardScreen from './InvestisseurDashboardScreen';
 import InvestissementScreen from './InvestissementScreen';
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +18,7 @@ const AccueilRouteur = (props) => {
   const { utilisateur, modeVue, token } = useAuth();
   const { projets, chargement, projetActifId } = useProjet();
   const [projetChoisi, setProjetChoisi] = useState(false);
-  const [vueTechnicien, setVueTechnicien] = useState('dashboard'); // 'dashboard' | 'liste'
+  const [vueTechnicien, setVueTechnicien] = useState('dashboard'); // 'dashboard' | 'liste' | 'vente'
   const { setOnRetourProjets, setProjetChoisiGlobal } = useNavigationProjets();
 
   const role = utilisateur?.role;
@@ -55,7 +56,8 @@ const AccueilRouteur = (props) => {
   if (modeTechnicien) {
     if (projetChoisi) return <GestionInvestScreen {...props} />;
     if (vueTechnicien === 'liste') return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} onRetour={() => setVueTechnicien('dashboard')} />;
-    return <DashboardTechnicienScreen token={token} onVoirProjets={() => setVueTechnicien('liste')} onOuvrirProjet={() => setProjetChoisi(true)} />;
+    if (vueTechnicien === 'vente') return <VenteTechnicienScreen token={token} onRetour={() => setVueTechnicien('dashboard')} />;
+    return <DashboardTechnicienScreen token={token} onVoirProjets={() => setVueTechnicien('liste')} onOuvrirProjet={() => setProjetChoisi(true)} onEnregistrerVente={() => setVueTechnicien('vente')} />;
   }
 
   // Technicien pur (aucun rôle cumulé) : même parcours dashboard -> liste ->
@@ -65,7 +67,8 @@ const AccueilRouteur = (props) => {
     if (chargement) return null;
     if (projetChoisi) return <GestionInvestScreen {...props} />;
     if (vueTechnicien === 'liste') return <TechnicienProjetsScreen token={token} onChoisir={() => setProjetChoisi(true)} onRetour={() => setVueTechnicien('dashboard')} />;
-    return <DashboardTechnicienScreen token={token} onVoirProjets={() => setVueTechnicien('liste')} onOuvrirProjet={() => setProjetChoisi(true)} />;
+    if (vueTechnicien === 'vente') return <VenteTechnicienScreen token={token} onRetour={() => setVueTechnicien('dashboard')} />;
+    return <DashboardTechnicienScreen token={token} onVoirProjets={() => setVueTechnicien('liste')} onOuvrirProjet={() => setProjetChoisi(true)} onEnregistrerVente={() => setVueTechnicien('vente')} />;
   }
 
   // Mode gestion (gestionnaire pur, ou gestion_invest en mode gestion) —
