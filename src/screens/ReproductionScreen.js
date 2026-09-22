@@ -314,6 +314,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Reproduction" sousTitre={cycleActif ? `${cycleActif.generation} · ${cycleActif.nom || ''}` : 'Aucun cycle actif'}
+        avecSelecteurProjet
         action={
           <TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('cycle')}>
             <Text style={styles.boutonPetitTexte}>+ Cycle</Text>

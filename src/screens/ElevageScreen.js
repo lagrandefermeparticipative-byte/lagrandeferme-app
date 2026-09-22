@@ -463,6 +463,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Elevage" sousTitre={`${totalVivants} vivants / ${totalRecus} reçus`}
+        avecSelecteurProjet
         action={
           <TouchableOpacity style={styles.boutonPetit} onPress={() => { setForm({ ...form, nom: '', quantite_initiale: '' }); setVue('nouveau'); }}>
             <Text style={styles.boutonPetitTexte}>+ Lot</Text>

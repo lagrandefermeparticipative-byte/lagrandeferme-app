@@ -440,6 +440,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Gestion" sousTitre={`${projetNom || 'Chargement...'} · Projet`}
+        avecSelecteurProjet
         action={
           <View style={{ flexDirection: 'row', gap: 6 }}>
             <TouchableOpacity style={styles.boutonVertPetit} onPress={() => setVue('payer')}>

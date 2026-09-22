@@ -9,7 +9,7 @@ import { useProjet } from '../context/ProjetContext';
 import api from '../services/api';
 import { useNavigationProjets } from '../context/NavigationProjetsContext';
 
-const Header = ({ titre, sousTitre, sansRetour, action, masquerSwitch }) => {
+const Header = ({ titre, sousTitre, sansRetour, action, masquerSwitch, avecSelecteurProjet }) => {
   const { utilisateur, modeVue, switchMode, token } = useAuth();
   const { setAnimationDirection } = useEspace();
   const navigation = useNavigation();
@@ -32,8 +32,8 @@ const Header = ({ titre, sousTitre, sansRetour, action, masquerSwitch }) => {
     utilisateur?.role === 'tech_invest' ||
     (mesRolesSurProjet.includes('investisseur') && mesRolesSurProjet.includes('technicien'))
   );
-  const { projets, projetActifId, choisirProjet } = useProjet();
-  const afficheSelecteurProjet = projets.length > 1 && (utilisateur?.role === 'technicien' || utilisateur?.role === 'tech_invest' || utilisateur?.role === 'investisseur');
+  const { projets, projetActifId, projetActif, choisirProjet } = useProjet();
+  const [selecteurOuvert, setSelecteurOuvert] = React.useState(false);
   const { onRetourProjets } = useNavigationProjets();
   const premierMode = utilisateur?.role === 'tech_invest' ? 'technicien' : 'gestion';
 
@@ -123,6 +123,25 @@ const Header = ({ titre, sousTitre, sansRetour, action, masquerSwitch }) => {
           {action}
         </View>
       )}
+
+      {avecSelecteurProjet && projets && projets.length > 0 && (
+        <View style={{ marginTop: 6 }}>
+          <TouchableOpacity onPress={() => setSelecteurOuvert(prev => !prev)} style={styles.selecteurBouton}>
+            <Text style={styles.selecteurBoutonTexte} numberOfLines={1}>{projetActif?.nom || 'Choisir un projet'}</Text>
+            <Text style={styles.selecteurFleche}>{selecteurOuvert ? '▲' : '▼'}</Text>
+          </TouchableOpacity>
+          {selecteurOuvert && (
+            <View style={styles.selecteurListe}>
+              {projets.map(p => (
+                <TouchableOpacity key={p.id} onPress={() => { choisirProjet(p.uuid_id || p.id); setSelecteurOuvert(false); }}
+                  style={[styles.selecteurItem, (p.uuid_id || p.id) === projetActifId && styles.selecteurItemActif]}>
+                  <Text style={[styles.selecteurItemTexte, (p.uuid_id || p.id) === projetActifId && styles.selecteurItemTexteActif]} numberOfLines={1}>{p.nom}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 };
@@ -152,6 +171,14 @@ const styles = StyleSheet.create({
   switchBouton: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, width: 52, alignItems: 'center' },
   switchTexte: { fontSize: 11, color: '#6E6E73' },
   switchTexteActif: { color: '#1D1D1F', fontWeight: '600' },
+  selecteurBouton: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F5F5F7', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 },
+  selecteurBoutonTexte: { fontSize: 12, fontWeight: '600', color: '#374151', flex: 1 },
+  selecteurFleche: { fontSize: 10, color: '#9CA3AF', marginLeft: 8 },
+  selecteurListe: { marginTop: 4, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 8, maxHeight: 220, overflow: 'hidden' },
+  selecteurItem: { paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F5F5F7' },
+  selecteurItemActif: { backgroundColor: '#F5F5F7' },
+  selecteurItemTexte: { fontSize: 13, color: '#374151' },
+  selecteurItemTexteActif: { color: '#1D1D1F', fontWeight: '700' },
 });
 
 export default Header;
