@@ -32,6 +32,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
   const [mortForm, setMortForm] = useState({ nombre: '', cause: 'Inconnue', observations: '' });
   const [reproForm, setReproForm] = useState({ nombre_sujets: '', note: '' });
   const [tousProjets, setTousProjets] = useState([]);
+  const [erreurProjets, setErreurProjets] = useState('');
   const [transfertForm, setTransfertForm] = useState({
     projet_destination_id: '', males_transferes: '', femelles_transferes: '',
     valorise: false, valeur: '', acheteur_note: '',
@@ -39,7 +40,8 @@ const ElevageScreen = ({ token, projetActifId }) => {
   const [sexageForm, setSexageForm] = useState({ males: '', femelles: '' });
 
   useEffect(() => {
-    api.get('/projets', { headers }).then(res => setTousProjets(res.data)).catch(() => setTousProjets([]));
+    api.get('/projets', { headers }).then(res => setTousProjets(res.data))
+      .catch(() => { setTousProjets([]); setErreurProjets('Impossible de charger les projets — vérifie ta connexion.'); });
   }, []);
   const charger = async (forcer = false) => {
     const cleCache = `elevage_${projetActifId}`;
@@ -280,6 +282,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
           </View>
           <View style={styles.carte}>
             <Text style={styles.label}>Projet de destination *</Text>
+            {erreurProjets !== '' && <Text style={styles.erreurTexte}>{erreurProjets}</Text>}
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {projetsDestination.map(p => (
                 <TouchableOpacity key={p.id} onPress={() => setTransfertForm({ ...transfertForm, projet_destination_id: p.uuid_id || p.id })}

@@ -38,6 +38,7 @@ const NouveauProjetScreen = ({ token, onTermine, onAnnuler }) => {
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
   const [comptesExistants, setComptesExistants] = useState([]);
+  const [erreurComptes, setErreurComptes] = useState('');
 
   const [form, setForm] = useState({
     nom: '', espece: 'Pintade', objectif_elevage: 'viande', reproduction_active: false,
@@ -54,7 +55,8 @@ const NouveauProjetScreen = ({ token, onTermine, onAnnuler }) => {
   const [investisseurs, setInvestisseurs] = useState([]);
 
   useEffect(() => {
-    api.get('/utilisateurs/liste', { headers }).then(res => setComptesExistants(res.data)).catch(() => {});
+    api.get('/utilisateurs/liste', { headers }).then(res => setComptesExistants(res.data))
+      .catch(() => setErreurComptes('Impossible de charger les comptes existants — vérifie ta connexion.'));
   }, []);
 
   const especeActuelle = ESPECES_AVICULTURE.find(x => x.nom === form.espece);
@@ -396,6 +398,7 @@ const NouveauProjetScreen = ({ token, onTermine, onAnnuler }) => {
                 </View>
                 {inv.mode === 'existant' ? (
                   <View style={styles.ligneLibelles}>
+                    {erreurComptes !== '' && <Text style={styles.erreurTexte}>{erreurComptes}</Text>}
                     {comptesExistants.map(c => (
                       <TouchableOpacity key={c.id} onPress={() => { const copie = [...investisseurs]; copie[i] = { ...copie[i], utilisateur_id: c.id }; setInvestisseurs(copie); }}
                         style={[styles.pastilleLib, inv.utilisateur_id === c.id && styles.pastilleLibActive]}>

@@ -30,9 +30,11 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   const [formCollecte, setFormCollecte] = useState({ date_collecte: new Date().toISOString().split('T')[0], nombre_oeufs: '', observations: '' });
   const [formEclosion, setFormEclosion] = useState({ date_eclosion_reelle: new Date().toISOString().split('T')[0], poussins_eclos: '', poussins_viables: '', observations: '', projet_suivant_id: '' });
   const [tousProjets, setTousProjets] = useState([]);
+  const [erreurProjets, setErreurProjets] = useState('');
 
   useEffect(() => {
-    api.get('/projets', { headers }).then(res => setTousProjets(res.data)).catch(() => setTousProjets([]));
+    api.get('/projets', { headers }).then(res => setTousProjets(res.data))
+      .catch(() => { setTousProjets([]); setErreurProjets('Impossible de charger les projets — vérifie ta connexion.'); });
   }, []);
 
   const charger = async () => {
@@ -279,6 +281,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
               </View>
             )}
             <Text style={styles.label}>Projet où placer les poussins viables (optionnel)</Text>
+            {erreurProjets !== '' && <Text style={styles.erreurTexte}>{erreurProjets}</Text>}
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <TouchableOpacity onPress={() => setFormEclosion({ ...formEclosion, projet_suivant_id: '' })}
                 style={[styles.chip, formEclosion.projet_suivant_id === '' && styles.chipActif, { marginRight: 6 }]}>
@@ -497,6 +500,7 @@ const styles = StyleSheet.create({
   carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
   label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  erreurTexte: { color: '#DC2626', fontSize: 12, marginBottom: 4 },
   champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
   infoTexte: { fontSize: 12, color: '#6E6E73', marginBottom: 8 },
   lienGenerations: { fontSize: 11, color: '#1D4ED8', marginBottom: 12, marginTop: -4 },

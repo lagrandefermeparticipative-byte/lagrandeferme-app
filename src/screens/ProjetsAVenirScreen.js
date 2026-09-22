@@ -28,11 +28,13 @@ const ProjetsAVenirScreen = ({ token }) => {
   const [note, setNote] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
+  const [erreurChargement, setErreurChargement] = useState('');
 
   const charger = () => {
+    setErreurChargement('');
     api.get('/projets/a-venir', { headers })
       .then(res => setProjets(res.data))
-      .catch(() => setProjets([]))
+      .catch(() => { setProjets([]); setErreurChargement('Impossible de charger les projets — vérifie ta connexion.'); })
       .finally(() => setChargement(false));
   };
 
@@ -133,6 +135,10 @@ const ProjetsAVenirScreen = ({ token }) => {
       <ScrollView style={styles.conteneur}>
         {chargement ? (
           <ActivityIndicator style={{ marginTop: 30 }} color="#1D1D1F" />
+        ) : erreurChargement ? (
+          <View style={styles.videCarte}>
+            <Text style={styles.erreurTexte}>{erreurChargement}</Text>
+          </View>
         ) : projets.length === 0 ? (
           <View style={styles.videCarte}>
             <Text style={styles.vide}>Aucun projet à venir pour l'instant. Reviens bientôt !</Text>

@@ -22,12 +22,14 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
   const [rapportOuvertId, setRapportOuvertId] = useState(null);
   const [projetsAVenir, setProjetsAVenir] = useState([]);
   const [estimations, setEstimations] = useState({});
+  const [erreur, setErreur] = useState('');
+  const [erreurAVenir, setErreurAVenir] = useState('');
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
     api.get('/projets/moi/investisseur', { headers })
       .then(res => setProjets(res.data))
-      .catch(() => setProjets([]))
+      .catch(() => { setProjets([]); setErreur('Impossible de charger tes investissements — vérifie ta connexion.'); })
       .finally(() => setChargement(false));
     // Montants réels basés sur la caisse actuelle de chaque projet, pas la
     // promesse de départ — même calcul que la Liquidation.
@@ -41,7 +43,8 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
   }, [token]);
 
   useEffect(() => {
-    api.get('/projets/a-venir', { headers }).then(res => setProjetsAVenir(res.data)).catch(() => setProjetsAVenir([]));
+    api.get('/projets/a-venir', { headers }).then(res => setProjetsAVenir(res.data))
+      .catch(() => { setProjetsAVenir([]); setErreurAVenir('Impossible de charger — vérifie ta connexion.'); });
   }, [token]);
 
   useEffect(() => {
@@ -99,6 +102,8 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
             )}
             {chargement ? (
               <Text style={styles.vide}>Chargement...</Text>
+            ) : erreur ? (
+              <Text style={styles.erreurTexte}>{erreur}</Text>
             ) : projets.length === 0 ? (
               <Text style={styles.vide}>Aucun investissement pour l'instant.</Text>
             ) : (
@@ -118,6 +123,7 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
 
             <View style={{ marginTop: 20 }}>
               <Text style={styles.labelSection}>PROCHAINS PROJETS</Text>
+              {erreurAVenir !== '' && <Text style={styles.erreurTexte}>{erreurAVenir}</Text>}
               {projetsAVenir.length === 0 ? (
                 <TouchableOpacity style={styles.carteProjet} onPress={() => navigation.navigate('ProjetsAVenir')}>
                   <Text style={styles.carteSousTexte}>Rien à réserver pour l'instant — reviens régulièrement, un nouveau projet peut s'ouvrir à tout moment.</Text>
@@ -168,6 +174,7 @@ const styles = StyleSheet.create({
   barreFond: { height: 4, backgroundColor: '#F5F5F7', borderRadius: 2, marginTop: 8, overflow: 'hidden' },
   barreRemplie: { height: 4, borderRadius: 2, backgroundColor: '#2D6A4F' },
   vide: { fontSize: 13, color: '#6E6E73', textAlign: 'center', marginTop: 40 },
+  erreurTexte: { color: '#DC2626', fontSize: 13, textAlign: 'center', marginTop: 20 },
   ongletsLigne: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', marginBottom: 14 },
   ongletBouton: { paddingVertical: 10, marginRight: 20 },
   ongletBoutonActif: { borderBottomWidth: 2, borderBottomColor: '#1D1D1F' },

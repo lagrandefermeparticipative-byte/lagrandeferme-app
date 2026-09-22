@@ -21,11 +21,13 @@ const FermeScreen = ({ token }) => {
   const [noteVente, setNoteVente] = useState('');
   const [envoiVente, setEnvoiVente] = useState(false);
   const [projetsAVenir, setProjetsAVenir] = useState([]);
+  const [erreurAVenir, setErreurAVenir] = useState('');
 
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    api.get('/projets/a-venir', { headers }).then(res => setProjetsAVenir(res.data)).catch(() => setProjetsAVenir([]));
+    api.get('/projets/a-venir', { headers }).then(res => setProjetsAVenir(res.data))
+      .catch(() => { setProjetsAVenir([]); setErreurAVenir('Impossible de charger — vérifie ta connexion.'); });
   }, [token]);
 
   const charger = async (forcer = false) => {
@@ -166,6 +168,7 @@ const FermeScreen = ({ token }) => {
             <Text style={styles.sectionTitre}>Prochains projets</Text>
             <TouchableOpacity onPress={() => navigation.navigate('NouveauProjetAVenir')}><Text style={styles.lienAjouter}>+ Nouveau</Text></TouchableOpacity>
           </View>
+          {erreurAVenir !== '' && <Text style={styles.erreurTexte}>{erreurAVenir}</Text>}
           {projetsAVenir.length === 0 ? (
             <TouchableOpacity style={styles.videCarte} onPress={() => navigation.navigate('NouveauProjetAVenir')}>
               <Text style={styles.vide}>Aucun projet à venir — en créer un</Text>
@@ -388,6 +391,7 @@ const styles = StyleSheet.create({
   progressFond: { height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, marginTop: 6, overflow: 'hidden' },
   progressBarre: { height: '100%', backgroundColor: '#1D1D1F', borderRadius: 3 },
   vide: { textAlign: 'center', color: '#6E6E73', fontSize: 13, paddingVertical: 20 },
+  erreurTexte: { color: '#DC2626', fontSize: 12, marginBottom: 6 },
   carteAccordeon: { backgroundColor: '#fff', borderRadius: 20, marginBottom: 8, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   accordeonHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
   moisBloc: { paddingHorizontal: 14, paddingBottom: 10, borderTopWidth: 1, borderTopColor: '#F5F5F7' },

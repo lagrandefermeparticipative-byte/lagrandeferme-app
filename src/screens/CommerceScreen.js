@@ -23,6 +23,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
   const [tousProjets, setTousProjets] = useState([]);
   const [projetVenteId, setProjetVenteId] = useState(projetActifId);
   const [lotsProjetVente, setLotsProjetVente] = useState([]);
+  const [erreurLotsProjetVente, setErreurLotsProjetVente] = useState('');
   const [lotsDisponibles, setLotsDisponibles] = useState([]);
   const [chargementDisponibles, setChargementDisponibles] = useState(true);
   const lotSouhaiteRef = useRef(null);
@@ -78,6 +79,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
 
   useEffect(() => {
     if (!projetVenteId) return;
+    setErreurLotsProjetVente('');
     api.get(`/lots?projet_id=${projetVenteId}`, { headers })
       .then(res => {
         setLotsProjetVente(res.data);
@@ -85,7 +87,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
         lotSouhaiteRef.current = null;
         setFormVente(prev => ({ ...prev, lot_id: lotVoulu || (res.data.length > 0 ? String(res.data[0].uuid_id || res.data[0].id) : '') }));
       })
-      .catch(() => setLotsProjetVente([]));
+      .catch(() => { setLotsProjetVente([]); setErreurLotsProjetVente('Impossible de charger les lots — vérifie ta connexion.'); });
   }, [projetVenteId]);
 
   // Ce qui change concrètement quand un lot passe en "vente activée" : il
@@ -221,6 +223,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
               ))}
             </ScrollView>
             <Text style={[styles.label, { marginTop: 12 }]}>Lot vendu *</Text>
+            {erreurLotsProjetVente !== '' && <Text style={styles.erreurTexte}>{erreurLotsProjetVente}</Text>}
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {lotsProjetVente.map(l => {
                 const vivantsLot = parseInt(l.vivants ?? l.quantite_initiale);
@@ -534,6 +537,7 @@ const styles = StyleSheet.create({
   chipTexteActif: { color: '#fff', fontWeight: '600' },
   infoTexte: { fontSize: 11, color: '#6E6E73', marginTop: 6 },
   alerteRougeLegere: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, padding: 8, marginTop: 10 },
+  erreurTexte: { color: '#DC2626', fontSize: 12, marginBottom: 4 },
   alerteRougeLegereTexte: { color: '#DC2626', fontSize: 11 },
   encartVert: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5', borderRadius: 10, padding: 12, marginTop: 10 },
   encartVertLabel: { fontSize: 11, color: '#059669' },

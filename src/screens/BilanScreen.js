@@ -24,9 +24,11 @@ const BilanScreen = ({ token }) => {
   const [chargement, setChargement] = useState(false);
   const [clotureOuverte, setClotureOuverte] = useState(null);
   const [detailCloture, setDetailCloture] = useState(null);
+  const [erreurProjets, setErreurProjets] = useState('');
 
   useEffect(() => {
-    api.get('/projets', { headers }).then(res => setProjets(res.data)).catch(() => {});
+    api.get('/projets', { headers }).then(res => setProjets(res.data))
+      .catch(() => setErreurProjets('Impossible de charger la liste des projets — vérifie ta connexion.'));
   }, []);
 
   const genererBilan = async () => {
@@ -83,6 +85,7 @@ const BilanScreen = ({ token }) => {
           <Text style={styles.label}>Au (AAAA-MM-JJ)</Text>
           <TextInput style={styles.champ} value={dateFin} onChangeText={setDateFin} />
           <Text style={styles.label}>Projet</Text>
+          {erreurProjets !== '' && <Text style={styles.erreurTexte}>{erreurProjets}</Text>}
           <TouchableOpacity onPress={() => setProjetId('')} style={[styles.optionLigne, !projetId && styles.optionLigneActive]}>
             <Text style={styles.optionTexte}>Tous les projets (vue ferme complète)</Text>
           </TouchableOpacity>
@@ -228,6 +231,7 @@ const styles = StyleSheet.create({
   carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F', marginBottom: 8 },
   carteSousTexte: { fontSize: 11, color: '#6E6E73' },
   label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
+  erreurTexte: { color: '#DC2626', fontSize: 12, marginBottom: 4 },
   champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13 },
   raccourciChip: { backgroundColor: '#F3F4F6', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6 },
   raccourciTexte: { fontSize: 11, color: '#6E6E73', fontWeight: '600' },

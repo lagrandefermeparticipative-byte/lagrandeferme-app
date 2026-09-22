@@ -29,11 +29,12 @@ const TechnicienProjetsScreen = ({ token, onChoisir, onRetour }) => {
   const { choisirProjet } = useProjet();
   const [projets, setProjets] = useState([]);
   const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState('');
 
   useEffect(() => {
     api.get('/projets/moi/technicien', { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setProjets(res.data))
-      .catch(() => setProjets([]))
+      .catch(() => { setProjets([]); setErreur('Impossible de charger tes projets — vérifie ta connexion.'); })
       .finally(() => setChargement(false));
   }, [token]);
 
@@ -53,6 +54,8 @@ const TechnicienProjetsScreen = ({ token, onChoisir, onRetour }) => {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.conteneur}>
         {chargement ? (
           <Text style={styles.vide}>Chargement...</Text>
+        ) : erreur ? (
+          <Text style={styles.erreurTexte}>{erreur}</Text>
         ) : projets.length === 0 ? (
           <Text style={styles.vide}>Aucun projet ne t'est encore assigné.</Text>
         ) : (
@@ -85,6 +88,7 @@ const TechnicienProjetsScreen = ({ token, onChoisir, onRetour }) => {
 const styles = StyleSheet.create({
   conteneur: { flex: 1, padding: 16, justifyContent: 'center' },
   vide: { fontSize: 13, color: '#6E6E73', textAlign: 'center', marginTop: 40 },
+  erreurTexte: { fontSize: 13, color: '#DC2626', textAlign: 'center', marginTop: 40 },
   carteProjet: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   carteTitre: { fontSize: 14, fontWeight: '600', color: '#1D1D1F' },

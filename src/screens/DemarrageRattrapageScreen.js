@@ -44,11 +44,13 @@ const DemarrageRattrapageScreen = ({ token, onTerminer, onAnnuler }) => {
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
   const [comptesExistants, setComptesExistants] = useState([]);
+  const [erreurComptes, setErreurComptes] = useState('');
   const [form, setForm] = useState(formInitial);
   const [investisseurs, setInvestisseurs] = useState([{ mode: 'nouveau', utilisateur_id: '', nom: '', email: '', mot_de_passe: '', telephone: '', mise: '' }]);
 
   useEffect(() => {
-    api.get('/utilisateurs/liste', { headers }).then(res => setComptesExistants(res.data)).catch(() => {});
+    api.get('/utilisateurs/liste', { headers }).then(res => setComptesExistants(res.data))
+      .catch(() => setErreurComptes('Impossible de charger les comptes existants — vérifie ta connexion.'));
   }, []);
 
   const ajouterInvestisseur = () => setInvestisseurs(prev => [...prev, { mode: 'nouveau', utilisateur_id: '', nom: '', email: '', mot_de_passe: '', telephone: '', mise: '' }]);
@@ -271,6 +273,9 @@ const DemarrageRattrapageScreen = ({ token, onTerminer, onAnnuler }) => {
                       <Text style={[styles.chipTexte, inv.mode === 'existant' && styles.chipTexteActif]}>Compte existant</Text>
                     </TouchableOpacity>
                   </View>
+                  {inv.mode === 'existant' && erreurComptes !== '' && (
+                    <Text style={styles.erreurTexte}>{erreurComptes}</Text>
+                  )}
                   {inv.mode === 'existant' ? (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                       {comptesExistants.map(c => (
