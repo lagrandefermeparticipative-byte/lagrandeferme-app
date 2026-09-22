@@ -13,8 +13,12 @@ const formatMontant = (m) => new Intl.NumberFormat('fr-FR').format(Math.round(m 
 const ProjetsAVenirScreen = ({ token }) => {
   const navigation = useNavigation();
   const headers = { Authorization: `Bearer ${token}` };
-  const { utilisateur } = useAuth();
-  const estGestionnaire = utilisateur?.role === 'gestionnaire' || utilisateur?.role === 'gestion_invest';
+  const { utilisateur, modeVue } = useAuth();
+  // Un gestion_invest basculé en mode Investisseur ne doit jamais voir la
+  // vue gestionnaire (bouton "+ Projet", liste nominative des réservations
+  // avec emails/téléphones d'autres personnes) — c'est le mode affiché qui
+  // tranche, jamais uniquement le rôle global.
+  const estGestionnaire = utilisateur?.role === 'gestionnaire' || (utilisateur?.role === 'gestion_invest' && modeVue !== 'investisseur');
   const [projets, setProjets] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [projetOuvert, setProjetOuvert] = useState(null);
