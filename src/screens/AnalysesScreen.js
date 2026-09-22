@@ -120,7 +120,7 @@ const AnalysesScreen = ({ token, projetActifId }) => {
   if (chargement) {
     return (
       <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
-        <Header titre="Analyses" sousTitre={projet?.nom} />
+        <Header titre="Analyses" sousTitre={projet?.nom} avecSelecteurProjet />
         <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       </View>
     );
@@ -128,7 +128,7 @@ const AnalysesScreen = ({ token, projetActifId }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
-      <Header titre="Analyses" sousTitre={projet?.nom || 'Pintades 2026'} />
+      <Header titre="Analyses" sousTitre={projet?.nom || 'Pintades 2026'} avecSelecteurProjet />
       <ScrollView style={styles.conteneur}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ongletsLigne}>
           {['bilan', 'elevage', 'comparaison', 'budget', 'ventes'].map(t => (
