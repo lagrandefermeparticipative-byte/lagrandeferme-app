@@ -91,9 +91,9 @@ const ApercuFermeProjetScreen = ({ token, projetId, onRetour }) => {
         {onglet === 'ventes' && (
           <View>
             <View style={styles.carteNoire}>
-              <Text style={styles.carteNoireLabel}>Total recettes</Text>
-              <Text style={styles.carteNoireMontant}>{formatMontant(totalRecettes)}</Text>
-              <Text style={styles.carteNoireSous}>{formatMontant(totalEncaisse)} encaissé</Text>
+              <Text style={styles.carteNoireLabel}>Total encaissé</Text>
+              <Text style={styles.carteNoireMontant}>{formatMontant(totalEncaisse)}</Text>
+              <Text style={styles.carteNoireSous}>{formatMontant(totalRecettes)} valeur totale des ventes · {formatMontant(totalRecettes - totalEncaisse)} en attente</Text>
             </View>
             {ventes.length === 0 ? <Text style={styles.vide}>Aucune vente enregistrée.</Text> : ventes.map(v => (
               <View key={v.id} style={[styles.carte, styles.ligneEntre]}>

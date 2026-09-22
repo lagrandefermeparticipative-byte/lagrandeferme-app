@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
@@ -72,11 +72,10 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
     finally { setChargement(false); }
   };
 
-  const dejaCharge = useRef(false);
   useEffect(() => {
-    if (projetActifId && !dejaCharge.current) {
+    if (projetActifId) {
+      setChargement(true);
       charger();
-      dejaCharge.current = true;
     }
   }, [projetActifId]);
 

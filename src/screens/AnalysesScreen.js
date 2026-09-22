@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import { BarChart, PieChart } from 'react-native-chart-kit';
 import api from '../services/api';
@@ -47,11 +47,10 @@ const AnalysesScreen = ({ token, projetActifId }) => {
     finally { setChargement(false); }
   };
 
-  const dejaCharge = useRef(false);
   useEffect(() => {
-    if (projetActifId && !dejaCharge.current) {
+    if (projetActifId) {
+      setChargement(true);
       charger();
-      dejaCharge.current = true;
     }
   }, [projetActifId]);
 

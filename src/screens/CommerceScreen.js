@@ -65,11 +65,10 @@ const CommerceScreen = ({ token, projetActifId }) => {
     finally { setChargement(false); }
   };
 
-  const dejaCharge = useRef(false);
   useEffect(() => {
-    if (projetActifId && !dejaCharge.current) {
+    if (projetActifId) {
+      setChargement(true);
       charger();
-      dejaCharge.current = true;
     }
   }, [projetActifId]);
 
@@ -459,10 +458,10 @@ const CommerceScreen = ({ token, projetActifId }) => {
                   <View key={nomProjet} style={{ marginBottom: 16 }}>
                     <Text style={[styles.groupeTitre, { marginBottom: 8, paddingHorizontal: 2 }]}>{nomProjet}</Text>
                     <View style={styles.carteNoire}>
-                      <Text style={styles.carteNoireLabel}>Total recettes</Text>
-                      <Text style={styles.carteNoireMontant}>{formatMontant(recetteProjet)}</Text>
+                      <Text style={styles.carteNoireLabel}>Total encaissé</Text>
+                      <Text style={styles.carteNoireMontant}>{formatMontant(payeeProjet)}</Text>
                       <View style={styles.grille2noire}>
-                        <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Encaissé</Text><Text style={styles.miniNoireValeur}>{formatMontant(payeeProjet)}</Text></View>
+                        <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Valeur des ventes</Text><Text style={styles.miniNoireValeur}>{formatMontant(recetteProjet)}</Text></View>
                         <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>En attente</Text><Text style={styles.miniNoireValeur}>{formatMontant(enAttenteProjet)}</Text></View>
                       </View>
                       <Text style={styles.carteNoireSousLabel}>{vendusProjet} sujets vendus</Text>

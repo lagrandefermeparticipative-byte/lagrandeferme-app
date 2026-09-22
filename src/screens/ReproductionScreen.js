@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
@@ -45,6 +45,9 @@ const ReproductionScreen = ({ token, projetActifId }) => {
         const actif = res.data.find(c => c.statut !== 'termine') || res.data[0];
         setCycleActif(actif);
         chargerCollectes(actif.uuid_id || actif.id);
+      } else {
+        setCycleActif(null);
+        setCollectes([]);
       }
     } catch (error) { console.log('Erreur reproduction:', error.message); }
     finally { setChargement(false); }
@@ -57,17 +60,10 @@ const ReproductionScreen = ({ token, projetActifId }) => {
     } catch (error) { console.log('Erreur collectes:', error.message); }
   };
 
-  const dejaCharge = useRef(false);
   useEffect(() => {
-    if (projetActifId && !dejaCharge.current) {
+    if (projetActifId) {
+      setChargement(true);
       charger();
-      dejaCharge.current = true;
-    }
-  }, [projetActifId]);
-  useEffect(() => {
-    if (projetActifId && !dejaCharge.current) {
-      charger();
-      dejaCharge.current = true;
     }
   }, [projetActifId]);
 
