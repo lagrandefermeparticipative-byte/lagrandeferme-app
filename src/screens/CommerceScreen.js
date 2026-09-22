@@ -454,17 +454,28 @@ const CommerceScreen = ({ token, projetActifId }) => {
                 const payeeProjet = ventesProjet.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
                 const enAttenteProjet = recetteProjet - payeeProjet;
                 const vendusProjet = ventesProjet.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
+                const ventesNonSoldees = ventesProjet.filter(v => v.statut_paiement !== 'payee');
+                const sujetsEnAttenteProjet = ventesNonSoldees.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
                 return (
                   <View key={nomProjet} style={{ marginBottom: 16 }}>
                     <Text style={[styles.groupeTitre, { marginBottom: 8, paddingHorizontal: 2 }]}>{nomProjet}</Text>
                     <View style={styles.carteNoire}>
                       <Text style={styles.carteNoireLabel}>Total encaissé</Text>
                       <Text style={styles.carteNoireMontant}>{formatMontant(payeeProjet)}</Text>
-                      <View style={styles.grille2noire}>
-                        <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Valeur des ventes</Text><Text style={styles.miniNoireValeur}>{formatMontant(recetteProjet)}</Text></View>
-                        <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>En attente</Text><Text style={styles.miniNoireValeur}>{formatMontant(enAttenteProjet)}</Text></View>
+                      <View style={{ gap: 8, marginTop: 12 }}>
+                        <View style={[styles.miniNoire, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                          <Text style={styles.miniNoireLabel}>Sujets vendus</Text>
+                          <Text style={styles.miniNoireValeur}>{vendusProjet}</Text>
+                        </View>
+                        <View style={[styles.miniNoire, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                          <Text style={styles.miniNoireLabel}>En attente</Text>
+                          <Text style={styles.miniNoireValeur}>{formatMontant(enAttenteProjet)} · {sujetsEnAttenteProjet} sujet{sujetsEnAttenteProjet > 1 ? 's' : ''}</Text>
+                        </View>
+                        <View style={[styles.miniNoire, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                          <Text style={styles.miniNoireLabel}>Total des ventes</Text>
+                          <Text style={styles.miniNoireValeur}>{formatMontant(recetteProjet)}</Text>
+                        </View>
                       </View>
-                      <Text style={styles.carteNoireSousLabel}>{vendusProjet} sujets vendus</Text>
                     </View>
                     {ventesProjet.map(vente => {
                       const badge = STATUTS_VENTE[vente.statut_paiement] || STATUTS_VENTE.en_attente;
@@ -476,8 +487,8 @@ const CommerceScreen = ({ token, projetActifId }) => {
                           </View>
                           <Text style={styles.carteSousTexte}>{new Date(vente.date_vente).toLocaleDateString('fr-FR')} · {vente.lot_nom || 'Lot inconnu'} · {vente.type_acheteur}</Text>
                           <View style={styles.grille3}>
-                            <View style={styles.statBleue}><Text style={styles.statBleueTexte}>{vente.males_vendus}</Text><Text style={styles.statBleueLabel}>Mâles</Text></View>
-                            <View style={styles.statRose}><Text style={styles.statRoseTexte}>{vente.femelles_vendues}</Text><Text style={styles.statRoseLabel}>Femelles</Text></View>
+                            <View style={styles.statBleue}><Text style={styles.statBleueTexte}>{vente.males_vendus}</Text><Text style={styles.statBleueLabel}>Mâles{parseInt(vente.males_vendus) > 0 ? ` · ${formatMontant(vente.prix_male)}` : ''}</Text></View>
+                            <View style={styles.statRose}><Text style={styles.statRoseTexte}>{vente.femelles_vendues}</Text><Text style={styles.statRoseLabel}>Femelles{parseInt(vente.femelles_vendues) > 0 ? ` · ${formatMontant(vente.prix_femelle)}` : ''}</Text></View>
                             <View style={styles.statVerte}><Text style={styles.statVerteTexte}>{formatMontant(vente.recette_totale)}</Text><Text style={styles.statVerteLabel}>Recette</Text></View>
                           </View>
                           {vente.statut_paiement !== 'en_attente' && (
