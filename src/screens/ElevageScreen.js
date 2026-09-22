@@ -26,8 +26,11 @@ const ElevageScreen = ({ token, projetActifId }) => {
   const [form, setForm] = useState({
     nom: '', date_arrivee: new Date().toISOString().split('T')[0], fournisseur: '',
     quantite_initiale: '', prix_unitaire: '1000', enclos: 'Enclos A',
-    transport_cout: '0', etat_sanitaire: 'Bon état', observations: '',
+    transport_type: 'Livraison fournisseur', transport_cout: '0', etat_sanitaire: 'Bon état', observations: '',
   });
+  const ENCLOS_OPTIONS = ['Enclos A', 'Enclos B', 'Enclos C', 'Enclos D'];
+  const TRANSPORT_OPTIONS = ['Livraison fournisseur', 'Nous sommes allés chercher'];
+  const ETAT_SANITAIRE_OPTIONS = ['Bon état', 'Quelques sujets faibles', 'Problème détecté'];
   const [editForm, setEditForm] = useState({ males: '', femelles: '', enclos: '', observations: '' });
   const [mortForm, setMortForm] = useState({ nombre: '', cause: 'Inconnue', observations: '' });
   const [reproForm, setReproForm] = useState({ nombre_sujets: '', note: '' });
@@ -412,9 +415,34 @@ const ElevageScreen = ({ token, projetActifId }) => {
             <Text style={styles.label}>Prix unitaire (F)</Text>
             <TextInput style={styles.champ} keyboardType="numeric" value={form.prix_unitaire} onChangeText={v => setForm({ ...form, prix_unitaire: v })} />
             <Text style={styles.label}>Enclos</Text>
-            <TextInput style={styles.champ} value={form.enclos} onChangeText={v => setForm({ ...form, enclos: v })} />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+              {ENCLOS_OPTIONS.map(opt => (
+                <TouchableOpacity key={opt} onPress={() => setForm({ ...form, enclos: opt })}
+                  style={[styles.chip, form.enclos === opt && styles.chipActif]}>
+                  <Text style={[styles.chipTexte, form.enclos === opt && styles.chipTexteActif]}>{opt}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.label}>Transport</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+              {TRANSPORT_OPTIONS.map(opt => (
+                <TouchableOpacity key={opt} onPress={() => setForm({ ...form, transport_type: opt })}
+                  style={[styles.chip, form.transport_type === opt && styles.chipActif]}>
+                  <Text style={[styles.chipTexte, form.transport_type === opt && styles.chipTexteActif]}>{opt}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
             <Text style={styles.label}>Coût transport (F)</Text>
             <TextInput style={styles.champ} keyboardType="numeric" value={form.transport_cout} onChangeText={v => setForm({ ...form, transport_cout: v })} />
+            <Text style={styles.label}>État sanitaire à l'arrivée</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+              {ETAT_SANITAIRE_OPTIONS.map(opt => (
+                <TouchableOpacity key={opt} onPress={() => setForm({ ...form, etat_sanitaire: opt })}
+                  style={[styles.chip, form.etat_sanitaire === opt && styles.chipActif]}>
+                  <Text style={[styles.chipTexte, form.etat_sanitaire === opt && styles.chipTexteActif]}>{opt}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
             <Text style={styles.label}>Observations</Text>
             <TextInput style={[styles.champ, { height: 70 }]} multiline value={form.observations} onChangeText={v => setForm({ ...form, observations: v })} />
           </View>

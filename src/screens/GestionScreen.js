@@ -14,6 +14,16 @@ const STATUTS = {
 
 const CATEGORIES = ['Alimentation', 'Sante & vaccins', 'Transport', 'Technicien', 'Infrastructure', 'Achat sujets', 'Autre'];
 
+const LIBELLES_PAR_CATEGORIE = {
+  'Alimentation': ['Maïs', 'Soja', 'Ingrédients divers', 'Aliment complet'],
+  'Sante & vaccins': ['Vaccins', 'Antibiotiques', 'Déparasitant', 'Vitamines'],
+  'Transport': ['Transport achats', 'Transport livraisons', 'Livraisons'],
+  'Technicien': ['Techniciens - salaires'],
+  'Infrastructure': ['Ustensiles', 'Charbon', 'Electricite'],
+  'Achat sujets': ['Pintadeaux'],
+  'Autre': ['Communication digitale', 'Imprevus'],
+};
+
 const GestionScreen = ({ token, projetActifId, projetNom }) => {
   const headers = { Authorization: `Bearer ${token}` };
   const [depenses, setDepenses] = useState([]);
@@ -205,6 +215,11 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
 
   // --- FORMULAIRE (nouveau/modifier partagé) ---
   if (vue === 'nouveau' || vue === 'modifier') {
+    const libellesExistants = [...new Set(depenses.map(d => d.libelle).filter(Boolean))];
+    const suggestionsLibelle = [...new Set([
+      ...(LIBELLES_PAR_CATEGORIE[form.categorie] || []),
+      ...libellesExistants,
+    ])].sort();
     return (
       <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={vue === 'nouveau' ? 'Nouvelle dépense' : `Modifier · ${depenseSelectionnee?.libelle}`} />
@@ -219,7 +234,20 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
               ))}
             </View>
             <Text style={styles.label}>Libellé</Text>
-            <TextInput style={styles.champ} placeholder="Ex: Achat maïs" value={form.libelle} onChangeText={v => setForm({ ...form, libelle: v })} />
+            {suggestionsLibelle.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {suggestionsLibelle.map(l => (
+                    <TouchableOpacity key={l} onPress={() => setForm({ ...form, libelle: l })} style={[styles.chip, form.libelle === l && styles.chipActif]}>
+                      <Text style={[styles.chipTexte, form.libelle === l && styles.chipTexteActif]}>{l}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+            <TextInput style={styles.champ} placeholder="Ex: Achat maïs (ou choisis ci-dessus)" value={form.libelle} onChangeText={v => setForm({ ...form, libelle: v })} />
+            <Text style={styles.label}>Date</Text>
+            <TextInput style={styles.champ} placeholder="AAAA-MM-JJ" value={form.date_depense} onChangeText={v => setForm({ ...form, date_depense: v })} />
             <Text style={styles.label}>Montant prévu (F)</Text>
             <TextInput style={styles.champ} keyboardType="numeric" value={String(form.montant_prevu)} onChangeText={v => setForm({ ...form, montant_prevu: v })} />
             <Text style={styles.label}>Montant réel (F)</Text>
@@ -533,7 +561,7 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
                         <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
                           <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirHistorique(depense)}><Text style={styles.actionVerteTexte}>Historique</Text></TouchableOpacity>
                           <TouchableOpacity style={styles.actionIndigo} onPress={() => ouvrirRepartition(depense)}><Text style={styles.actionIndigoTexte}>Répartition</Text></TouchableOpacity>
-                          <TouchableOpacity style={styles.actionGrise} onPress={() => { setDepenseSelectionnee(depense); setForm({ libelle: depense.libelle, categorie: depense.categorie, montant_prevu: String(depense.montant_prevu || ''), montant_reel: String(depense.montant_reel || ''), statut: depense.statut, date_depense: depense.date_depense || '', fournisseur: depense.fournisseur || '', note: depense.note || '' }); setVue('modifier'); }}><Text style={styles.actionGriseTexte}>Modifier</Text></TouchableOpacity>
+                          <TouchableOpacity style={styles.actionGrise} onPress={() => { setDepenseSelectionnee(depense); setForm({ libelle: depense.libelle, categorie: depense.categorie, montant_prevu: String(depense.montant_prevu || ''), montant_reel: String(depense.montant_reel || ''), statut: depense.statut, date_depense: depense.date_depense ? depense.date_depense.split('T')[0] : '', fournisseur: depense.fournisseur || '', note: depense.note || '' }); setVue('modifier'); }}><Text style={styles.actionGriseTexte}>Modifier</Text></TouchableOpacity>
                           <TouchableOpacity style={styles.actionRouge} onPress={() => supprimerDepense(depense)}><Text style={styles.actionRougeTexte}>🗑</Text></TouchableOpacity>
                         </View>
                       </View>

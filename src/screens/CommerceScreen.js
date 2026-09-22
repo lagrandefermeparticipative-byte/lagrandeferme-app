@@ -279,7 +279,18 @@ const CommerceScreen = ({ token, projetActifId }) => {
             )}
 
             <Text style={styles.label}>Acheteur</Text>
-            <TextInput style={styles.champ} placeholder="Nom de l'acheteur" value={formVente.acheteur} onChangeText={v => setFormVente({ ...formVente, acheteur: v })} />
+            {acheteurs.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {acheteurs.map(a => (
+                    <TouchableOpacity key={a.id} onPress={() => setFormVente({ ...formVente, acheteur: a.nom })} style={[styles.chip, formVente.acheteur === a.nom && styles.chipActif]}>
+                      <Text style={[styles.chipTexte, formVente.acheteur === a.nom && styles.chipTexteActif]}>{a.nom}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+            <TextInput style={styles.champ} placeholder="Nom de l'acheteur (ou choisis ci-dessus)" value={formVente.acheteur} onChangeText={v => setFormVente({ ...formVente, acheteur: v })} />
 
             <Text style={styles.label}>Type acheteur</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
