@@ -57,7 +57,8 @@ const AnalysesScreen = ({ token, projetActifId }) => {
   const totalDepensesReelles = depenses.reduce((s, d) => s + parseFloat(d.montant_reel || 0), 0);
   const totalDepensesPrevues = depenses.reduce((s, d) => s + parseFloat(d.montant_prevu || 0), 0);
   const totalRecettes = ventes.reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
-  const totalRecettesPayees = ventes.filter(v => v.statut_paiement === 'payee').reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
+  const totalEncaisse = ventes.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
+  const totalEnAttente = totalRecettes - totalEncaisse;
   const totalSujetsInitiaux = lots.reduce((s, l) => s + parseInt(l.quantite_initiale || 0), 0);
   const totalVivants = lots.reduce((s, l) => s + parseInt(l.vivants || l.quantite_initiale || 0), 0);
   const totalVendus = ventes.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
@@ -66,8 +67,14 @@ const AnalysesScreen = ({ token, projetActifId }) => {
   const labelAnimal = (projet?.type_volaille || 'sujet').toLowerCase();
   const labelAnimalPluriel = labelAnimal.endsWith('s') ? labelAnimal : labelAnimal + 's';
 
-  const profitNet = totalRecettes - totalDepensesReelles;
+  // Valorisation du cheptel vivant au coût réel engagé — même formule que
+  // l'estimation de liquidation (simulerRepartitionLiquidation).
+  const coutParSujetRecu = totalSujetsInitiaux > 0 ? totalDepensesReelles / totalSujetsInitiaux : 0;
+  const valeurCheptelVivant = Math.round(coutParSujetRecu * totalVivants);
+
+  const profitNet = totalEncaisse - totalDepensesReelles;
   const rendementReel = totalDepensesReelles > 0 ? ((profitNet / totalDepensesReelles) * 100).toFixed(1) : 0;
+  const profitTotalAvecStock = profitNet + valeurCheptelVivant;
   const coutRevient = totalSujetsInitiaux > 0 ? Math.round(totalDepensesReelles / totalSujetsInitiaux) : 0;
   const coutRevientPrevu = totalSujetsInitiaux > 0 ? Math.round(totalDepensesPrevues / totalSujetsInitiaux) : 0;
 
@@ -93,6 +100,23 @@ const AnalysesScreen = ({ token, projetActifId }) => {
     return { name: l.nom, vivants, morts, taux: ((vivants / parseInt(l.quantite_initiale)) * 100).toFixed(1) };
   });
 
+  // Comparaison par lot : les dépenses ne sont pas ventilées par lot dans ce
+  // modèle (seulement par projet), donc on compare ce qui est réellement
+  // mesurable au niveau du lot — reçus/vivants/morts/survie et ventes.
+  const dataComparaisonLots = lots.map(l => {
+    const ventesLot = ventes.filter(v => v.lot_nom === l.nom);
+    const recetteLot = ventesLot.reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
+    const encaisseLot = ventesLot.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
+    const vendusLot = ventesLot.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
+    const vivants = parseInt(l.vivants || l.quantite_initiale);
+    const morts = parseInt(l.quantite_initiale) - vivants;
+    const taux = parseFloat(((vivants / parseInt(l.quantite_initiale)) * 100).toFixed(1));
+    return {
+      nom: l.nom, recus: parseInt(l.quantite_initiale), vivants, morts, taux,
+      vendus: vendusLot, recetteLot, encaisseLot, enAttenteLot: recetteLot - encaisseLot,
+    };
+  }).sort((a, b) => b.taux - a.taux);
+
   if (chargement) {
     return (
       <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
@@ -107,10 +131,10 @@ const AnalysesScreen = ({ token, projetActifId }) => {
       <Header titre="Analyses" sousTitre={projet?.nom || 'Pintades 2026'} />
       <ScrollView style={styles.conteneur}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ongletsLigne}>
-          {['bilan', 'elevage', 'budget', 'ventes'].map(t => (
+          {['bilan', 'elevage', 'comparaison', 'budget', 'ventes'].map(t => (
             <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
               <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>
-                {t === 'bilan' ? 'Bilan' : t === 'elevage' ? 'Élevage' : t === 'budget' ? 'Budget' : 'Ventes'}
+                {t === 'bilan' ? 'Bilan' : t === 'elevage' ? 'Élevage' : t === 'comparaison' ? 'Comparaison' : t === 'budget' ? 'Budget' : 'Ventes'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -129,9 +153,19 @@ const AnalysesScreen = ({ token, projetActifId }) => {
             </View>
             <View style={styles.grille2mini}>
               <View style={styles.mini}><Text style={styles.miniLabel}>Dépenses réelles</Text><Text style={styles.miniValeur}>{formatMontant(totalDepensesReelles)}</Text><Text style={styles.carteSousTexte}>Prévu : {formatMontant(totalDepensesPrevues)}</Text></View>
-              <View style={styles.mini}><Text style={styles.miniLabel}>Recettes</Text><Text style={styles.miniValeur}>{formatMontant(totalRecettes)}</Text><Text style={styles.carteSousTexte}>Encaissé : {formatMontant(totalRecettesPayees)}</Text></View>
-              <View style={styles.mini}><Text style={styles.miniLabel}>Profit net actuel</Text><Text style={[styles.miniValeur, { color: profitNet >= 0 ? '#059669' : '#DC2626' }]}>{formatMontant(profitNet)}</Text></View>
-              <View style={styles.mini}><Text style={styles.miniLabel}>Recette projetée</Text><Text style={[styles.miniValeur, { color: '#2563EB' }]}>{formatMontant(recetteProjetee)}</Text><Text style={styles.carteSousTexte}>{totalVivants} vivants</Text></View>
+              <View style={styles.mini}><Text style={styles.miniLabel}>Total encaissé</Text><Text style={styles.miniValeur}>{formatMontant(totalEncaisse)}</Text><Text style={styles.carteSousTexte}>{formatMontant(totalRecettes)} vendu · {formatMontant(totalEnAttente)} en attente</Text></View>
+              <View style={styles.mini}><Text style={styles.miniLabel}>Profit net actuel</Text><Text style={[styles.miniValeur, { color: profitNet >= 0 ? '#059669' : '#DC2626' }]}>{formatMontant(profitNet)}</Text><Text style={styles.carteSousTexte}>Encaissé − dépenses réelles</Text></View>
+              <View style={styles.mini}><Text style={styles.miniLabel}>Valeur du cheptel vivant</Text><Text style={[styles.miniValeur, { color: '#2563EB' }]}>{formatMontant(valeurCheptelVivant)}</Text><Text style={styles.carteSousTexte}>{totalVivants} vivants au coût réel</Text></View>
+            </View>
+            <View style={styles.carte}>
+              <Text style={styles.miniLabel}>Profit total (encaissé + stock vivant)</Text>
+              <Text style={[styles.miniValeur, { fontSize: 17, color: profitTotalAvecStock >= 0 ? '#059669' : '#DC2626' }]}>{formatMontant(profitTotalAvecStock)}</Text>
+              <Text style={styles.carteSousTexte}>Ce que le projet a rapporté si on compte le cheptel encore vivant à sa valeur de coût, en plus de l'argent déjà encaissé.</Text>
+            </View>
+            <View style={styles.carte}>
+              <Text style={styles.miniLabel}>Recette projetée si tout vendu</Text>
+              <Text style={[styles.miniValeur, { color: '#2563EB' }]}>{formatMontant(recetteProjetee)}</Text>
+              <Text style={styles.carteSousTexte}>{totalVivants} vivants restants à vendre</Text>
             </View>
             <View style={styles.carte}>
               <Text style={styles.carteTitre}>Indicateurs clés</Text>
@@ -186,6 +220,36 @@ const AnalysesScreen = ({ token, projetActifId }) => {
           </View>
         )}
 
+        {onglet === 'comparaison' && (
+          <View>
+            {dataComparaisonLots.length === 0 ? (
+              <View style={styles.videCarte}>
+                <Text style={styles.vide}>Aucun lot enregistré sur ce projet.</Text>
+              </View>
+            ) : dataComparaisonLots.map(lot => (
+              <View key={lot.nom} style={styles.carte}>
+                <View style={styles.ligneEntre}>
+                  <Text style={styles.carteTitre}>{lot.nom}</Text>
+                  <View style={[styles.badgeSurvie, { backgroundColor: lot.taux >= 95 ? '#ECFDF5' : lot.taux >= 85 ? '#FFF7ED' : '#FEF2F2' }]}>
+                    <Text style={[styles.badgeSurvieTexte, { color: lot.taux >= 95 ? '#059669' : lot.taux >= 85 ? '#EA580C' : '#DC2626' }]}>{lot.taux}% survie</Text>
+                  </View>
+                </View>
+                <View style={styles.grille4comparaison}>
+                  <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.recus}</Text><Text style={styles.miniStatLabel}>Reçus</Text></View>
+                  <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.vivants}</Text><Text style={styles.miniStatLabel}>Vivants</Text></View>
+                  <View style={styles.miniStat}><Text style={[styles.miniStatChiffre, { color: '#DC2626' }]}>{lot.morts}</Text><Text style={styles.miniStatLabel}>Morts</Text></View>
+                  <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.vendus}</Text><Text style={styles.miniStatLabel}>Vendus</Text></View>
+                </View>
+                {lot.recetteLot > 0 && (
+                  <Text style={styles.carteSousTexte}>
+                    Encaissé : {formatMontant(lot.encaisseLot)}{lot.enAttenteLot > 0 ? ` · En attente : ${formatMontant(lot.enAttenteLot)}` : ''}
+                  </Text>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
         {onglet === 'budget' && (
           <View>
             {dataBudget.length > 0 && (
@@ -218,14 +282,15 @@ const AnalysesScreen = ({ token, projetActifId }) => {
           <View>
             <View style={styles.grille2noireIndep}>
               <View style={styles.carteNoireGrille}><Text style={styles.carteNoireLabel}>Total vendus</Text><Text style={styles.carteNoireMontant}>{totalVendus}</Text><Text style={styles.carteNoireSousLabel}>sur {totalVivants} vivants</Text></View>
-              <View style={styles.carteNoireGrille}><Text style={styles.carteNoireLabel}>Recettes totales</Text><Text style={styles.carteNoireMontant}>{formatMontant(totalRecettes)}</Text><Text style={styles.carteNoireSousLabel}>Encaissé : {formatMontant(totalRecettesPayees)}</Text></View>
+              <View style={styles.carteNoireGrille}><Text style={styles.carteNoireLabel}>Total encaissé</Text><Text style={styles.carteNoireMontant}>{formatMontant(totalEncaisse)}</Text><Text style={styles.carteNoireSousLabel}>{formatMontant(totalRecettes)} vendu · {formatMontant(totalEnAttente)} en attente</Text></View>
             </View>
             <View style={styles.carte}>
               <Text style={styles.carteTitre}>Projection finale</Text>
               <LigneInfo label={`${labelAnimalPluriel.charAt(0).toUpperCase()}${labelAnimalPluriel.slice(1)} restantes`} value={totalVivants - totalVendus} />
               <LigneInfo label="Prix moyen estimé" value={formatMontant((prixMale + prixFemelle) / 2)} />
               <LigneInfo label="Recette projetée" value={formatMontant(recetteProjetee)} />
-              <LigneInfo label="Recette déjà réalisée" value={formatMontant(totalRecettes)} />
+              <LigneInfo label="Encaissé à ce jour" value={formatMontant(totalEncaisse)} />
+              <LigneInfo label="En attente de paiement" value={formatMontant(totalEnAttente)} />
               <LigneInfo label="Recette restante estimée" value={formatMontant(recetteProjetee - totalRecettes)} />
             </View>
             {ventes.length > 0 && (
@@ -291,6 +356,14 @@ const styles = StyleSheet.create({
   progressBarre: { height: '100%', backgroundColor: '#1D1D1F', borderRadius: 4 },
   rapportTexte: { fontSize: 12, color: '#374151', fontWeight: '500' },
   mortsTexte: { fontSize: 11, color: '#EF4444' },
+  videCarte: { backgroundColor: '#fff', borderRadius: 20, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E5EA', padding: 30, alignItems: 'center' },
+  vide: { color: '#6E6E73', fontSize: 13 },
+  badgeSurvie: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  badgeSurvieTexte: { fontSize: 10, fontWeight: '700' },
+  grille4comparaison: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  miniStat: { alignItems: 'center' },
+  miniStatChiffre: { fontSize: 14, fontWeight: '600', color: '#1D1D1F' },
+  miniStatLabel: { fontSize: 10, color: '#6E6E73' },
 });
 
 export default AnalysesScreen;
