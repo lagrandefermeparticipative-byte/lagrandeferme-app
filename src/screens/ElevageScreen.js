@@ -33,7 +33,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
   const ETAT_SANITAIRE_OPTIONS = ['Bon état', 'Quelques sujets faibles', 'Problème détecté'];
   const [editForm, setEditForm] = useState({ males: '', femelles: '', enclos: '', observations: '' });
   const [mortForm, setMortForm] = useState({ nombre: '', cause: 'Inconnue', observations: '' });
-  const [reproForm, setReproForm] = useState({ nombre_sujets: '', note: '' });
+  const [reproForm, setReproForm] = useState({ males: '', femelles: '', nombre_sujets: '', note: '', creer_cycle: false, generation_cycle: 'G1', nom_cycle: '' });
   const [tousProjets, setTousProjets] = useState([]);
   const [erreurProjets, setErreurProjets] = useState('');
   const [transfertForm, setTransfertForm] = useState({
@@ -112,13 +112,27 @@ const ElevageScreen = ({ token, projetActifId }) => {
   };
 
   const extraireReproducteurs = async () => {
-    if (!reproForm.nombre_sujets) { setErreur('Nombre requis.'); return; }
+    const lotDejaSexe = !!lotSelectionne.date_sexage;
+    const totalRepro = lotDejaSexe
+      ? (parseInt(reproForm.males) || 0) + (parseInt(reproForm.femelles) || 0)
+      : (parseInt(reproForm.nombre_sujets) || 0);
+    if (totalRepro <= 0) {
+      setErreur(lotDejaSexe ? 'Indique au moins un sujet (mâle ou femelle) à extraire.' : 'Indique le nombre de sujets à extraire.');
+      return;
+    }
     setEnvoi(true); setErreur('');
     try {
-      await api.post(`/lots/${lotSelectionne.uuid_id || lotSelectionne.id}/reproducteurs`, {
-        nombre_sujets: parseInt(reproForm.nombre_sujets), note: reproForm.note,
-      }, { headers });
+      const base = lotDejaSexe
+        ? { males: reproForm.males, femelles: reproForm.femelles, note: reproForm.note }
+        : { nombre_sujets: reproForm.nombre_sujets, note: reproForm.note };
+      const payload = reproForm.creer_cycle
+        ? { ...base, creer_cycle: true, generation_cycle: reproForm.generation_cycle, nom_cycle: reproForm.nom_cycle }
+        : base;
+      const res = await api.post(`/lots/${lotSelectionne.uuid_id || lotSelectionne.id}/reproducteurs`, payload, { headers });
       setVue('liste'); charger(true);
+      if (res.data?.cycle) {
+        Alert.alert('Extraction enregistrée', `Un cycle de ponte "${res.data.cycle.generation}" a été créé pour ce lot dans Reproduction.`);
+      }
     } catch (error) { setErreur(error.response?.data?.message || 'Erreur.'); }
     finally { setEnvoi(false); }
   };
@@ -252,11 +266,41 @@ const ElevageScreen = ({ token, projetActifId }) => {
             <Text style={styles.alerteOrangeLegereTexte}>{dispo} sujets disponibles dans ce lot avant cette extraction</Text>
           </View>
           <View style={styles.carte}>
-            <Text style={styles.label}>Nombre de sujets à extraire *</Text>
-            <TextInput style={styles.champ} keyboardType="numeric" value={reproForm.nombre_sujets} onChangeText={v => setReproForm({ ...reproForm, nombre_sujets: v })} />
+            {lotSelectionne.date_sexage ? (
+              <>
+                <Text style={styles.label}>Mâles à extraire</Text>
+                <TextInput style={styles.champ} keyboardType="numeric" placeholder="0" value={reproForm.males} onChangeText={v => setReproForm({ ...reproForm, males: v })} />
+                <Text style={styles.label}>Femelles à extraire</Text>
+                <TextInput style={styles.champ} keyboardType="numeric" placeholder="0" value={reproForm.femelles} onChangeText={v => setReproForm({ ...reproForm, femelles: v })} />
+                {((parseInt(reproForm.males) || 0) + (parseInt(reproForm.femelles) || 0)) > dispo && (
+                  <Text style={styles.erreurTexte}>⚠️ Tu essaies d'extraire {(parseInt(reproForm.males) || 0) + (parseInt(reproForm.femelles) || 0)} sujets mais ce lot n'en a que {dispo} de disponibles.</Text>
+                )}
+              </>
+            ) : (
+              <>
+                <Text style={styles.label}>Nombre de sujets à extraire *</Text>
+                <TextInput style={styles.champ} keyboardType="numeric" value={reproForm.nombre_sujets} onChangeText={v => setReproForm({ ...reproForm, nombre_sujets: v })} />
+                <Text style={styles.infoTexte}>Ce lot n'est pas encore sexé — tu pourras préciser mâles/femelles plus tard via le sexage du lot.</Text>
+                {(parseInt(reproForm.nombre_sujets) || 0) > dispo && (
+                  <Text style={styles.erreurTexte}>⚠️ Tu essaies d'extraire {reproForm.nombre_sujets} sujets mais ce lot n'en a que {dispo} de disponibles.</Text>
+                )}
+              </>
+            )}
             <Text style={styles.label}>Note (optionnel)</Text>
             <TextInput style={[styles.champ, { height: 70 }]} multiline value={reproForm.note} onChangeText={v => setReproForm({ ...reproForm, note: v })} placeholder="Ex: reproducteurs pour la prochaine génération..." />
             <Text style={styles.infoTexte}>Ces sujets quittent définitivement le pool disponible à la vente de ce lot, même s'ils changent de statut plus tard.</Text>
+            <TouchableOpacity style={styles.ligneCheckboxTransfert} onPress={() => setReproForm({ ...reproForm, creer_cycle: !reproForm.creer_cycle })}>
+              <View style={[styles.checkbox, reproForm.creer_cycle && styles.checkboxCoche]}>{reproForm.creer_cycle && <Text style={styles.checkboxTexte}>✓</Text>}</View>
+              <Text style={styles.checkboxLabel}>Créer directement un cycle de ponte pour ce lot</Text>
+            </TouchableOpacity>
+            {reproForm.creer_cycle && (
+              <>
+                <Text style={styles.label}>Génération</Text>
+                <TextInput style={styles.champ} placeholder="Ex: G1" value={reproForm.generation_cycle} onChangeText={v => setReproForm({ ...reproForm, generation_cycle: v })} />
+                <Text style={styles.label}>Nom du cycle (optionnel)</Text>
+                <TextInput style={styles.champ} placeholder="Ex: Ponte Nov. 2026" value={reproForm.nom_cycle} onChangeText={v => setReproForm({ ...reproForm, nom_cycle: v })} />
+              </>
+            )}
           </View>
           {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
           <TouchableOpacity style={styles.boutonOrangeGrand} onPress={extraireReproducteurs} disabled={envoi}>
@@ -520,7 +564,10 @@ const ElevageScreen = ({ token, projetActifId }) => {
             } else {
               badge = BADGES[lot.phase_calculee] || BADGES.demarrage;
             }
-            const peutActiverVente = !epuise && lot.phase_calculee === 'finition' && !lot.vente_activee;
+            // Un lot né sur la ferme (poussins issus de la reproduction) se
+            // vend couramment dès la sortie, sans attendre la phase Finition.
+            const peutActiverVente = !epuise && !lot.vente_activee
+              && (lot.phase_calculee === 'finition' || lot.origine_lot === 'reproduction_interne');
             const especeSexageDifferable = ['Pintade', 'Poulet de chair', 'Dinde', 'Canard'].includes(projet?.type_volaille);
             const peutSexer = especeSexageDifferable && !epuise && lot.phase_calculee !== 'demarrage' && !lot.date_sexage;
             return (
@@ -565,7 +612,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
                     <Text style={styles.actionGriseTexte}>Modifier</Text>
                   </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.actionOrange} onPress={() => { setLotSelectionne(lot); setReproForm({ nombre_sujets: '', note: '' }); setErreur(''); setVue('reproducteurs'); }}>
+                <TouchableOpacity style={styles.actionOrange} onPress={() => { setLotSelectionne(lot); setReproForm({ males: '', femelles: '', nombre_sujets: '', note: '', creer_cycle: false, generation_cycle: 'G1', nom_cycle: '' }); setErreur(''); setVue('reproducteurs'); }}>
                   <Text style={styles.actionOrangeTexte}>🐔 Extraire des reproducteurs</Text>
                 </TouchableOpacity>
                 {!epuise && (

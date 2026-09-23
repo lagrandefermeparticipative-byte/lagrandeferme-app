@@ -21,13 +21,15 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   const [collectes, setCollectes] = useState([]);
   const [onglet, setOnglet] = useState('synthese');
   const [chargement, setChargement] = useState(true);
-  const [vue, setVue] = useState('liste'); // liste | cycle | ponte | couveuse | collecte | eclosion
+  const [vue, setVue] = useState('liste'); // liste | cycle | couveuse | collecte | eclosion
   const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState('');
 
-  const [formCycle, setFormCycle] = useState({ generation: 'G1', nom: '' });
-  const [formPonte, setFormPonte] = useState({ nb_femelles: '', nb_males: '', date_debut_ponte: '', date_fin_ponte: '' });
+  const [formCycle, setFormCycle] = useState({ generation: 'G1', nom: '', projet_id: '', lot_origine_id: '' });
+  const [lotsDuProjetCycle, setLotsDuProjetCycle] = useState([]);
   const [formCouveuse, setFormCouveuse] = useState({ prestataire_couveuse: '', date_envoi_couveuse: '', oeufs_envoyes: '', cout_couveuse: '', duree_incubation: '28', date_eclosion_prevue: '' });
-  const [formCollecte, setFormCollecte] = useState({ date_collecte: new Date().toISOString().split('T')[0], nombre_oeufs: '', observations: '' });
+  const [formCollecte, setFormCollecte] = useState({ date_collecte: new Date().toISOString().split('T')[0], nombre_oeufs: '', observations: '', date_debut_periode: '', date_fin_periode: '' });
+  const [collecteEnEdition, setCollecteEnEdition] = useState(null);
   const [formEclosion, setFormEclosion] = useState({ date_eclosion_reelle: new Date().toISOString().split('T')[0], poussins_eclos: '', poussins_viables: '', observations: '', projet_suivant_id: '' });
   const [tousProjets, setTousProjets] = useState([]);
   const [erreurProjets, setErreurProjets] = useState('');
@@ -67,46 +69,119 @@ const ReproductionScreen = ({ token, projetActifId }) => {
     }
   }, [projetActifId]);
 
+  const ouvrirFormCycle = () => {
+    setFormCycle(prev => ({ ...prev, projet_id: projetActifId, lot_origine_id: '' }));
+    setErreur('');
+    setVue('cycle');
+  };
+
+  // Le lot d'origine dépend du projet choisi dans le formulaire — pas
+  // forcément celui actuellement affiché, puisqu'on peut créer un cycle
+  // pour n'importe quel projet de la ferme.
+  useEffect(() => {
+    if (vue !== 'cycle' || !formCycle.projet_id) { setLotsDuProjetCycle([]); return; }
+    api.get(`/lots?projet_id=${formCycle.projet_id}`, { headers })
+      .then(res => setLotsDuProjetCycle(res.data))
+      .catch(() => setLotsDuProjetCycle([]));
+  }, [vue, formCycle.projet_id]);
+
   const creerCycle = async () => {
-    setEnvoi(true);
+    if (!formCycle.projet_id) { setErreur('Choisis le projet pour lequel créer ce cycle.'); return; }
+    setEnvoi(true); setErreur('');
     try {
-      await api.post('/reproduction', { ...formCycle, projet_id: projetActifId }, { headers });
-      setVue('liste'); setFormCycle({ generation: 'G1', nom: '' }); charger();
-    } catch (error) { Alert.alert('Erreur', 'Création impossible.'); }
+      await api.post('/reproduction', formCycle, { headers });
+      const projetDifferent = formCycle.projet_id !== projetActifId;
+      setVue('liste');
+      setFormCycle({ generation: 'G1', nom: '', projet_id: '', lot_origine_id: '' });
+      charger();
+      if (projetDifferent) {
+        const nomProjet = tousProjets.find(p => (p.uuid_id || p.id) === formCycle.projet_id)?.nom;
+        Alert.alert('Cycle créé', `Créé pour "${nomProjet || 'l\'autre projet'}" — bascule sur ce projet (sélecteur en haut) pour le voir.`);
+      }
+    } catch (error) { setErreur(error.response?.data?.message || 'Erreur lors de la création du cycle.'); }
     finally { setEnvoi(false); }
   };
 
-  const enregistrerPonte = async () => {
-    setEnvoi(true);
-    try {
-      await api.put(`/reproduction/${cycleActif.uuid_id || cycleActif.id}`, formPonte, { headers });
-      setVue('liste'); charger();
-    } catch (error) { Alert.alert('Erreur', "Enregistrement impossible."); }
-    finally { setEnvoi(false); }
+  const ouvrirFormCouveuse = () => {
+    setFormCouveuse({
+      prestataire_couveuse: cycleActif?.prestataire_couveuse || '',
+      date_envoi_couveuse: cycleActif?.date_envoi_couveuse ? cycleActif.date_envoi_couveuse.split('T')[0] : '',
+      oeufs_envoyes: cycleActif?.oeufs_envoyes || '',
+      cout_couveuse: cycleActif?.cout_couveuse || '',
+      duree_incubation: cycleActif?.duree_incubation || '28',
+      date_eclosion_prevue: cycleActif?.date_eclosion_prevue ? cycleActif.date_eclosion_prevue.split('T')[0] : '',
+    });
+    setErreur('');
+    setVue('couveuse');
   };
 
   const enregistrerCouveuse = async () => {
-    setEnvoi(true);
+    setEnvoi(true); setErreur('');
     try {
       await api.put(`/reproduction/${cycleActif.uuid_id || cycleActif.id}`, formCouveuse, { headers });
       setVue('liste'); charger();
-    } catch (error) { Alert.alert('Erreur', "Enregistrement impossible."); }
+    } catch (error) { setErreur(error.response?.data?.message || "Erreur lors de l'enregistrement."); }
     finally { setEnvoi(false); }
+  };
+
+  const ouvrirFormCollecte = (collecte = null) => {
+    if (collecte) {
+      setCollecteEnEdition(collecte);
+      setFormCollecte({
+        date_collecte: collecte.date_collecte ? collecte.date_collecte.split('T')[0] : '',
+        nombre_oeufs: String(collecte.nombre_oeufs || ''),
+        observations: collecte.observations || '',
+        date_debut_periode: collecte.date_debut_periode ? collecte.date_debut_periode.split('T')[0] : '',
+        date_fin_periode: collecte.date_fin_periode ? collecte.date_fin_periode.split('T')[0] : '',
+      });
+    } else {
+      setCollecteEnEdition(null);
+      setFormCollecte({ date_collecte: new Date().toISOString().split('T')[0], nombre_oeufs: '', observations: '', date_debut_periode: '', date_fin_periode: '' });
+    }
+    setErreur('');
+    setVue('collecte');
   };
 
   const enregistrerCollecte = async () => {
-    if (!formCollecte.nombre_oeufs) { Alert.alert('Champ manquant', 'Nombre d\'œufs requis.'); return; }
-    setEnvoi(true);
+    if (!formCollecte.nombre_oeufs) { setErreur("Nombre d'œufs requis."); return; }
+    setEnvoi(true); setErreur('');
     try {
-      await api.post(`/reproduction/${cycleActif.uuid_id || cycleActif.id}/collectes`, formCollecte, { headers });
-      setVue('liste'); setFormCollecte({ date_collecte: new Date().toISOString().split('T')[0], nombre_oeufs: '', observations: '' });
+      if (collecteEnEdition) {
+        await api.put(`/reproduction/collectes/${collecteEnEdition.id}`, formCollecte, { headers });
+      } else {
+        await api.post(`/reproduction/${cycleActif.uuid_id || cycleActif.id}/collectes`, formCollecte, { headers });
+      }
+      setVue('liste'); setCollecteEnEdition(null);
+      setFormCollecte({ date_collecte: new Date().toISOString().split('T')[0], nombre_oeufs: '', observations: '', date_debut_periode: '', date_fin_periode: '' });
       charger(); chargerCollectes(cycleActif.uuid_id || cycleActif.id);
-    } catch (error) { Alert.alert('Erreur', "Enregistrement impossible."); }
+    } catch (error) { setErreur(error.response?.data?.message || "Erreur lors de l'enregistrement de la collecte."); }
     finally { setEnvoi(false); }
   };
 
+  const supprimerCollecte = (collecte) => {
+    Alert.alert('Supprimer', 'Supprimer cette collecte ?', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Supprimer', style: 'destructive', onPress: async () => {
+        try {
+          await api.delete(`/reproduction/collectes/${collecte.id}`, { headers });
+          charger(); chargerCollectes(cycleActif.uuid_id || cycleActif.id);
+        } catch (error) { Alert.alert('Erreur', error.response?.data?.message || 'Suppression impossible.'); }
+      }},
+    ]);
+  };
+
+  const ouvrirFormEclosion = () => {
+    const projetDuCycle = tousProjets.find(p => p.id === cycleActif?.projet_id);
+    setFormEclosion(prev => ({
+      ...prev,
+      projet_suivant_id: prev.projet_suivant_id || (projetDuCycle ? (projetDuCycle.uuid_id || projetDuCycle.id) : ''),
+    }));
+    setErreur('');
+    setVue('eclosion');
+  };
+
   const enregistrerEclosion = async () => {
-    setEnvoi(true);
+    setEnvoi(true); setErreur('');
     try {
       const poussinsEclos = parseInt(formEclosion.poussins_eclos) || 0;
       const poussinsViables = parseInt(formEclosion.poussins_viables) || 0;
@@ -116,16 +191,19 @@ const ReproductionScreen = ({ token, projetActifId }) => {
         projet_suivant_id: formEclosion.projet_suivant_id || null,
       }, { headers });
       setVue('liste'); charger();
-    } catch (error) { Alert.alert('Erreur', "Enregistrement impossible."); }
+    } catch (error) { setErreur(error.response?.data?.message || "Erreur lors de l'enregistrement."); }
     finally { setEnvoi(false); }
   };
 
   const supprimerCycle = (cycle) => {
-    Alert.alert('Supprimer', `Supprimer le cycle "${cycle.generation}${cycle.nom ? ' · ' + cycle.nom : ''}" ?`, [
+    Alert.alert('Supprimer', `Supprimer le cycle "${cycle.generation}${cycle.nom ? ' · ' + cycle.nom : ''}" ? Cette action est irréversible.`, [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Supprimer', style: 'destructive', onPress: async () => {
-        try { await api.delete(`/reproduction/${cycle.uuid_id || cycle.id}`, { headers }); charger(); }
-        catch { Alert.alert('Erreur', 'Suppression impossible.'); }
+        try {
+          await api.delete(`/reproduction/${cycle.uuid_id || cycle.id}`, { headers });
+          if (cycleActif?.id === cycle.id) setCycleActif(null);
+          charger();
+        } catch (error) { Alert.alert('Erreur', error.response?.data?.message || 'Suppression impossible.'); }
       }},
     ]);
   };
@@ -144,7 +222,19 @@ const ReproductionScreen = ({ token, projetActifId }) => {
         <Header titre="Nouveau cycle de reproduction" />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
-            <Text style={styles.infoTexte}>On garde la création simple — tu pourras ajouter les détails de ponte et couveuse ensuite.</Text>
+            <Text style={styles.infoTexte}>On garde la création simple — tu pourras ajouter les détails de couveuse ensuite.</Text>
+
+            <Text style={styles.label}>Projet *</Text>
+            {erreurProjets !== '' && <Text style={styles.erreurTexte}>{erreurProjets}</Text>}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {tousProjets.map(p => (
+                <TouchableOpacity key={p.id} onPress={() => setFormCycle({ ...formCycle, projet_id: p.uuid_id || p.id, lot_origine_id: '' })}
+                  style={[styles.chip, formCycle.projet_id === (p.uuid_id || p.id) && styles.chipActif, { marginRight: 6 }]}>
+                  <Text style={[styles.chipTexte, formCycle.projet_id === (p.uuid_id || p.id) && styles.chipTexteActif]}>{p.nom}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
             <Text style={styles.label}>Génération</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {['G1','G2','G3','G4','G5'].map(g => (
@@ -153,42 +243,39 @@ const ReproductionScreen = ({ token, projetActifId }) => {
                 </TouchableOpacity>
               ))}
             </View>
+            <TextInput style={[styles.champ, { marginTop: 6 }]} placeholder="Ou une autre étiquette libre" value={formCycle.generation} onChangeText={v => setFormCycle({ ...formCycle, generation: v })} />
+            <Text style={styles.infoTexte}>Juste une étiquette — pas besoin de créer une génération formelle pour des sujets déjà dans un lot en cours.</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Generations')}>
               <Text style={styles.lienGenerations}>Voir/gérer les générations existantes →</Text>
             </TouchableOpacity>
+
             <Text style={styles.label}>Nom du cycle</Text>
             <TextInput style={styles.champ} placeholder="Ex: Cycle Nov. 2026" value={formCycle.nom} onChangeText={v => setFormCycle({ ...formCycle, nom: v })} />
+
+            <Text style={styles.label}>Lot d'origine (optionnel)</Text>
+            {!formCycle.projet_id ? (
+              <Text style={styles.infoTexte}>Choisis d'abord un projet.</Text>
+            ) : lotsDuProjetCycle.length === 0 ? (
+              <Text style={styles.infoTexte}>Aucun lot dans ce projet.</Text>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <TouchableOpacity onPress={() => setFormCycle({ ...formCycle, lot_origine_id: '' })}
+                  style={[styles.chip, formCycle.lot_origine_id === '' && styles.chipActif, { marginRight: 6 }]}>
+                  <Text style={[styles.chipTexte, formCycle.lot_origine_id === '' && styles.chipTexteActif]}>Aucun lot précis</Text>
+                </TouchableOpacity>
+                {lotsDuProjetCycle.map(l => (
+                  <TouchableOpacity key={l.id} onPress={() => setFormCycle({ ...formCycle, lot_origine_id: l.uuid_id || l.id })}
+                    style={[styles.chip, formCycle.lot_origine_id === (l.uuid_id || l.id) && styles.chipActif, { marginRight: 6 }]}>
+                    <Text style={[styles.chipTexte, formCycle.lot_origine_id === (l.uuid_id || l.id) && styles.chipTexteActif]}>{l.nom}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+            <Text style={styles.infoTexte}>Précise de quel lot viennent les reproducteurs — utile si le projet a plusieurs lots.</Text>
           </View>
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
           <TouchableOpacity style={styles.boutonPrincipal} onPress={creerCycle} disabled={envoi}>
             <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Création...' : 'Créer le cycle'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
-            <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
-          </TouchableOpacity>
-          <View style={{ height: 40 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    );
-  }
-
-  // --- FORMULAIRE PONTE ---
-  if (vue === 'ponte') {
-    return (
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <Header titre="Détails de la ponte" />
-        <ScrollView style={styles.conteneur}>
-          <View style={styles.carte}>
-            <Text style={styles.label}>Femelles</Text>
-            <TextInput style={styles.champ} keyboardType="numeric" value={formPonte.nb_femelles} onChangeText={v => setFormPonte({ ...formPonte, nb_femelles: v })} />
-            <Text style={styles.label}>Mâles</Text>
-            <TextInput style={styles.champ} keyboardType="numeric" value={formPonte.nb_males} onChangeText={v => setFormPonte({ ...formPonte, nb_males: v })} />
-            <Text style={styles.label}>Début ponte (AAAA-MM-JJ)</Text>
-            <TextInput style={styles.champ} value={formPonte.date_debut_ponte} onChangeText={v => setFormPonte({ ...formPonte, date_debut_ponte: v })} />
-            <Text style={styles.label}>Fin ponte (AAAA-MM-JJ)</Text>
-            <TextInput style={styles.champ} value={formPonte.date_fin_ponte} onChangeText={v => setFormPonte({ ...formPonte, date_fin_ponte: v })} />
-          </View>
-          <TouchableOpacity style={styles.boutonPrincipal} onPress={enregistrerPonte} disabled={envoi}>
-            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Enregistrer'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
             <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
@@ -211,14 +298,15 @@ const ReproductionScreen = ({ token, projetActifId }) => {
             <Text style={styles.label}>Date envoi (AAAA-MM-JJ)</Text>
             <TextInput style={styles.champ} value={formCouveuse.date_envoi_couveuse} onChangeText={v => setFormCouveuse({ ...formCouveuse, date_envoi_couveuse: v })} />
             <Text style={styles.label}>Œufs envoyés</Text>
-            <TextInput style={styles.champ} keyboardType="numeric" value={formCouveuse.oeufs_envoyes} onChangeText={v => setFormCouveuse({ ...formCouveuse, oeufs_envoyes: v })} />
+            <TextInput style={styles.champ} keyboardType="numeric" value={String(formCouveuse.oeufs_envoyes)} onChangeText={v => setFormCouveuse({ ...formCouveuse, oeufs_envoyes: v })} />
             <Text style={styles.label}>Coût couveuse (F)</Text>
-            <TextInput style={styles.champ} keyboardType="numeric" value={formCouveuse.cout_couveuse} onChangeText={v => setFormCouveuse({ ...formCouveuse, cout_couveuse: v })} />
+            <TextInput style={styles.champ} keyboardType="numeric" value={String(formCouveuse.cout_couveuse)} onChangeText={v => setFormCouveuse({ ...formCouveuse, cout_couveuse: v })} />
             <Text style={styles.label}>Durée incubation (jours)</Text>
-            <TextInput style={styles.champ} keyboardType="numeric" value={formCouveuse.duree_incubation} onChangeText={v => setFormCouveuse({ ...formCouveuse, duree_incubation: v })} />
+            <TextInput style={styles.champ} keyboardType="numeric" value={String(formCouveuse.duree_incubation)} onChangeText={v => setFormCouveuse({ ...formCouveuse, duree_incubation: v })} />
             <Text style={styles.label}>Date éclosion prévue (AAAA-MM-JJ)</Text>
             <TextInput style={styles.champ} value={formCouveuse.date_eclosion_prevue} onChangeText={v => setFormCouveuse({ ...formCouveuse, date_eclosion_prevue: v })} />
           </View>
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
           <TouchableOpacity style={styles.boutonPrincipal} onPress={enregistrerCouveuse} disabled={envoi}>
             <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Enregistrer'}</Text>
           </TouchableOpacity>
@@ -235,20 +323,26 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   if (vue === 'collecte') {
     return (
       <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <Header titre="Collecte d'œufs" />
+        <Header titre={collecteEnEdition ? 'Modifier la collecte' : "Collecte d'œufs"} />
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
             <Text style={styles.label}>Date de collecte (AAAA-MM-JJ)</Text>
             <TextInput style={styles.champ} value={formCollecte.date_collecte} onChangeText={v => setFormCollecte({ ...formCollecte, date_collecte: v })} />
             <Text style={styles.label}>Nombre d'œufs *</Text>
-            <TextInput style={styles.champ} keyboardType="numeric" value={formCollecte.nombre_oeufs} onChangeText={v => setFormCollecte({ ...formCollecte, nombre_oeufs: v })} />
+            <TextInput style={styles.champ} keyboardType="numeric" value={String(formCollecte.nombre_oeufs)} onChangeText={v => setFormCollecte({ ...formCollecte, nombre_oeufs: v })} />
+            <Text style={styles.label}>Début période de ponte</Text>
+            <TextInput style={styles.champ} placeholder="AAAA-MM-JJ" value={formCollecte.date_debut_periode} onChangeText={v => setFormCollecte({ ...formCollecte, date_debut_periode: v })} />
+            <Text style={styles.label}>Fin période de ponte</Text>
+            <TextInput style={styles.champ} placeholder="AAAA-MM-JJ" value={formCollecte.date_fin_periode} onChangeText={v => setFormCollecte({ ...formCollecte, date_fin_periode: v })} />
+            <Text style={styles.infoTexte}>La vague de ponte concernée par cette collecte — utile si plusieurs pontes se succèdent sur le même cycle.</Text>
             <Text style={styles.label}>Observations</Text>
             <TextInput style={[styles.champ, { height: 70 }]} multiline value={formCollecte.observations} onChangeText={v => setFormCollecte({ ...formCollecte, observations: v })} />
           </View>
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
           <TouchableOpacity style={styles.boutonPrincipal} onPress={enregistrerCollecte} disabled={envoi}>
-            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : 'Enregistrer la collecte'}</Text>
+            <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : (collecteEnEdition ? 'Enregistrer les modifications' : 'Enregistrer la collecte')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => { setVue('liste'); setCollecteEnEdition(null); }}>
             <Text style={styles.boutonSecondaireTexte}>Annuler</Text>
           </TouchableOpacity>
           <View style={{ height: 40 }} />
@@ -290,10 +384,11 @@ const ReproductionScreen = ({ token, projetActifId }) => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <Text style={styles.infoTexte}>Si choisi, un lot "Reproduction interne" est créé automatiquement dans ce projet avec les poussins viables.</Text>
+            <Text style={styles.infoTexte}>Pré-rempli avec le projet de ce cycle. Si choisi, un lot "Reproduction interne" est créé automatiquement, déjà prêt à la vente (pas besoin d'attendre la Finition).</Text>
             <Text style={styles.label}>Observations</Text>
             <TextInput style={[styles.champ, { height: 70 }]} multiline value={formEclosion.observations} onChangeText={v => setFormEclosion({ ...formEclosion, observations: v })} />
           </View>
+          {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
           <TouchableOpacity style={styles.boutonPrincipal} onPress={enregistrerEclosion} disabled={envoi}>
             <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Enregistrement...' : "Enregistrer l'éclosion"}</Text>
           </TouchableOpacity>
@@ -312,7 +407,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
       <Header titre="Reproduction" sousTitre={cycleActif ? `${cycleActif.generation} · ${cycleActif.nom || ''}` : 'Aucun cycle actif'}
         avecSelecteurProjet
         action={
-          <TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('cycle')}>
+          <TouchableOpacity style={styles.boutonPetit} onPress={ouvrirFormCycle}>
             <Text style={styles.boutonPetitTexte}>+ Cycle</Text>
           </TouchableOpacity>
         }
@@ -324,7 +419,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
           <View style={styles.videCarte}>
             <Text style={{ fontSize: 40, marginBottom: 10 }}>🥚</Text>
             <Text style={styles.vide}>Aucun cycle de reproduction enregistré</Text>
-            <TouchableOpacity style={styles.boutonPrincipal} onPress={() => setVue('cycle')}>
+            <TouchableOpacity style={styles.boutonPrincipal} onPress={ouvrirFormCycle}>
               <Text style={styles.boutonPrincipalTexte}>Créer le premier cycle</Text>
             </TouchableOpacity>
           </View>
@@ -361,9 +456,10 @@ const ReproductionScreen = ({ token, projetActifId }) => {
                     <Text style={[styles.badgeTexte, { color: STATUTS[cycleActif.statut]?.text || '#4B5563' }]}>{STATUTS[cycleActif.statut]?.label || cycleActif.statut}</Text>
                   </View>
                 </View>
+                {cycleActif.lot_origine_nom && (
+                  <Text style={styles.carteNoireSousTexte}>Lot d'origine : {cycleActif.lot_origine_nom}</Text>
+                )}
                 <View style={styles.grille2noire}>
-                  <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Femelles</Text><Text style={styles.miniNoireValeur}>{cycleActif.nb_femelles || '—'}</Text></View>
-                  <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Mâles</Text><Text style={styles.miniNoireValeur}>{cycleActif.nb_males || '—'}</Text></View>
                   <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>Œufs collectés</Text><Text style={styles.miniNoireValeur}>{cycleActif.oeufs_collectes || 0}</Text></View>
                   <View style={styles.miniNoire}><Text style={styles.miniNoireLabel}>En couveuse</Text><Text style={styles.miniNoireValeur}>{cycleActif.oeufs_envoyes || '—'}</Text></View>
                 </View>
@@ -380,7 +476,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
                     <View style={[styles.progressBarreOrange, { width: `${progressionIncubation()}%` }]} />
                   </View>
                   {cycleActif.statut !== 'termine' && (
-                    <TouchableOpacity style={styles.boutonVert} onPress={() => setVue('eclosion')}>
+                    <TouchableOpacity style={styles.boutonVert} onPress={ouvrirFormEclosion}>
                       <Text style={styles.boutonVertTexte}>Enregistrer les résultats d'éclosion</Text>
                     </TouchableOpacity>
                   )}
@@ -403,36 +499,49 @@ const ReproductionScreen = ({ token, projetActifId }) => {
             <View>
               <View style={styles.ligneEntre}>
                 <Text style={styles.sectionTitre}>Collectes · {collectes.length} entrées</Text>
-                <TouchableOpacity style={styles.boutonPetit} onPress={() => setVue('collecte')}>
+                <TouchableOpacity style={styles.boutonPetit} onPress={() => ouvrirFormCollecte()}>
                   <Text style={styles.boutonPetitTexte}>+ Collecte</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.carte}>
-                <View style={styles.ligneEntre}>
-                  <Text style={styles.carteTitre}>Effectifs & dates de ponte</Text>
-                  <TouchableOpacity onPress={() => setVue('ponte')}><Text style={styles.lienModifier}>Modifier</Text></TouchableOpacity>
+                <Text style={styles.carteTitre}>Résumé de la ponte</Text>
+                <View style={{ marginTop: 8 }}>
+                  <Text style={styles.miniLabel}>Total œufs</Text>
+                  <Text style={styles.miniValeurGrande}>{cycleActif.oeufs_collectes || 0}</Text>
                 </View>
-                <View style={styles.grille2}>
-                  <View><Text style={styles.miniLabel}>Total œufs</Text><Text style={styles.miniValeurGrande}>{cycleActif.oeufs_collectes || 0}</Text></View>
-                  <View><Text style={styles.miniLabel}>Taux ponte moyen</Text>
-                    <Text style={[styles.miniValeurGrande, { color: '#BE185D' }]}>
-                      {cycleActif.nb_femelles && collectes.length > 0 ? `${((cycleActif.oeufs_collectes / (cycleActif.nb_femelles * collectes.length)) * 100).toFixed(1)}%` : '—'}
-                    </Text>
-                  </View>
+                <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F5F5F7' }}>
+                  <Text style={styles.miniLabel}>Période ponte (toutes vagues)</Text>
+                  <Text style={styles.infoValeur}>
+                    {cycleActif.periode_ponte_debut ? new Date(cycleActif.periode_ponte_debut).toLocaleDateString('fr-FR') : '—'}
+                    {cycleActif.periode_ponte_fin ? ' → ' + new Date(cycleActif.periode_ponte_fin).toLocaleDateString('fr-FR') : ''}
+                  </Text>
                 </View>
               </View>
               {collectes.length === 0 ? (
                 <View style={styles.videCarte}>
                   <Text style={styles.vide}>Aucune collecte enregistrée</Text>
-                  <TouchableOpacity style={styles.boutonPrincipal} onPress={() => setVue('collecte')}>
+                  <TouchableOpacity style={styles.boutonPrincipal} onPress={() => ouvrirFormCollecte()}>
                     <Text style={styles.boutonPrincipalTexte}>Enregistrer une collecte</Text>
                   </TouchableOpacity>
                 </View>
               ) : collectes.map(c => (
                 <View style={styles.carte} key={c.id}>
                   <View style={styles.ligneEntre}>
-                    <Text style={styles.carteTitre}>{new Date(c.date_collecte).toLocaleDateString('fr-FR')}</Text>
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#1D1D1F' }}>{c.nombre_oeufs} 🥚</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.carteTitre}>{new Date(c.date_collecte).toLocaleDateString('fr-FR')}</Text>
+                      {c.date_debut_periode && (
+                        <Text style={styles.vagueTexte}>
+                          Vague : {new Date(c.date_debut_periode).toLocaleDateString('fr-FR')}
+                          {c.date_fin_periode ? ' → ' + new Date(c.date_fin_periode).toLocaleDateString('fr-FR') : ''}
+                        </Text>
+                      )}
+                      {c.observations && <Text style={styles.infoTexte}>{c.observations}</Text>}
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#1D1D1F' }}>{c.nombre_oeufs} 🥚</Text>
+                      <TouchableOpacity onPress={() => ouvrirFormCollecte(c)}><Text style={styles.iconeAction}>✏️</Text></TouchableOpacity>
+                      <TouchableOpacity onPress={() => supprimerCollecte(c)}><Text style={styles.iconeAction}>🗑</Text></TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               ))}
@@ -444,7 +553,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
               <View style={styles.carte}>
                 <View style={styles.ligneEntre}>
                   <Text style={styles.carteTitre}>Détails couveuse</Text>
-                  <TouchableOpacity onPress={() => setVue('couveuse')}><Text style={styles.lienModifier}>Modifier</Text></TouchableOpacity>
+                  <TouchableOpacity onPress={ouvrirFormCouveuse}><Text style={styles.lienModifier}>Modifier</Text></TouchableOpacity>
                 </View>
                 <LigneInfo label="Prestataire" value={cycleActif.prestataire_couveuse || '—'} />
                 <LigneInfo label="Œufs envoyés" value={cycleActif.oeufs_envoyes || '—'} />
@@ -452,7 +561,7 @@ const ReproductionScreen = ({ token, projetActifId }) => {
                 <LigneInfo label="Durée incubation" value={`${cycleActif.duree_incubation || 28} jours`} />
               </View>
               {cycleActif.statut !== 'termine' && (
-                <TouchableOpacity style={styles.boutonPrincipal} onPress={() => setVue('eclosion')}>
+                <TouchableOpacity style={styles.boutonPrincipal} onPress={ouvrirFormEclosion}>
                   <Text style={styles.boutonPrincipalTexte}>Enregistrer les résultats d'éclosion</Text>
                 </TouchableOpacity>
               )}
@@ -464,14 +573,20 @@ const ReproductionScreen = ({ token, projetActifId }) => {
               <View style={styles.ligneEntre}>
                 <View>
                   <Text style={styles.carteTitre}>{cycle.generation} · {cycle.nom || 'Sans nom'}</Text>
+                  {cycle.lot_origine_nom && <Text style={styles.infoTexte}>Lot : {cycle.lot_origine_nom}</Text>}
                 </View>
                 <View style={[styles.badge, { backgroundColor: STATUTS[cycle.statut]?.bg || '#F3F4F6' }]}>
                   <Text style={[styles.badgeTexte, { color: STATUTS[cycle.statut]?.text || '#4B5563' }]}>{STATUTS[cycle.statut]?.label || cycle.statut}</Text>
                 </View>
               </View>
-              <View style={styles.infoWebBloc}>
-                <Text style={styles.infoWebTexte}>Suppression disponible depuis le site web</Text>
+              <View style={styles.grille3}>
+                <View style={styles.miniStat}><Text style={styles.miniStatLabel}>Œufs</Text><Text style={styles.miniStatValeur}>{cycle.oeufs_collectes || 0}</Text></View>
+                <View style={styles.miniStat}><Text style={styles.miniStatLabel}>Poussins</Text><Text style={styles.miniStatValeur}>{cycle.poussins_viables || '—'}</Text></View>
+                <View style={styles.miniStat}><Text style={styles.miniStatLabel}>Éclosion</Text><Text style={styles.miniStatValeur}>{cycle.taux_eclosion ? cycle.taux_eclosion + '%' : '—'}</Text></View>
               </View>
+              <TouchableOpacity style={styles.actionRouge} onPress={() => supprimerCycle(cycle)}>
+                <Text style={styles.actionRougeTexte}>🗑 Supprimer ce cycle</Text>
+              </TouchableOpacity>
             </View>
           ))}
           <View style={{ height: 40 }} />
@@ -489,17 +604,15 @@ const LigneInfo = ({ label, value }) => (
 );
 
 const styles = StyleSheet.create({
-  infoWebBloc: { backgroundColor: "#F5F5F7", borderRadius: 8, paddingVertical: 8, alignItems: "center" },
-  infoWebTexte: { color: "#6E6E73", fontSize: 11 },
   conteneur: { flex: 1, padding: 16 },
   centre: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   ligneEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   carte: { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   carteTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
   label: { fontSize: 12, color: '#6E6E73', marginBottom: 6, marginTop: 10 },
-  erreurTexte: { color: '#DC2626', fontSize: 12, marginBottom: 4 },
+  erreurTexte: { color: '#DC2626', fontSize: 12, marginBottom: 4, marginTop: 4 },
   champ: { backgroundColor: '#F5F5F7', borderRadius: 8, padding: 10, fontSize: 13, color: '#1D1D1F' },
-  infoTexte: { fontSize: 12, color: '#6E6E73', marginBottom: 8 },
+  infoTexte: { fontSize: 12, color: '#6E6E73', marginBottom: 8, marginTop: 4 },
   lienGenerations: { fontSize: 11, color: '#1D4ED8', marginBottom: 12, marginTop: -4 },
   chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#F3F4F6' },
   chipActif: { backgroundColor: '#1D1D1F' },
@@ -529,6 +642,7 @@ const styles = StyleSheet.create({
   ongletTexteActif: { color: '#1D1D1F' },
   carteNoire: { backgroundColor: '#111827', borderRadius: 12, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   carteNoireTitre: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  carteNoireSousTexte: { color: '#9CA3AF', fontSize: 11, marginTop: 4 },
   grille2noire: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   miniNoire: { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, width: '47%' },
   miniNoireLabel: { color: '#9CA3AF', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
@@ -539,12 +653,17 @@ const styles = StyleSheet.create({
   progressFond: { height: 8, backgroundColor: '#F3F4F6', borderRadius: 4, marginTop: 6, overflow: 'hidden' },
   progressBarreOrange: { height: '100%', backgroundColor: '#FB923C', borderRadius: 4 },
   sectionTitre: { fontSize: 13, fontWeight: '600', color: '#1D1D1F', marginBottom: 8 },
-  grille2: { flexDirection: 'row', gap: 20, marginTop: 10 },
   miniLabel: { fontSize: 11, color: '#6E6E73' },
   miniValeurGrande: { fontSize: 20, fontWeight: '600', color: '#1D1D1F', marginTop: 2 },
   lienModifier: { fontSize: 11, color: '#6E6E73', backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   infoLabel: { fontSize: 12, color: '#6E6E73', paddingVertical: 6 },
   infoValeur: { fontSize: 12, fontWeight: '600', color: '#1D1D1F', paddingVertical: 6 },
+  vagueTexte: { fontSize: 11, color: '#BE185D', marginTop: 2 },
+  iconeAction: { fontSize: 14 },
+  grille3: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F5F5F7' },
+  miniStat: { alignItems: 'center' },
+  miniStatLabel: { fontSize: 10, color: '#6E6E73' },
+  miniStatValeur: { fontSize: 13, fontWeight: '600', color: '#1D1D1F' },
   actionRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8 },
   actionRougeTexte: { color: '#DC2626', fontSize: 11, fontWeight: '600' },
 });
