@@ -40,8 +40,11 @@ const MesProjetsScreen = ({ onChoisir }) => {
     }
   }, [estInvestisseur, projets.length, token]);
 
+  // "Investissement total" doit refléter l'argent réellement encaissé,
+  // pas la mise promise/engagée.
   const ensemble = lignesInvest ? {
-    totalMise: lignesInvest.reduce((s, l) => s + parseFloat(l.mise || 0), 0),
+    totalEncaisse: lignesInvest.reduce((s, l) => s + parseFloat(l.montant_paye || 0), 0),
+    totalEngage: lignesInvest.reduce((s, l) => s + parseFloat(l.mise || 0), 0),
     totalGain: lignesInvest.reduce((s, l) => s + (l.montant_estime != null ? parseFloat(l.montant_estime) : parseFloat(l.mise || 0)), 0),
     nbProjets: lignesInvest.length,
   } : null;
@@ -60,7 +63,10 @@ const MesProjetsScreen = ({ onChoisir }) => {
         {ensemble && (
           <View style={styles.carteEnsemble}>
             <Text style={styles.carteEnsembleLabel}>VOTRE INVESTISSEMENT TOTAL</Text>
-            <Text style={styles.carteEnsembleMontant}>{formatMontant(ensemble.totalMise)}</Text>
+            <Text style={styles.carteEnsembleMontant}>{formatMontant(ensemble.totalEncaisse)}</Text>
+            {ensemble.totalEncaisse < ensemble.totalEngage && (
+              <Text style={styles.carteEnsembleSousTexte}>{formatMontant(ensemble.totalEngage)} engagés au total</Text>
+            )}
             <View style={styles.ligneDivisoire} />
             <View style={styles.statsEtalees}>
               <View>
@@ -81,8 +87,10 @@ const MesProjetsScreen = ({ onChoisir }) => {
                   <View key={l.id} style={styles.ligneDetailProjet}>
                     <Text style={styles.detailProjetNom}>{l.projet_nom}</Text>
                     <View style={styles.ligneEntre}>
-                      <Text style={styles.detailLabel}>Investi</Text>
-                      <Text style={styles.detailValeur}>{formatMontant(l.mise)}</Text>
+                      <Text style={styles.detailLabel}>Encaissé</Text>
+                      <Text style={styles.detailValeur}>
+                        {formatMontant(l.montant_paye)}{parseFloat(l.montant_paye || 0) < parseFloat(l.mise || 0) ? ` sur ${formatMontant(l.mise)}` : ''}
+                      </Text>
                     </View>
                     <View style={styles.ligneEntre}>
                       <Text style={styles.detailLabel}>Estimé à date</Text>

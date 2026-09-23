@@ -60,8 +60,11 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
       });
   }, [projets]);
 
+  // "Investissement total" doit refléter l'argent réellement encaissé,
+  // pas la mise promise/engagée.
   const ensemble = projets.length > 0 ? {
-    totalMise: projets.reduce((s, p) => s + parseFloat(p.mise || 0), 0),
+    totalEncaisse: projets.reduce((s, p) => s + parseFloat(estimations[p.id]?.montant_paye || 0), 0),
+    totalEngage: projets.reduce((s, p) => s + parseFloat(p.mise || 0), 0),
     totalGain: projets.reduce((s, p) => {
       const est = estimations[p.id];
       return s + (est && est.montant_estime != null ? est.montant_estime : parseFloat(p.mise || 0));
@@ -96,8 +99,12 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
             {ensemble && (
               <View style={styles.carteEnsemble}>
                 <Text style={styles.carteEnsembleLabel}>VOTRE INVESTISSEMENT TOTAL</Text>
-                <Text style={styles.carteEnsembleMontant}>{formatMontant(ensemble.totalMise)}</Text>
-                <Text style={styles.carteEnsembleSousTexte}>{projets.length} projet{projets.length > 1 ? 's' : ''} · {formatMontant(ensemble.totalGain)} estimés au total à date</Text>
+                <Text style={styles.carteEnsembleMontant}>{formatMontant(ensemble.totalEncaisse)}</Text>
+                <Text style={styles.carteEnsembleSousTexte}>
+                  {projets.length} projet{projets.length > 1 ? 's' : ''}
+                  {ensemble.totalEncaisse < ensemble.totalEngage ? ` · ${formatMontant(ensemble.totalEngage)} engagés au total` : ''}
+                  {' '}· {formatMontant(ensemble.totalGain)} estimés au total à date
+                </Text>
               </View>
             )}
             {chargement ? (
@@ -113,7 +120,8 @@ const InvestisseurDashboardScreen = ({ token, onChoisir }) => {
                   <TouchableOpacity key={p.id} style={styles.carteProjet} onPress={() => ouvrirProjet(p)}>
                     <Text style={styles.carteTitre}>{p.projet_nom || p.nom}</Text>
                     <Text style={styles.carteSousTexte}>
-                      Investi : {formatMontant(p.mise)}
+                      Encaissé : {formatMontant(est?.montant_paye || 0)}
+                      {parseFloat(est?.montant_paye || 0) < parseFloat(p.mise || 0) ? ` sur ${formatMontant(p.mise)} engagés` : ''}
                       {est && est.montant_estime != null ? ` · Estimé : ${formatMontant(est.montant_estime)}` : ''}
                     </Text>
                   </TouchableOpacity>

@@ -317,7 +317,11 @@ const InvestissementScreen = ({ token, projetActifId, utilisateurNom }) => {
                 <View style={estilosApple.carteApple}>
                   <Text style={estilosApple.labelApple}>{investissement.estimation_type === 'liquide_final' ? 'MONTANT FINAL REÇU' : 'CE QUE VOUS POUVEZ ESPÉRER RECEVOIR'}</Text>
                   <Text style={estilosApple.montantApple}>{investissement.montant_estime != null ? formatMontant(investissement.montant_estime) : '—'}</Text>
-                  <Text style={estilosApple.sousTexteApple}>Sur votre mise de {formatMontant(investissement.mise)} · {((investissement.mise / investissement.total_investi) * 100).toFixed(1)}% du projet</Text>
+                  <Text style={estilosApple.sousTexteApple}>
+                    Sur votre encaissé de {formatMontant(investissement.montant_paye)}
+                    {investissement.total_paye > 0 ? ` · ${((investissement.montant_paye / investissement.total_paye) * 100).toFixed(1)}% du projet` : ''}
+                    {parseFloat(investissement.montant_paye || 0) < parseFloat(investissement.mise || 0) ? ` (sur ${formatMontant(investissement.mise)} engagés)` : ''}
+                  </Text>
                   {investissement.estimation_type === 'estimation_live' && (
                     <Text style={estilosApple.sousTexteApple}>Estimation en direct, basée sur ce qu'il reste réellement dans la caisse du projet aujourd'hui — elle évolue avec la santé du cheptel et les ventes.</Text>
                   )}
