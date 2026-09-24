@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, FlatList, SectionList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
+import { creerVenteSchema } from '@lagrandeferme/schemas';
+import { formaterErreursZod } from '@lagrandeferme/schemas/erreurs';
 import Header from '../components/Header';
 
 const formatMontant = (m) => new Intl.NumberFormat('fr-FR').format(Math.round(m || 0)) + ' F';
@@ -32,6 +34,7 @@ const CommerceScreen = ({ token, projetActifId }) => {
   const [vue, setVue] = useState('liste'); // liste | vente | acheteur
   const [acheteurEnEdition, setAcheteurEnEdition] = useState(null);
   const [envoi, setEnvoi] = useState(false);
+  const [erreursVente, setErreursVente] = useState({});
 
   const [formVente, setFormVente] = useState({
     lot_id: '', date_vente: new Date().toISOString().split('T')[0],
@@ -121,6 +124,22 @@ const CommerceScreen = ({ token, projetActifId }) => {
 
   const creerVente = async () => {
     if (!formVente.lot_id) { Alert.alert('Champ manquant', 'Choisis le lot vendu.'); return; }
+    const resultat = creerVenteSchema.safeParse({
+      lot_id: formVente.lot_id,
+      males_vendus: formVente.males_vendus,
+      femelles_vendues: formVente.femelles_vendues,
+      prix_male: formVente.prix_male,
+      prix_femelle: formVente.prix_femelle,
+    });
+    if (!resultat.success) {
+      setErreursVente(formaterErreursZod(resultat.error).parChamp);
+      return;
+    }
+    if (depasseDisponible) {
+      Alert.alert('Stock insuffisant', `Tu essaies de vendre ${totalAVendre} sujets mais ce lot n'en a que ${vivantsDisponibles} de vivants.`);
+      return;
+    }
+    setErreursVente({});
     setEnvoi(true);
     try {
       const nomLotVendu = lotChoisi?.nom;
@@ -300,7 +319,8 @@ const CommerceScreen = ({ token, projetActifId }) => {
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.label}>Mâles vendus</Text>
-                <TextInput style={styles.champ} keyboardType="numeric" value={formVente.males_vendus} onChangeText={v => setFormVente({ ...formVente, males_vendus: v })} />
+                <TextInput style={styles.champ} keyboardType="numeric" value={formVente.males_vendus} onChangeText={v => { setErreursVente(prev => ({ ...prev, males_vendus: undefined })); setFormVente({ ...formVente, males_vendus: v }); }} />
+                {erreursVente.males_vendus && <Text style={styles.erreurChampTexte}>{erreursVente.males_vendus}</Text>}
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.label}>Prix mâle (F)</Text>
@@ -590,6 +610,7 @@ const styles = StyleSheet.create({
   infoTexte: { fontSize: 11, color: '#6E6E73', marginTop: 6 },
   alerteRougeLegere: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 8, padding: 8, marginTop: 10 },
   erreurTexte: { color: '#DC2626', fontSize: 12, marginBottom: 4 },
+  erreurChampTexte: { color: '#DC2626', fontSize: 11, marginTop: 4 },
   alerteRougeLegereTexte: { color: '#DC2626', fontSize: 11 },
   encartVert: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5', borderRadius: 10, padding: 12, marginTop: 10 },
   encartVertLabel: { fontSize: 11, color: '#059669' },

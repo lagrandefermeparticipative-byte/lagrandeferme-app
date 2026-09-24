@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import { BarChart, PieChart } from 'react-native-chart-kit';
 import api from '../services/api';
 import Header from '../components/Header';
@@ -126,19 +126,72 @@ const AnalysesScreen = ({ token, projetActifId }) => {
     );
   }
 
+  const OngletsLigne = () => (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ongletsLigne}>
+      {['bilan', 'elevage', 'comparaison', 'budget', 'ventes'].map(t => (
+        <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
+          <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>
+            {t === 'bilan' ? 'Bilan' : t === 'elevage' ? 'Élevage' : t === 'comparaison' ? 'Comparaison' : t === 'budget' ? 'Budget' : 'Ventes'}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
+  const renderLotComparaison = (lot) => (
+    <View style={styles.carte}>
+      <View style={styles.ligneEntre}>
+        <Text style={styles.carteTitre}>{lot.nom}</Text>
+        <View style={[styles.badgeSurvie, { backgroundColor: lot.taux >= 95 ? '#ECFDF5' : lot.taux >= 85 ? '#FFF7ED' : '#FEF2F2' }]}>
+          <Text style={[styles.badgeSurvieTexte, { color: lot.taux >= 95 ? '#059669' : lot.taux >= 85 ? '#EA580C' : '#DC2626' }]}>{lot.taux}% survie</Text>
+        </View>
+      </View>
+      <View style={styles.grille4comparaison}>
+        <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.recus}</Text><Text style={styles.miniStatLabel}>Reçus</Text></View>
+        <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.vivants}</Text><Text style={styles.miniStatLabel}>Vivants</Text></View>
+        <View style={styles.miniStat}><Text style={[styles.miniStatChiffre, { color: '#DC2626' }]}>{lot.morts}</Text><Text style={styles.miniStatLabel}>Morts</Text></View>
+        <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.vendus}</Text><Text style={styles.miniStatLabel}>Vendus</Text></View>
+      </View>
+      {lot.recetteLot > 0 && (
+        <Text style={styles.carteSousTexte}>
+          Encaissé : {formatMontant(lot.encaisseLot)}{lot.enAttenteLot > 0 ? ` · En attente : ${formatMontant(lot.enAttenteLot)}` : ''}
+        </Text>
+      )}
+    </View>
+  );
+
+  const renderVente = (v) => (
+    <View style={styles.ligneEntre}>
+      <View>
+        <Text style={styles.rapportTexte}>{v.acheteur || 'Inconnu'}</Text>
+        <Text style={styles.carteSousTexte}>{new Date(v.date_vente).toLocaleDateString('fr-FR')} · {v.males_vendus}M + {v.femelles_vendues}F</Text>
+      </View>
+      <Text style={styles.rapportTexte}>{formatMontant(v.recette_totale)}</Text>
+    </View>
+  );
+
+  if (onglet === 'comparaison') {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
+        <Header titre="Analyses" sousTitre={projet?.nom || 'Pintades 2026'} avecSelecteurProjet />
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={dataComparaisonLots}
+          keyExtractor={(lot) => lot.nom}
+          renderItem={({ item }) => renderLotComparaison(item)}
+          ListHeaderComponent={<OngletsLigne />}
+          ListEmptyComponent={<View style={styles.videCarte}><Text style={styles.vide}>Aucun lot enregistré sur ce projet.</Text></View>}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Analyses" sousTitre={projet?.nom || 'Pintades 2026'} avecSelecteurProjet />
       <ScrollView style={styles.conteneur}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ongletsLigne}>
-          {['bilan', 'elevage', 'comparaison', 'budget', 'ventes'].map(t => (
-            <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
-              <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>
-                {t === 'bilan' ? 'Bilan' : t === 'elevage' ? 'Élevage' : t === 'comparaison' ? 'Comparaison' : t === 'budget' ? 'Budget' : 'Ventes'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <OngletsLigne />
 
         {onglet === 'bilan' && (
           <View>
@@ -220,36 +273,6 @@ const AnalysesScreen = ({ token, projetActifId }) => {
           </View>
         )}
 
-        {onglet === 'comparaison' && (
-          <View>
-            {dataComparaisonLots.length === 0 ? (
-              <View style={styles.videCarte}>
-                <Text style={styles.vide}>Aucun lot enregistré sur ce projet.</Text>
-              </View>
-            ) : dataComparaisonLots.map(lot => (
-              <View key={lot.nom} style={styles.carte}>
-                <View style={styles.ligneEntre}>
-                  <Text style={styles.carteTitre}>{lot.nom}</Text>
-                  <View style={[styles.badgeSurvie, { backgroundColor: lot.taux >= 95 ? '#ECFDF5' : lot.taux >= 85 ? '#FFF7ED' : '#FEF2F2' }]}>
-                    <Text style={[styles.badgeSurvieTexte, { color: lot.taux >= 95 ? '#059669' : lot.taux >= 85 ? '#EA580C' : '#DC2626' }]}>{lot.taux}% survie</Text>
-                  </View>
-                </View>
-                <View style={styles.grille4comparaison}>
-                  <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.recus}</Text><Text style={styles.miniStatLabel}>Reçus</Text></View>
-                  <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.vivants}</Text><Text style={styles.miniStatLabel}>Vivants</Text></View>
-                  <View style={styles.miniStat}><Text style={[styles.miniStatChiffre, { color: '#DC2626' }]}>{lot.morts}</Text><Text style={styles.miniStatLabel}>Morts</Text></View>
-                  <View style={styles.miniStat}><Text style={styles.miniStatChiffre}>{lot.vendus}</Text><Text style={styles.miniStatLabel}>Vendus</Text></View>
-                </View>
-                {lot.recetteLot > 0 && (
-                  <Text style={styles.carteSousTexte}>
-                    Encaissé : {formatMontant(lot.encaisseLot)}{lot.enAttenteLot > 0 ? ` · En attente : ${formatMontant(lot.enAttenteLot)}` : ''}
-                  </Text>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-
         {onglet === 'budget' && (
           <View>
             {dataBudget.length > 0 && (
@@ -296,15 +319,7 @@ const AnalysesScreen = ({ token, projetActifId }) => {
             {ventes.length > 0 && (
               <View style={styles.carte}>
                 <Text style={styles.carteTitre}>Historique ventes</Text>
-                {ventes.map(v => (
-                  <View style={styles.ligneEntre} key={v.id}>
-                    <View>
-                      <Text style={styles.rapportTexte}>{v.acheteur || 'Inconnu'}</Text>
-                      <Text style={styles.carteSousTexte}>{new Date(v.date_vente).toLocaleDateString('fr-FR')} · {v.males_vendus}M + {v.femelles_vendues}F</Text>
-                    </View>
-                    <Text style={styles.rapportTexte}>{formatMontant(v.recette_totale)}</Text>
-                  </View>
-                ))}
+                {ventes.map(v => <View key={v.id}>{renderVente(v)}</View>)}
               </View>
             )}
           </View>

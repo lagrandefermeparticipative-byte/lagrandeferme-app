@@ -120,6 +120,11 @@ const ElevageScreen = ({ token, projetActifId }) => {
       setErreur(lotDejaSexe ? 'Indique au moins un sujet (mâle ou femelle) à extraire.' : 'Indique le nombre de sujets à extraire.');
       return;
     }
+    const dispo = parseInt(lotSelectionne.vivants || lotSelectionne.quantite_initiale);
+    if (totalRepro > dispo) {
+      setErreur(`Tu essaies d'extraire ${totalRepro} sujets mais ce lot n'en a que ${dispo} de disponibles.`);
+      return;
+    }
     setEnvoi(true); setErreur('');
     try {
       const base = lotDejaSexe

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import api from '../services/api';
+import { creerInvestisseurSchema, creerDepenseSchema } from '@lagrandeferme/schemas';
+import { formaterErreursZod } from '@lagrandeferme/schemas/erreurs';
 import Header from '../components/Header';
 import { useCache } from '../context/CacheContext';
 import { useProjet } from '../context/ProjetContext';
@@ -37,6 +39,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   const [invSelectionne, setInvSelectionne] = useState(null);
   const [envoi, setEnvoi] = useState(false);
   const [erreurForm, setErreurForm] = useState('');
+  const [erreursDepenseForm, setErreursDepenseForm] = useState({});
   const [uploadEnCours, setUploadEnCours] = useState(false);
   const [assignations, setAssignations] = useState([]);
   const [comptesDisponibles, setComptesDisponibles] = useState([]);
@@ -234,6 +237,11 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   };
 
   const soumettreInvestisseur = async () => {
+    const resultatMise = creerInvestisseurSchema.shape.mise.safeParse(form.mise);
+    if (!resultatMise.success) {
+      setErreurForm(formaterErreursZod(resultatMise.error).message);
+      return;
+    }
     setEnvoi(true); setErreurForm('');
     try {
       let userId;
@@ -275,6 +283,12 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   };
 
   const soumettreNouvelleDepense = async () => {
+    const resultat = creerDepenseSchema.safeParse(newDepenseForm);
+    if (!resultat.success) {
+      setErreursDepenseForm(formaterErreursZod(resultat.error).parChamp);
+      return;
+    }
+    setErreursDepenseForm({});
     setEnvoi(true);
     try {
       await api.post('/depenses', { ...newDepenseForm, projet_id: projetId }, { headers });
@@ -298,7 +312,8 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
         <ScrollView style={styles.conteneur}>
           <View style={styles.carte}>
             <Text style={styles.label}>Libellé</Text>
-            <TextInput style={styles.champ} placeholder="Ex: Achat maïs" value={newDepenseForm.libelle} onChangeText={v => setNewDepenseForm({ ...newDepenseForm, libelle: v })} />
+            <TextInput style={styles.champ} placeholder="Ex: Achat maïs" value={newDepenseForm.libelle} onChangeText={v => { setErreursDepenseForm(prev => ({ ...prev, libelle: undefined })); setNewDepenseForm({ ...newDepenseForm, libelle: v }); }} />
+            {erreursDepenseForm.libelle && <Text style={styles.erreurTexte}>{erreursDepenseForm.libelle}</Text>}
             <Text style={styles.label}>Catégorie</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {['Alimentation', 'Sante & vaccins', 'Transport', 'Technicien', 'Infrastructure', 'Achat sujets', 'Autre'].map(c => (
@@ -552,6 +567,112 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   }
 
   // ---------- VUE PRINCIPALE ----------
+  const SousOngletsLigne = () => (
+    <View style={{ marginBottom: 4 }}>
+      {onglet === 'investisseurs' && totalInvesti > 0 && (
+        <View style={styles.carteNoire}>
+          <Text style={styles.carteNoireLabelSeul}>Total investi</Text>
+          <Text style={styles.carteNoireMontant}>{formatMontant(totalInvesti)}</Text>
+          <Text style={styles.carteNoireSousLabel}>dont encaissé : {formatMontant(totalEncaisse)} · {investisseurs.length} investisseur{investisseurs.length > 1 ? 's' : ''}</Text>
+        </View>
+      )}
+      {onglet === 'budget' && (
+        <View style={styles.carteNoire}>
+          <Text style={styles.carteNoireLabelSeul}>Budget total prévu</Text>
+          <Text style={styles.carteNoireMontant}>{formatMontant(totalPrevu)}</Text>
+          <View style={[styles.ligneEntre, { marginTop: 8 }]}>
+            <Text style={styles.carteNoireSousLabel}>Dépensé : {formatMontant(totalReel)}</Text>
+            <Text style={styles.carteNoireSousLabel}>{totalPrevu > 0 ? Math.round((totalReel / totalPrevu) * 100) : 0}% consommé</Text>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderInvestisseur = (inv) => {
+    const pourcentage = totalInvesti > 0 ? ((inv.mise / totalInvesti) * 100).toFixed(1) : 0;
+    return (
+      <View style={styles.carte}>
+        <View style={styles.ligneEntre}>
+          <View>
+            <Text style={styles.carteTitre}>{inv.nom}</Text>
+            <Text style={styles.carteSousTexteSeul}>{inv.email}</Text>
+            {inv.type_investisseur && inv.type_investisseur !== 'retail' && (
+              <View style={styles.badgeBleu}><Text style={styles.badgeBleuTexte}>{inv.type_investisseur === 'landowner' ? 'Propriétaire terrien' : 'Institutionnel'}</Text></View>
+            )}
+          </View>
+          {(() => {
+            const paye = parseFloat(inv.montant_paye || 0);
+            const mise = parseFloat(inv.mise || 0);
+            const statut = paye >= mise && mise > 0 ? 'paye' : paye > 0 ? 'partiel' : 'attente';
+            const couleurs = { paye: ['#ECFDF5', '#047857', 'Mise encaissée'], partiel: ['#FFFBEB', '#B45309', 'Partiellement encaissée'], attente: ['#F3F4F6', '#4B5563', 'En attente'] }[statut];
+            return (
+              <View style={[styles.badge, { backgroundColor: couleurs[0] }]}>
+                <Text style={[styles.badgeTexte, { color: couleurs[1] }]}>{couleurs[2]}</Text>
+              </View>
+            );
+          })()}
+        </View>
+        <View style={styles.grille3}>
+          <View style={styles.miniBox}><Text style={styles.miniLabel}>Mise</Text><Text style={styles.miniValeur}>{formatMontant(inv.mise)}</Text></View>
+          <View style={styles.miniBox}><Text style={styles.miniLabel}>Encaissé</Text><Text style={styles.miniValeur}>{formatMontant(inv.montant_paye || 0)}</Text></View>
+          <View style={styles.miniBox}><Text style={styles.miniLabel}>Part</Text><Text style={styles.miniValeur}>{pourcentage}%</Text></View>
+        </View>
+        {inv.preference_paiement && <Text style={styles.carteSousTexte}>💳 {inv.preference_paiement}{inv.numero_mobile_money ? ' · ' + inv.numero_mobile_money : ''}</Text>}
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {inv.mou_url ? (
+            <TouchableOpacity style={styles.actionBleue} onPress={() => Linking.openURL(inv.mou_url)}><Text style={styles.actionBleueTexte}>📄 Voir le contrat MOU</Text></TouchableOpacity>
+          ) : <View style={styles.actionDesactivee}><Text style={styles.actionDesactiveeTexte}>Pas de contrat</Text></View>}
+          <TouchableOpacity style={styles.actionGrise} onPress={() => ouvrirEdit(inv)}><Text style={styles.actionGriseTexte}>Modifier</Text></TouchableOpacity>
+        </View>
+        {parseFloat(inv.montant_paye || 0) < parseFloat(inv.mise || 0) && (
+          <TouchableOpacity style={[styles.boutonVert, { marginTop: 8 }]} onPress={() => ouvrirPaiementInv(inv)}><Text style={styles.boutonVertTexte}>Enregistrer un paiement</Text></TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
+  const renderDepenseBudget = (depense) => {
+    const saisie = saisiesRapides[depense.id] || {};
+    const badge = getStatutBadge(saisie.statut || depense.statut);
+    const montantReel = parseFloat(saisie.montant_reel) || 0;
+    const ecart = montantReel - parseFloat(depense.montant_prevu || 0);
+    return (
+      <View style={styles.carte}>
+        <View style={styles.ligneEntre}>
+          <View><Text style={styles.carteTitre}>{depense.libelle}</Text><Text style={styles.carteSousTexteSeul}>{depense.categorie}</Text></View>
+          <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
+        </View>
+        <View style={[styles.ligneEntre, { marginVertical: 8 }]}>
+          <Text style={styles.carteSousTexte}>Prévu : <Text style={{ fontWeight: '600', color: '#1D1D1F' }}>{formatMontant(depense.montant_prevu)}</Text></Text>
+          {ecart !== 0 && <Text style={{ fontSize: 11, fontWeight: '600', color: ecart > 0 ? '#DC2626' : '#059669' }}>Écart : {ecart > 0 ? '+' : ''}{formatMontant(ecart)}</Text>}
+        </View>
+        <View style={styles.saisieRapideBloc}>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            <View style={{ flex: 1 }}><Text style={styles.miniLabel}>Montant réel (F)</Text><TextInput style={styles.champPetit} keyboardType="numeric" value={saisie.montant_reel} onChangeText={v => handleSaisieRapide(depense.id, 'montant_reel', v)} /></View>
+            <View style={{ flex: 1 }}><Text style={styles.miniLabel}>Date</Text><TextInput style={styles.champPetit} placeholder="AAAA-MM-JJ" value={saisie.date_depense} onChangeText={v => handleSaisieRapide(depense.id, 'date_depense', v)} /></View>
+          </View>
+          <Text style={styles.miniLabel}>Statut</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {['planifiee', 'engagee', 'payee', 'annulee'].map(s => (
+              <TouchableOpacity key={s} onPress={() => handleSaisieRapide(depense.id, 'statut', s)} style={[styles.chip, saisie.statut === s && styles.chipActif]}>
+                <Text style={[styles.chipTexte, saisie.statut === s && styles.chipTexteActif]}>{getStatutBadge(s).label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+            <TouchableOpacity style={styles.actionNoire} onPress={() => sauvegarderSaisieRapide(depense)}><Text style={styles.actionNoireTexte}>✓ Enregistrer</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.actionBleue} onPress={() => choisirEtUploaderFacture(depense)} disabled={uploadFactureEnCours[depense.id]}>
+              <Text style={styles.actionBleueTexte}>{uploadFactureEnCours[depense.id] ? '⏳...' : depense.facture_url ? '📎 Voir' : '📎 Facture'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionRouge} onPress={() => supprimerDepense(depense.uuid_id || depense.id)}><Text style={{ fontSize: 12 }}>🗑</Text></TouchableOpacity>
+          </View>
+          {depense.facture_url && <TouchableOpacity onPress={() => Linking.openURL(depense.facture_url)}><Text style={[styles.lienBleu, { marginTop: 6 }]}>Voir la facture uploadée</Text></TouchableOpacity>}
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre={projet?.nom || 'Gestion projet'} sousTitre="Investisseurs & Paramètres"
@@ -570,125 +691,38 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
 
       {chargement ? (
         <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
+      ) : onglet === 'investisseurs' ? (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={investisseurs}
+          keyExtractor={(inv) => String(inv.id)}
+          renderItem={({ item }) => renderInvestisseur(item)}
+          ListHeaderComponent={<SousOngletsLigne />}
+          ListEmptyComponent={
+            <View style={styles.videCarte}>
+              <Text style={styles.vide}>Aucun investisseur pour ce projet</Text>
+              <TouchableOpacity style={styles.boutonPrincipalPetit} onPress={() => setVue('nouvelInv')}><Text style={styles.boutonPrincipalTexte}>Ajouter un investisseur</Text></TouchableOpacity>
+            </View>
+          }
+        />
+      ) : onglet === 'budget' ? (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={depenses}
+          keyExtractor={(d) => String(d.id)}
+          renderItem={({ item }) => renderDepenseBudget(item)}
+          ListHeaderComponent={<SousOngletsLigne />}
+          ListEmptyComponent={
+            <View style={styles.videCarte}>
+              <Text style={styles.vide}>Aucune dépense prévue</Text>
+              <TouchableOpacity style={styles.boutonPrincipalPetit} onPress={() => setVue('nouvelleDepense')}><Text style={styles.boutonPrincipalTexte}>Ajouter une dépense</Text></TouchableOpacity>
+            </View>
+          }
+        />
       ) : (
         <ScrollView style={styles.conteneur}>
-          {onglet === 'investisseurs' && (
-            <View>
-              {totalInvesti > 0 && (
-                <View style={styles.carteNoire}>
-                  <Text style={styles.carteNoireLabelSeul}>Total investi</Text>
-                  <Text style={styles.carteNoireMontant}>{formatMontant(totalInvesti)}</Text>
-                  <Text style={styles.carteNoireSousLabel}>dont encaissé : {formatMontant(totalEncaisse)} · {investisseurs.length} investisseur{investisseurs.length > 1 ? 's' : ''}</Text>
-                </View>
-              )}
-              {investisseurs.length === 0 ? (
-                <View style={styles.videCarte}>
-                  <Text style={styles.vide}>Aucun investisseur pour ce projet</Text>
-                  <TouchableOpacity style={styles.boutonPrincipalPetit} onPress={() => setVue('nouvelInv')}><Text style={styles.boutonPrincipalTexte}>Ajouter un investisseur</Text></TouchableOpacity>
-                </View>
-              ) : investisseurs.map(inv => {
-                const pourcentage = totalInvesti > 0 ? ((inv.mise / totalInvesti) * 100).toFixed(1) : 0;
-                return (
-                  <View key={inv.id} style={styles.carte}>
-                    <View style={styles.ligneEntre}>
-                      <View>
-                        <Text style={styles.carteTitre}>{inv.nom}</Text>
-                        <Text style={styles.carteSousTexteSeul}>{inv.email}</Text>
-                        {inv.type_investisseur && inv.type_investisseur !== 'retail' && (
-                          <View style={styles.badgeBleu}><Text style={styles.badgeBleuTexte}>{inv.type_investisseur === 'landowner' ? 'Propriétaire terrien' : 'Institutionnel'}</Text></View>
-                        )}
-                      </View>
-                      {(() => {
-                        const paye = parseFloat(inv.montant_paye || 0);
-                        const mise = parseFloat(inv.mise || 0);
-                        const statut = paye >= mise && mise > 0 ? 'paye' : paye > 0 ? 'partiel' : 'attente';
-                        const couleurs = { paye: ['#ECFDF5', '#047857', 'Mise encaissée'], partiel: ['#FFFBEB', '#B45309', 'Partiellement encaissée'], attente: ['#F3F4F6', '#4B5563', 'En attente'] }[statut];
-                        return (
-                          <View style={[styles.badge, { backgroundColor: couleurs[0] }]}>
-                            <Text style={[styles.badgeTexte, { color: couleurs[1] }]}>{couleurs[2]}</Text>
-                          </View>
-                        );
-                      })()}
-                    </View>
-                    <View style={styles.grille3}>
-                      <View style={styles.miniBox}><Text style={styles.miniLabel}>Mise</Text><Text style={styles.miniValeur}>{formatMontant(inv.mise)}</Text></View>
-                      <View style={styles.miniBox}><Text style={styles.miniLabel}>Encaissé</Text><Text style={styles.miniValeur}>{formatMontant(inv.montant_paye || 0)}</Text></View>
-                      <View style={styles.miniBox}><Text style={styles.miniLabel}>Part</Text><Text style={styles.miniValeur}>{pourcentage}%</Text></View>
-                    </View>
-                    {inv.preference_paiement && <Text style={styles.carteSousTexte}>💳 {inv.preference_paiement}{inv.numero_mobile_money ? ' · ' + inv.numero_mobile_money : ''}</Text>}
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                      {inv.mou_url ? (
-                        <TouchableOpacity style={styles.actionBleue} onPress={() => Linking.openURL(inv.mou_url)}><Text style={styles.actionBleueTexte}>📄 Voir le contrat MOU</Text></TouchableOpacity>
-                      ) : <View style={styles.actionDesactivee}><Text style={styles.actionDesactiveeTexte}>Pas de contrat</Text></View>}
-                      <TouchableOpacity style={styles.actionGrise} onPress={() => ouvrirEdit(inv)}><Text style={styles.actionGriseTexte}>Modifier</Text></TouchableOpacity>
-                    </View>
-                    {parseFloat(inv.montant_paye || 0) < parseFloat(inv.mise || 0) && (
-                      <TouchableOpacity style={[styles.boutonVert, { marginTop: 8 }]} onPress={() => ouvrirPaiementInv(inv)}><Text style={styles.boutonVertTexte}>Enregistrer un paiement</Text></TouchableOpacity>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-          )}
-
-          {onglet === 'budget' && (
-            <View>
-              <View style={styles.carteNoire}>
-                <Text style={styles.carteNoireLabelSeul}>Budget total prévu</Text>
-                <Text style={styles.carteNoireMontant}>{formatMontant(totalPrevu)}</Text>
-                <View style={[styles.ligneEntre, { marginTop: 8 }]}>
-                  <Text style={styles.carteNoireSousLabel}>Dépensé : {formatMontant(totalReel)}</Text>
-                  <Text style={styles.carteNoireSousLabel}>{totalPrevu > 0 ? Math.round((totalReel / totalPrevu) * 100) : 0}% consommé</Text>
-                </View>
-              </View>
-              {depenses.length === 0 ? (
-                <View style={styles.videCarte}>
-                  <Text style={styles.vide}>Aucune dépense prévue</Text>
-                  <TouchableOpacity style={styles.boutonPrincipalPetit} onPress={() => setVue('nouvelleDepense')}><Text style={styles.boutonPrincipalTexte}>Ajouter une dépense</Text></TouchableOpacity>
-                </View>
-              ) : depenses.map(depense => {
-                const saisie = saisiesRapides[depense.id] || {};
-                const badge = getStatutBadge(saisie.statut || depense.statut);
-                const montantReel = parseFloat(saisie.montant_reel) || 0;
-                const ecart = montantReel - parseFloat(depense.montant_prevu || 0);
-                return (
-                  <View key={depense.id} style={styles.carte}>
-                    <View style={styles.ligneEntre}>
-                      <View><Text style={styles.carteTitre}>{depense.libelle}</Text><Text style={styles.carteSousTexteSeul}>{depense.categorie}</Text></View>
-                      <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
-                    </View>
-                    <View style={[styles.ligneEntre, { marginVertical: 8 }]}>
-                      <Text style={styles.carteSousTexte}>Prévu : <Text style={{ fontWeight: '600', color: '#1D1D1F' }}>{formatMontant(depense.montant_prevu)}</Text></Text>
-                      {ecart !== 0 && <Text style={{ fontSize: 11, fontWeight: '600', color: ecart > 0 ? '#DC2626' : '#059669' }}>Écart : {ecart > 0 ? '+' : ''}{formatMontant(ecart)}</Text>}
-                    </View>
-                    <View style={styles.saisieRapideBloc}>
-                      <View style={{ flexDirection: 'row', gap: 6 }}>
-                        <View style={{ flex: 1 }}><Text style={styles.miniLabel}>Montant réel (F)</Text><TextInput style={styles.champPetit} keyboardType="numeric" value={saisie.montant_reel} onChangeText={v => handleSaisieRapide(depense.id, 'montant_reel', v)} /></View>
-                        <View style={{ flex: 1 }}><Text style={styles.miniLabel}>Date</Text><TextInput style={styles.champPetit} placeholder="AAAA-MM-JJ" value={saisie.date_depense} onChangeText={v => handleSaisieRapide(depense.id, 'date_depense', v)} /></View>
-                      </View>
-                      <Text style={styles.miniLabel}>Statut</Text>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        {['planifiee', 'engagee', 'payee', 'annulee'].map(s => (
-                          <TouchableOpacity key={s} onPress={() => handleSaisieRapide(depense.id, 'statut', s)} style={[styles.chip, saisie.statut === s && styles.chipActif]}>
-                            <Text style={[styles.chipTexte, saisie.statut === s && styles.chipTexteActif]}>{getStatutBadge(s).label}</Text>
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                      <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
-                        <TouchableOpacity style={styles.actionNoire} onPress={() => sauvegarderSaisieRapide(depense)}><Text style={styles.actionNoireTexte}>✓ Enregistrer</Text></TouchableOpacity>
-                        <TouchableOpacity style={styles.actionBleue} onPress={() => choisirEtUploaderFacture(depense)} disabled={uploadFactureEnCours[depense.id]}>
-                          <Text style={styles.actionBleueTexte}>{uploadFactureEnCours[depense.id] ? '⏳...' : depense.facture_url ? '📎 Voir' : '📎 Facture'}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionRouge} onPress={() => supprimerDepense(depense.uuid_id || depense.id)}><Text style={{ fontSize: 12 }}>🗑</Text></TouchableOpacity>
-                      </View>
-                      {depense.facture_url && <TouchableOpacity onPress={() => Linking.openURL(depense.facture_url)}><Text style={[styles.lienBleu, { marginTop: 6 }]}>Voir la facture uploadée</Text></TouchableOpacity>}
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-
           {onglet === 'details' && projet && (
             <View>
               <View style={styles.carte}>

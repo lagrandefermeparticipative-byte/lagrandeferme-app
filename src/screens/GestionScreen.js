@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
 
@@ -436,6 +436,124 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   }
 
   // --- VUE PRINCIPALE ---
+  const OngletsLigne = () => (
+    <View>
+      {alerteDepassement && (
+        <View style={styles.alerteRouge}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.alerteRougeTitre}>⚠️ Budget dépassé</Text>
+            <Text style={styles.alerteRougeTexte}>"{alerteDepassement.libelle}" dépasse le prévu de {formatMontant(alerteDepassement.montant)}</Text>
+          </View>
+          <TouchableOpacity onPress={() => setAlerteDepassement(null)}><Text style={{ color: '#F87171' }}>✕</Text></TouchableOpacity>
+        </View>
+      )}
+
+      <View style={styles.ongletsLigne}>
+        {['budget', 'depenses'].map(t => (
+          <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
+            <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>{t === 'budget' ? 'Budget' : 'Dépenses'}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {onglet === 'budget' && (
+        <View>
+          <View style={styles.carteNoire}>
+            <Text style={styles.carteNoireLabel}>Budget consommé</Text>
+            <Text style={styles.carteNoireMontant}>{pourcentageConsomme}%</Text>
+            <View style={styles.progressFondNoir}>
+              <View style={[styles.progressBarreBlanche, { width: `${Math.min(pourcentageConsomme, 100)}%` }]} />
+            </View>
+            <View style={[styles.ligneEntre, { marginTop: 8 }]}>
+              <Text style={styles.carteNoireSousLabel}>{formatMontant(totalReel)} dépensé</Text>
+              <Text style={styles.carteNoireSousLabel}>{formatMontant(totalEncaisse)} encaissé</Text>
+            </View>
+            {resteACompleter > 0 && (
+              <Text style={styles.alerteAmbreTexteSurNoir}>⚠️ {formatMontant(resteACompleter)} restant à compléter par les investisseurs</Text>
+            )}
+          </View>
+          <View style={styles.grille2mini}>
+            <View style={styles.mini}>
+              <Text style={styles.miniLabel}>Écart budget</Text>
+              <Text style={[styles.miniValeur, { color: ecart > 0 ? '#DC2626' : '#059669' }]}>{ecart > 0 ? '+' : ''}{formatMontant(ecart)}</Text>
+            </View>
+            <View style={styles.mini}>
+              <Text style={styles.miniLabel}>Coût / {labelAnimal}</Text>
+              <Text style={styles.miniValeur}>{formatMontant(coutParPintade)}</Text>
+              <Text style={styles.carteSousTexte}>{totalPintades} vivantes</Text>
+            </View>
+          </View>
+          <Text style={styles.sectionTitre}>Par catégorie</Text>
+          {groupParCategorie().map(([cat, vals]) => {
+            const pct = vals.prevu > 0 ? Math.round((vals.reel / vals.prevu) * 100) : 0;
+            return (
+              <View style={styles.carte} key={cat}>
+                <View style={styles.ligneEntre}>
+                  <Text style={styles.carteTitre}>{cat}</Text>
+                  <Text style={[styles.pctTexte, pct > 100 && { color: '#DC2626' }]}>{pct}%</Text>
+                </View>
+                <View style={styles.progressFond}>
+                  <View style={[styles.progressBarre, { width: `${Math.min(pct, 100)}%`, backgroundColor: pct > 100 ? '#F87171' : '#1D1D1F' }]} />
+                </View>
+                <View style={styles.ligneEntre}>
+                  <Text style={styles.carteSousTexte}>Réel : {formatMontant(vals.reel)}</Text>
+                  <Text style={styles.carteSousTexte}>Prévu : {formatMontant(vals.prevu)}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+
+  const renderCategorie = (cat) => {
+    const depensesCat = depenses.filter(d => d.categorie === cat);
+    const totalPrevuCat = depensesCat.reduce((s, d) => s + parseFloat(d.montant_prevu || 0), 0);
+    const totalReelCat = depensesCat.reduce((s, d) => s + parseFloat(d.montant_reel || 0), 0);
+    const ouverte = categorieOuverte === cat;
+    return (
+      <View style={styles.carteAccordeon}>
+        <TouchableOpacity style={styles.accordeonHeader} onPress={() => setCategorieOuverte(ouverte ? null : cat)}>
+          <View>
+            <Text style={styles.carteTitre}>{cat}</Text>
+            <Text style={styles.carteSousTexte}>{depensesCat.length} dépense{depensesCat.length > 1 ? 's' : ''}</Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.carteTitre}>{formatMontant(totalReelCat)}</Text>
+            <Text style={styles.carteSousTexte}>/ {formatMontant(totalPrevuCat)}</Text>
+          </View>
+        </TouchableOpacity>
+        {ouverte && depensesCat.map(depense => {
+          const badge = STATUTS[depense.statut] || STATUTS.planifiee;
+          const ecartLigne = (parseFloat(depense.montant_reel) || 0) - parseFloat(depense.montant_prevu || 0);
+          return (
+            <View style={styles.carteDepense} key={depense.id}>
+              <View style={styles.ligneEntre}>
+                <Text style={styles.carteTitre}>{depense.libelle}</Text>
+                <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+                  <Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text>
+                </View>
+              </View>
+              <Text style={styles.carteSousTexte}>{depense.fournisseur}</Text>
+              <View style={styles.grille3mini}>
+                <View><Text style={styles.miniLabelPetit}>Prévu</Text><Text style={styles.miniValeurPetite}>{formatMontant(depense.montant_prevu)}</Text></View>
+                <View><Text style={styles.miniLabelPetit}>Réel</Text><Text style={styles.miniValeurPetite}>{formatMontant(depense.montant_reel || 0)}</Text></View>
+                <View><Text style={styles.miniLabelPetit}>Écart</Text><Text style={[styles.miniValeurPetite, { color: ecartLigne > 0 ? '#DC2626' : ecartLigne < 0 ? '#059669' : '#6E6E73' }]}>{ecartLigne > 0 ? '+' : ''}{formatMontant(ecartLigne)}</Text></View>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirHistorique(depense)}><Text style={styles.actionVerteTexte}>Historique</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.actionIndigo} onPress={() => ouvrirRepartition(depense)}><Text style={styles.actionIndigoTexte}>Répartition</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.actionGrise} onPress={() => { setDepenseSelectionnee(depense); setForm({ libelle: depense.libelle, categorie: depense.categorie, montant_prevu: String(depense.montant_prevu || ''), montant_reel: String(depense.montant_reel || ''), statut: depense.statut, date_depense: depense.date_depense ? depense.date_depense.split('T')[0] : '', fournisseur: depense.fournisseur || '', note: depense.note || '' }); setVue('modifier'); }}><Text style={styles.actionGriseTexte}>Modifier</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.actionRouge} onPress={() => supprimerDepense(depense)}><Text style={styles.actionRougeTexte}>🗑</Text></TouchableOpacity>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Gestion" sousTitre={`${projetNom || 'Chargement...'} · Projet`}
@@ -453,126 +571,25 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
       />
       {chargement ? (
         <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
+      ) : onglet === 'budget' ? (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={[]}
+          keyExtractor={() => 'x'}
+          renderItem={null}
+          ListHeaderComponent={<OngletsLigne />}
+        />
       ) : (
-        <ScrollView style={styles.conteneur}>
-          {alerteDepassement && (
-            <View style={styles.alerteRouge}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.alerteRougeTitre}>⚠️ Budget dépassé</Text>
-                <Text style={styles.alerteRougeTexte}>"{alerteDepassement.libelle}" dépasse le prévu de {formatMontant(alerteDepassement.montant)}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setAlerteDepassement(null)}><Text style={{ color: '#F87171' }}>✕</Text></TouchableOpacity>
-            </View>
-          )}
-
-          <View style={styles.ongletsLigne}>
-            {['budget', 'depenses'].map(t => (
-              <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
-                <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>{t === 'budget' ? 'Budget' : 'Dépenses'}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {onglet === 'budget' && (
-            <View>
-              <View style={styles.carteNoire}>
-                <Text style={styles.carteNoireLabel}>Budget consommé</Text>
-                <Text style={styles.carteNoireMontant}>{pourcentageConsomme}%</Text>
-                <View style={styles.progressFondNoir}>
-                  <View style={[styles.progressBarreBlanche, { width: `${Math.min(pourcentageConsomme, 100)}%` }]} />
-                </View>
-                <View style={[styles.ligneEntre, { marginTop: 8 }]}>
-                  <Text style={styles.carteNoireSousLabel}>{formatMontant(totalReel)} dépensé</Text>
-                  <Text style={styles.carteNoireSousLabel}>{formatMontant(totalEncaisse)} encaissé</Text>
-                </View>
-                {resteACompleter > 0 && (
-                  <Text style={styles.alerteAmbreTexteSurNoir}>⚠️ {formatMontant(resteACompleter)} restant à compléter par les investisseurs</Text>
-                )}
-              </View>
-              <View style={styles.grille2mini}>
-                <View style={styles.mini}>
-                  <Text style={styles.miniLabel}>Écart budget</Text>
-                  <Text style={[styles.miniValeur, { color: ecart > 0 ? '#DC2626' : '#059669' }]}>{ecart > 0 ? '+' : ''}{formatMontant(ecart)}</Text>
-                </View>
-                <View style={styles.mini}>
-                  <Text style={styles.miniLabel}>Coût / {labelAnimal}</Text>
-                  <Text style={styles.miniValeur}>{formatMontant(coutParPintade)}</Text>
-                  <Text style={styles.carteSousTexte}>{totalPintades} vivantes</Text>
-                </View>
-              </View>
-              <Text style={styles.sectionTitre}>Par catégorie</Text>
-              {groupParCategorie().map(([cat, vals]) => {
-                const pct = vals.prevu > 0 ? Math.round((vals.reel / vals.prevu) * 100) : 0;
-                return (
-                  <View style={styles.carte} key={cat}>
-                    <View style={styles.ligneEntre}>
-                      <Text style={styles.carteTitre}>{cat}</Text>
-                      <Text style={[styles.pctTexte, pct > 100 && { color: '#DC2626' }]}>{pct}%</Text>
-                    </View>
-                    <View style={styles.progressFond}>
-                      <View style={[styles.progressBarre, { width: `${Math.min(pct, 100)}%`, backgroundColor: pct > 100 ? '#F87171' : '#1D1D1F' }]} />
-                    </View>
-                    <View style={styles.ligneEntre}>
-                      <Text style={styles.carteSousTexte}>Réel : {formatMontant(vals.reel)}</Text>
-                      <Text style={styles.carteSousTexte}>Prévu : {formatMontant(vals.prevu)}</Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-
-          {onglet === 'depenses' && (
-            depenses.length === 0 ? <Text style={styles.vide}>Aucune dépense pour l'instant</Text> :
-            categoriesUtilisees.map(cat => {
-              const depensesCat = depenses.filter(d => d.categorie === cat);
-              const totalPrevuCat = depensesCat.reduce((s, d) => s + parseFloat(d.montant_prevu || 0), 0);
-              const totalReelCat = depensesCat.reduce((s, d) => s + parseFloat(d.montant_reel || 0), 0);
-              const ouverte = categorieOuverte === cat;
-              return (
-                <View style={styles.carteAccordeon} key={cat}>
-                  <TouchableOpacity style={styles.accordeonHeader} onPress={() => setCategorieOuverte(ouverte ? null : cat)}>
-                    <View>
-                      <Text style={styles.carteTitre}>{cat}</Text>
-                      <Text style={styles.carteSousTexte}>{depensesCat.length} dépense{depensesCat.length > 1 ? 's' : ''}</Text>
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={styles.carteTitre}>{formatMontant(totalReelCat)}</Text>
-                      <Text style={styles.carteSousTexte}>/ {formatMontant(totalPrevuCat)}</Text>
-                    </View>
-                  </TouchableOpacity>
-                  {ouverte && depensesCat.map(depense => {
-                    const badge = STATUTS[depense.statut] || STATUTS.planifiee;
-                    const ecartLigne = (parseFloat(depense.montant_reel) || 0) - parseFloat(depense.montant_prevu || 0);
-                    return (
-                      <View style={styles.carteDepense} key={depense.id}>
-                        <View style={styles.ligneEntre}>
-                          <Text style={styles.carteTitre}>{depense.libelle}</Text>
-                          <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-                            <Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text>
-                          </View>
-                        </View>
-                        <Text style={styles.carteSousTexte}>{depense.fournisseur}</Text>
-                        <View style={styles.grille3mini}>
-                          <View><Text style={styles.miniLabelPetit}>Prévu</Text><Text style={styles.miniValeurPetite}>{formatMontant(depense.montant_prevu)}</Text></View>
-                          <View><Text style={styles.miniLabelPetit}>Réel</Text><Text style={styles.miniValeurPetite}>{formatMontant(depense.montant_reel || 0)}</Text></View>
-                          <View><Text style={styles.miniLabelPetit}>Écart</Text><Text style={[styles.miniValeurPetite, { color: ecartLigne > 0 ? '#DC2626' : ecartLigne < 0 ? '#059669' : '#6E6E73' }]}>{ecartLigne > 0 ? '+' : ''}{formatMontant(ecartLigne)}</Text></View>
-                        </View>
-                        <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
-                          <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirHistorique(depense)}><Text style={styles.actionVerteTexte}>Historique</Text></TouchableOpacity>
-                          <TouchableOpacity style={styles.actionIndigo} onPress={() => ouvrirRepartition(depense)}><Text style={styles.actionIndigoTexte}>Répartition</Text></TouchableOpacity>
-                          <TouchableOpacity style={styles.actionGrise} onPress={() => { setDepenseSelectionnee(depense); setForm({ libelle: depense.libelle, categorie: depense.categorie, montant_prevu: String(depense.montant_prevu || ''), montant_reel: String(depense.montant_reel || ''), statut: depense.statut, date_depense: depense.date_depense ? depense.date_depense.split('T')[0] : '', fournisseur: depense.fournisseur || '', note: depense.note || '' }); setVue('modifier'); }}><Text style={styles.actionGriseTexte}>Modifier</Text></TouchableOpacity>
-                          <TouchableOpacity style={styles.actionRouge} onPress={() => supprimerDepense(depense)}><Text style={styles.actionRougeTexte}>🗑</Text></TouchableOpacity>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              );
-            })
-          )}
-          <View style={{ height: 40 }} />
-        </ScrollView>
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={categoriesUtilisees}
+          keyExtractor={(cat) => cat}
+          renderItem={({ item }) => renderCategorie(item)}
+          ListHeaderComponent={<OngletsLigne />}
+          ListEmptyComponent={<Text style={styles.vide}>Aucune dépense pour l'instant</Text>}
+        />
       )}
     </View>
   );
