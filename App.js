@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, AppState, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -91,6 +91,27 @@ const AppNavigator = () => {
   );
 };
 
+// expo-updates ne fonctionne pas dans Expo Go (uniquement en build EAS) —
+// même garde appOwnership que pour les notifications, sinon ça plante.
+const verifierMiseAJour = async () => {
+  try {
+    const Constants = (await import('expo-constants')).default;
+    if (Constants.appOwnership === 'expo') return;
+    const Updates = await import('expo-updates');
+    const resultat = await Updates.checkForUpdateAsync();
+    if (!resultat.isAvailable) return;
+    await Updates.fetchUpdateAsync();
+    Alert.alert(
+      'Mise à jour disponible',
+      "Une nouvelle version de l'application est prête. Redémarrer maintenant ?",
+      [
+        { text: 'Plus tard', style: 'cancel' },
+        { text: 'Redémarrer', onPress: () => Updates.reloadAsync() },
+      ]
+    );
+  } catch (err) { console.log('Vérification mise à jour impossible:', err.message); }
+};
+
 const Racine = () => {
   const { utilisateur, loading, token } = useAuth();
 
@@ -105,6 +126,14 @@ const Racine = () => {
       });
     }
   }, [utilisateur]);
+
+  React.useEffect(() => {
+    verifierMiseAJour();
+    const sub = AppState.addEventListener('change', (etat) => {
+      if (etat === 'active') verifierMiseAJour();
+    });
+    return () => sub.remove();
+  }, []);
 
   if (loading) return null;
   if (!utilisateur) return <LoginScreen />;
