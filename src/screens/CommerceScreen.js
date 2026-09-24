@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, SectionList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
 
@@ -205,6 +205,61 @@ const CommerceScreen = ({ token, projetActifId }) => {
     return acc;
   }, {});
 
+  // SectionList plutôt que .map() dans un ScrollView : sans ça, chaque vente
+  // de chaque projet est construite et gardée en mémoire d'un coup, même
+  // celles qui ne sont pas visibles à l'écran — ça se voit de moins en moins
+  // bien à mesure que l'historique de ventes grossit avec le temps.
+  const sectionsVentes = Object.entries(ventesParProjet).map(([nomProjet, ventesProjet]) => {
+    const recetteProjet = ventesProjet.reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
+    const payeeProjet = ventesProjet.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
+    const enAttenteProjet = recetteProjet - payeeProjet;
+    const vendusProjet = ventesProjet.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
+    const ventesNonSoldees = ventesProjet.filter(v => v.statut_paiement !== 'payee');
+    const sujetsEnAttenteProjet = ventesNonSoldees.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
+    return {
+      title: nomProjet,
+      data: ventesProjet,
+      recetteProjet, payeeProjet, enAttenteProjet, vendusProjet, sujetsEnAttenteProjet,
+    };
+  });
+
+  const OngletsLigne = () => (
+    <View style={styles.ongletsLigne}>
+      {['a_vendre', 'ventes', 'acheteurs'].map(t => (
+        <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
+          <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>{t === 'a_vendre' ? 'À vendre' : t.charAt(0).toUpperCase() + t.slice(1)}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const renderVente = (vente) => {
+    const badge = STATUTS_VENTE[vente.statut_paiement] || STATUTS_VENTE.en_attente;
+    return (
+      <View style={styles.carte}>
+        <View style={styles.ligneEntre}>
+          <Text style={styles.carteTitre}>{vente.acheteur || 'Acheteur inconnu'}</Text>
+          <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
+        </View>
+        <Text style={styles.carteSousTexte}>{new Date(vente.date_vente).toLocaleDateString('fr-FR')} · {vente.lot_nom || 'Lot inconnu'} · {vente.type_acheteur}</Text>
+        <View style={styles.grille3}>
+          <View style={styles.statBleue}><Text style={styles.statBleueTexte}>{vente.males_vendus}</Text><Text style={styles.statBleueLabel}>Mâles{parseInt(vente.males_vendus) > 0 ? ` · ${formatMontant(vente.prix_male)}` : ''}</Text></View>
+          <View style={styles.statRose}><Text style={styles.statRoseTexte}>{vente.femelles_vendues}</Text><Text style={styles.statRoseLabel}>Femelles{parseInt(vente.femelles_vendues) > 0 ? ` · ${formatMontant(vente.prix_femelle)}` : ''}</Text></View>
+          <View style={styles.statVerte}><Text style={styles.statVerteTexte}>{formatMontant(vente.recette_totale)}</Text><Text style={styles.statVerteLabel}>Recette</Text></View>
+        </View>
+        {vente.statut_paiement !== 'en_attente' && (
+          <Text style={styles.carteSousTexte}>Encaissé : {formatMontant(vente.montant_paye)} · Reste : {formatMontant(vente.recette_totale - vente.montant_paye)}</Text>
+        )}
+        <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
+          {vente.statut_paiement !== 'payee' && (
+            <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirPaiement(vente)}><Text style={styles.actionVerteTexte}>Enregistrer un paiement</Text></TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.actionRouge2} onPress={() => supprimerVente(vente)}><Text style={styles.actionRouge2Texte}>Supprimer</Text></TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
   // --- FORMULAIRE VENTE ---
   if (vue === 'vente') {
     return (
@@ -408,136 +463,112 @@ const CommerceScreen = ({ token, projetActifId }) => {
       />
       {chargement ? (
         <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
-      ) : (
-        <ScrollView style={styles.conteneur}>
-          <View style={styles.ongletsLigne}>
-            {['a_vendre', 'ventes', 'acheteurs'].map(t => (
-              <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
-                <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>{t === 'a_vendre' ? 'À vendre' : t.charAt(0).toUpperCase() + t.slice(1)}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {onglet === 'a_vendre' && (
+      ) : onglet === 'a_vendre' ? (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={lotsDisponibles}
+          keyExtractor={(lot) => String(lot.id)}
+          ListHeaderComponent={<OngletsLigne />}
+          ListEmptyComponent={
             chargementDisponibles ? (
               <View style={styles.centre}><ActivityIndicator size="small" color="#1D1D1F" /></View>
-            ) : lotsDisponibles.length === 0 ? (
+            ) : (
               <View style={styles.videCarte}>
                 <Text style={styles.vide}>Aucun lot n'est actuellement ouvert à la vente.</Text>
                 <Text style={[styles.infoTexte, { textAlign: 'center' }]}>Active la vente d'un lot depuis l'écran Élevage d'un projet pour qu'il apparaisse ici.</Text>
               </View>
-            ) : lotsDisponibles.map(lot => (
-              <View style={styles.carte} key={lot.id}>
-                <View style={styles.ligneEntre}>
-                  <Text style={styles.carteTitre}>{lot.projet_nom}</Text>
-                  <View style={styles.badge2Vert}><Text style={styles.badge2VertTexte}>Vente activée</Text></View>
-                </View>
-                <Text style={styles.carteSousTexte}>{lot.nom} · {parseInt(lot.vivants ?? lot.quantite_initiale)} sujets vivants disponibles</Text>
-                <TouchableOpacity style={[styles.boutonPrincipal, { marginTop: 10 }]} onPress={() => demarrerVenteLot(lot)}>
-                  <Text style={styles.boutonPrincipalTexte}>Vendre depuis ce lot</Text>
-                </TouchableOpacity>
+            )
+          }
+          renderItem={({ item: lot }) => (
+            <View style={styles.carte}>
+              <View style={styles.ligneEntre}>
+                <Text style={styles.carteTitre}>{lot.projet_nom}</Text>
+                <View style={styles.badge2Vert}><Text style={styles.badge2VertTexte}>Vente activée</Text></View>
               </View>
-            ))
-          )}
-
-          {onglet === 'ventes' && (
-            <View>
-              {ventes.length === 0 ? (
-                <View style={styles.videCarte}>
-                  <Text style={styles.vide}>Aucune vente enregistrée</Text>
-                  <TouchableOpacity style={styles.boutonPrincipal} onPress={() => setVue('vente')}>
-                    <Text style={styles.boutonPrincipalTexte}>Enregistrer une vente</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : Object.entries(ventesParProjet).map(([nomProjet, ventesProjet]) => {
-                const recetteProjet = ventesProjet.reduce((s, v) => s + parseFloat(v.recette_totale || 0), 0);
-                const payeeProjet = ventesProjet.reduce((s, v) => s + parseFloat(v.montant_paye || 0), 0);
-                const enAttenteProjet = recetteProjet - payeeProjet;
-                const vendusProjet = ventesProjet.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
-                const ventesNonSoldees = ventesProjet.filter(v => v.statut_paiement !== 'payee');
-                const sujetsEnAttenteProjet = ventesNonSoldees.reduce((s, v) => s + (parseInt(v.males_vendus) || 0) + (parseInt(v.femelles_vendues) || 0), 0);
-                return (
-                  <View key={nomProjet} style={{ marginBottom: 16 }}>
-                    <Text style={[styles.groupeTitre, { marginBottom: 8, paddingHorizontal: 2 }]}>{nomProjet}</Text>
-                    <View style={styles.carteNoire}>
-                      <Text style={styles.carteNoireLabel}>Total encaissé</Text>
-                      <Text style={styles.carteNoireMontant}>{formatMontant(payeeProjet)}</Text>
-                      <View style={{ gap: 8, marginTop: 12 }}>
-                        <View style={[styles.miniNoire, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-                          <Text style={styles.miniNoireLabel}>Sujets vendus</Text>
-                          <Text style={styles.miniNoireValeur}>{vendusProjet}</Text>
-                        </View>
-                        <View style={[styles.miniNoire, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-                          <Text style={styles.miniNoireLabel}>En attente</Text>
-                          <Text style={styles.miniNoireValeur}>{formatMontant(enAttenteProjet)} · {sujetsEnAttenteProjet} sujet{sujetsEnAttenteProjet > 1 ? 's' : ''}</Text>
-                        </View>
-                        <View style={[styles.miniNoire, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-                          <Text style={styles.miniNoireLabel}>Total des ventes</Text>
-                          <Text style={styles.miniNoireValeur}>{formatMontant(recetteProjet)}</Text>
-                        </View>
-                      </View>
-                    </View>
-                    {ventesProjet.map(vente => {
-                      const badge = STATUTS_VENTE[vente.statut_paiement] || STATUTS_VENTE.en_attente;
-                      return (
-                        <View style={styles.carte} key={vente.id}>
-                          <View style={styles.ligneEntre}>
-                            <Text style={styles.carteTitre}>{vente.acheteur || 'Acheteur inconnu'}</Text>
-                            <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
-                          </View>
-                          <Text style={styles.carteSousTexte}>{new Date(vente.date_vente).toLocaleDateString('fr-FR')} · {vente.lot_nom || 'Lot inconnu'} · {vente.type_acheteur}</Text>
-                          <View style={styles.grille3}>
-                            <View style={styles.statBleue}><Text style={styles.statBleueTexte}>{vente.males_vendus}</Text><Text style={styles.statBleueLabel}>Mâles{parseInt(vente.males_vendus) > 0 ? ` · ${formatMontant(vente.prix_male)}` : ''}</Text></View>
-                            <View style={styles.statRose}><Text style={styles.statRoseTexte}>{vente.femelles_vendues}</Text><Text style={styles.statRoseLabel}>Femelles{parseInt(vente.femelles_vendues) > 0 ? ` · ${formatMontant(vente.prix_femelle)}` : ''}</Text></View>
-                            <View style={styles.statVerte}><Text style={styles.statVerteTexte}>{formatMontant(vente.recette_totale)}</Text><Text style={styles.statVerteLabel}>Recette</Text></View>
-                          </View>
-                          {vente.statut_paiement !== 'en_attente' && (
-                            <Text style={styles.carteSousTexte}>Encaissé : {formatMontant(vente.montant_paye)} · Reste : {formatMontant(vente.recette_totale - vente.montant_paye)}</Text>
-                          )}
-                          <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
-                            {vente.statut_paiement !== 'payee' && (
-                              <TouchableOpacity style={styles.actionVerte} onPress={() => ouvrirPaiement(vente)}><Text style={styles.actionVerteTexte}>Enregistrer un paiement</Text></TouchableOpacity>
-                            )}
-                            <TouchableOpacity style={styles.actionRouge2} onPress={() => supprimerVente(vente)}><Text style={styles.actionRouge2Texte}>Supprimer</Text></TouchableOpacity>
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </View>
-                );
-              })}
+              <Text style={styles.carteSousTexte}>{lot.nom} · {parseInt(lot.vivants ?? lot.quantite_initiale)} sujets vivants disponibles</Text>
+              <TouchableOpacity style={[styles.boutonPrincipal, { marginTop: 10 }]} onPress={() => demarrerVenteLot(lot)}>
+                <Text style={styles.boutonPrincipalTexte}>Vendre depuis ce lot</Text>
+              </TouchableOpacity>
             </View>
           )}
-
-          {onglet === 'acheteurs' && (
-            acheteurs.length === 0 ? (
-              <View style={styles.videCarte}>
-                <Text style={styles.vide}>Aucun acheteur enregistré</Text>
-                <TouchableOpacity style={styles.boutonPrincipal} onPress={() => setVue('acheteur')}>
-                  <Text style={styles.boutonPrincipalTexte}>Ajouter un acheteur</Text>
-                </TouchableOpacity>
-              </View>
-            ) : acheteurs.map(acheteur => (
-              <View style={styles.carte} key={acheteur.id}>
-                <View style={styles.ligneEntre}>
-                  <Text style={styles.carteTitre}>{acheteur.nom}</Text>
-                  <View style={styles.badgeBleu}><Text style={styles.badgeBleuTexte}>{acheteur.type}</Text></View>
+        />
+      ) : onglet === 'ventes' ? (
+        <SectionList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          sections={sectionsVentes}
+          keyExtractor={(vente) => String(vente.id)}
+          stickySectionHeadersEnabled={false}
+          ListHeaderComponent={<OngletsLigne />}
+          ListEmptyComponent={
+            <View style={styles.videCarte}>
+              <Text style={styles.vide}>Aucune vente enregistrée</Text>
+              <TouchableOpacity style={styles.boutonPrincipal} onPress={() => setVue('vente')}>
+                <Text style={styles.boutonPrincipalTexte}>Enregistrer une vente</Text>
+              </TouchableOpacity>
+            </View>
+          }
+          renderSectionHeader={({ section }) => (
+            <View>
+              <Text style={[styles.groupeTitre, { marginBottom: 8, paddingHorizontal: 2 }]}>{section.title}</Text>
+              <View style={styles.carteNoire}>
+                <Text style={styles.carteNoireLabel}>Total encaissé</Text>
+                <Text style={styles.carteNoireMontant}>{formatMontant(section.payeeProjet)}</Text>
+                <View style={{ gap: 8, marginTop: 12 }}>
+                  <View style={[styles.miniNoire, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                    <Text style={styles.miniNoireLabel}>Sujets vendus</Text>
+                    <Text style={styles.miniNoireValeur}>{section.vendusProjet}</Text>
+                  </View>
+                  <View style={[styles.miniNoire, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                    <Text style={styles.miniNoireLabel}>En attente</Text>
+                    <Text style={styles.miniNoireValeur}>{formatMontant(section.enAttenteProjet)} · {section.sujetsEnAttenteProjet} sujet{section.sujetsEnAttenteProjet > 1 ? 's' : ''}</Text>
+                  </View>
+                  <View style={[styles.miniNoire, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                    <Text style={styles.miniNoireLabel}>Total des ventes</Text>
+                    <Text style={styles.miniNoireValeur}>{formatMontant(section.recetteProjet)}</Text>
+                  </View>
                 </View>
-                {acheteur.telephone && <Text style={styles.carteSousTexte}>📞 {acheteur.telephone}</Text>}
-                {acheteur.email && <Text style={styles.carteSousTexte}>✉️ {acheteur.email}</Text>}
-                <Text style={styles.carteSousTexte}>💳 {acheteur.mode_paiement_prefere}</Text>
-                {acheteur.credit_du > 0 && <Text style={styles.creditTexte}>Crédit dû : {formatMontant(acheteur.credit_du)}</Text>}
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
-                  <TouchableOpacity style={styles.actionGrise} onPress={() => { setAcheteurEnEdition(acheteur); setFormAcheteur({ nom: acheteur.nom, type: acheteur.type, telephone: acheteur.telephone || '', email: acheteur.email || '', mode_paiement_prefere: acheteur.mode_paiement_prefere, notes: acheteur.notes || '' }); setVue('acheteur'); }}>
-                    <Text style={styles.actionGriseTexte}>Modifier</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionRouge2} onPress={() => supprimerAcheteur(acheteur)}><Text style={styles.actionRouge2Texte}>Supprimer</Text></TouchableOpacity>
-                </View>
               </View>
-            ))
+            </View>
           )}
-          <View style={{ height: 40 }} />
-        </ScrollView>
+          renderSectionFooter={() => <View style={{ height: 16 }} />}
+          renderItem={({ item: vente }) => renderVente(vente)}
+        />
+      ) : (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={acheteurs}
+          keyExtractor={(acheteur) => String(acheteur.id)}
+          ListHeaderComponent={<OngletsLigne />}
+          ListEmptyComponent={
+            <View style={styles.videCarte}>
+              <Text style={styles.vide}>Aucun acheteur enregistré</Text>
+              <TouchableOpacity style={styles.boutonPrincipal} onPress={() => setVue('acheteur')}>
+                <Text style={styles.boutonPrincipalTexte}>Ajouter un acheteur</Text>
+              </TouchableOpacity>
+            </View>
+          }
+          renderItem={({ item: acheteur }) => (
+            <View style={styles.carte}>
+              <View style={styles.ligneEntre}>
+                <Text style={styles.carteTitre}>{acheteur.nom}</Text>
+                <View style={styles.badgeBleu}><Text style={styles.badgeBleuTexte}>{acheteur.type}</Text></View>
+              </View>
+              {acheteur.telephone && <Text style={styles.carteSousTexte}>📞 {acheteur.telephone}</Text>}
+              {acheteur.email && <Text style={styles.carteSousTexte}>✉️ {acheteur.email}</Text>}
+              <Text style={styles.carteSousTexte}>💳 {acheteur.mode_paiement_prefere}</Text>
+              {acheteur.credit_du > 0 && <Text style={styles.creditTexte}>Crédit dû : {formatMontant(acheteur.credit_du)}</Text>}
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
+                <TouchableOpacity style={styles.actionGrise} onPress={() => { setAcheteurEnEdition(acheteur); setFormAcheteur({ nom: acheteur.nom, type: acheteur.type, telephone: acheteur.telephone || '', email: acheteur.email || '', mode_paiement_prefere: acheteur.mode_paiement_prefere, notes: acheteur.notes || '' }); setVue('acheteur'); }}>
+                  <Text style={styles.actionGriseTexte}>Modifier</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionRouge2} onPress={() => supprimerAcheteur(acheteur)}><Text style={styles.actionRouge2Texte}>Supprimer</Text></TouchableOpacity>
+              </View>
+            </View>
+          )}
+        />
       )}
     </View>
   );
