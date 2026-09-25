@@ -84,7 +84,18 @@ const RapportScreen = ({ token, projetActifId }) => {
   useEffect(() => {
     if (projetActifId) {
       chargerTout();
-      api.get(`/projets/${projetActifId}`, { headers }).then(res => { setDateDebutProjet(res.data.date_debut); setTypeVolaille(res.data.type_volaille); }).catch(() => {});
+      // Sans cette info, getSemaineEnCours() retombe sur "semaine 1" en
+      // silence — un vrai souci en zone à connexion faible. Une reprise
+      // après un court délai absorbe les coupures passagères sans bloquer
+      // la saisie du rapport (qui ne dépend pas de cette valeur).
+      const chargerInfosProjet = (tentative = 0) => {
+        api.get(`/projets/${projetActifId}`, { headers })
+          .then(res => { setDateDebutProjet(res.data.date_debut); setTypeVolaille(res.data.type_volaille); })
+          .catch(() => {
+            if (tentative < 2) setTimeout(() => chargerInfosProjet(tentative + 1), 3000);
+          });
+      };
+      chargerInfosProjet();
     }
   }, [projetActifId]);
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Switch, Alert } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
 import { useNavigation } from '@react-navigation/native';
@@ -35,7 +35,13 @@ const ProfilScreen = ({ utilisateur, token, onDeconnecter }) => {
     const nouvelles = { ...notifs, [key]: !notifs[key] };
     setNotifs(nouvelles);
     try { await api.put('/auth/preferences', nouvelles, { headers }); }
-    catch { setNotifs(notifs); }
+    catch {
+      // Sans ce message, l'interrupteur bascule puis revient tout seul sans
+      // explication — l'utilisateur ne peut pas savoir si c'est un bug ou
+      // une coupure réseau.
+      setNotifs(notifs);
+      Alert.alert('Non enregistré', "La connexion a échoué — cette préférence n'a pas été sauvegardée. Réessaie.");
+    }
   };
 
   const enregistrerProfil = async () => {
