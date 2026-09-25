@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
 
@@ -135,31 +135,39 @@ const EquipementsScreen = ({ token }) => {
       {chargement ? (
         <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
-        <ScrollView style={styles.conteneur}>
-          <View style={styles.carteNoire}>
-            <Text style={styles.carteNoireLabel}>Valeur totale estimée</Text>
-            <Text style={styles.carteNoireMontant}>{formatMontant(valeurTotale)}</Text>
-            <Text style={styles.carteNoireSousLabel}>{equipements.length} équipement{equipements.length > 1 ? 's' : ''}</Text>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-            {categories.map(cat => (
-              <TouchableOpacity key={cat} onPress={() => setFiltreCategorie(cat)} style={[styles.filtreChip, filtreCategorie === cat && styles.filtreChipActif]}>
-                <Text style={[styles.filtreChipTexte, filtreCategorie === cat && styles.filtreChipTexteActif]}>{cat}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {equipementsFiltres.length === 0 ? (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={equipementsFiltres}
+          keyExtractor={(eq) => String(eq.id)}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.carteNoire}>
+                <Text style={styles.carteNoireLabel}>Valeur totale estimée</Text>
+                <Text style={styles.carteNoireMontant}>{formatMontant(valeurTotale)}</Text>
+                <Text style={styles.carteNoireSousLabel}>{equipements.length} équipement{equipements.length > 1 ? 's' : ''}</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                {categories.map(cat => (
+                  <TouchableOpacity key={cat} onPress={() => setFiltreCategorie(cat)} style={[styles.filtreChip, filtreCategorie === cat && styles.filtreChipActif]}>
+                    <Text style={[styles.filtreChipTexte, filtreCategorie === cat && styles.filtreChipTexteActif]}>{cat}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          }
+          ListEmptyComponent={
             <View style={styles.videCarte}>
               <Text style={styles.vide}>Aucun équipement enregistré</Text>
               <TouchableOpacity style={styles.boutonPrincipal} onPress={() => { setForm(VIDE); setVue('nouveau'); }}>
                 <Text style={styles.boutonPrincipalTexte}>Ajouter un équipement</Text>
               </TouchableOpacity>
             </View>
-          ) : equipementsFiltres.map(eq => {
+          }
+          renderItem={({ item: eq }) => {
             const badge = ETATS[eq.etat] || ETATS.bon;
             return (
-              <View style={styles.carte} key={eq.id}>
+              <View style={styles.carte}>
                 <View style={styles.ligneEntre}>
                   <Text style={styles.carteTitre}>{eq.nom}</Text>
                   <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
@@ -175,9 +183,8 @@ const EquipementsScreen = ({ token }) => {
                 </View>
               </View>
             );
-          })}
-          <View style={{ height: 40 }} />
-        </ScrollView>
+          }}
+        />
       )}
     </View>
   );

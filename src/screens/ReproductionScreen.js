@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
 import Header from '../components/Header';
@@ -402,6 +402,75 @@ const ReproductionScreen = ({ token, projetActifId }) => {
   }
 
   // --- VUE PRINCIPALE ---
+  const EnTeteCycles = () => (
+    <View>
+      {cycles.length > 1 && (
+        <ScrollView horizontal style={{ marginTop: 8, marginBottom: 10 }} showsHorizontalScrollIndicator={false}>
+          {cycles.map(c => (
+            <TouchableOpacity key={c.id} onPress={() => { setCycleActif(c); chargerCollectes(c.uuid_id || c.id); }}
+              style={[styles.cycleChip, cycleActif?.id === c.id && styles.cycleChipActif]}>
+              <Text style={[styles.cycleChipTexte, cycleActif?.id === c.id && styles.cycleChipTexteActif]}>{c.generation} {c.nom ? `· ${c.nom}` : ''}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+
+      <View style={styles.ongletsLigne}>
+        {['synthese', 'ponte', 'couveuse', 'historique'].map(t => (
+          <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
+            <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>
+              {t === 'synthese' ? 'Synthèse' : t === 'ponte' ? 'Ponte' : t === 'couveuse' ? 'Couveuse' : 'Historique'}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
+  const renderCollecte = (c) => (
+    <View style={styles.carte}>
+      <View style={styles.ligneEntre}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.carteTitre}>{new Date(c.date_collecte).toLocaleDateString('fr-FR')}</Text>
+          {c.date_debut_periode && (
+            <Text style={styles.vagueTexte}>
+              Vague : {new Date(c.date_debut_periode).toLocaleDateString('fr-FR')}
+              {c.date_fin_periode ? ' → ' + new Date(c.date_fin_periode).toLocaleDateString('fr-FR') : ''}
+            </Text>
+          )}
+          {c.observations && <Text style={styles.infoTexte}>{c.observations}</Text>}
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#1D1D1F' }}>{c.nombre_oeufs} 🥚</Text>
+          <TouchableOpacity onPress={() => ouvrirFormCollecte(c)}><Text style={styles.iconeAction}>✏️</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => supprimerCollecte(c)}><Text style={styles.iconeAction}>🗑</Text></TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderCycleHistorique = (cycle) => (
+    <View style={styles.carte}>
+      <View style={styles.ligneEntre}>
+        <View>
+          <Text style={styles.carteTitre}>{cycle.generation} · {cycle.nom || 'Sans nom'}</Text>
+          {cycle.lot_origine_nom && <Text style={styles.infoTexte}>Lot : {cycle.lot_origine_nom}</Text>}
+        </View>
+        <View style={[styles.badge, { backgroundColor: STATUTS[cycle.statut]?.bg || '#F3F4F6' }]}>
+          <Text style={[styles.badgeTexte, { color: STATUTS[cycle.statut]?.text || '#4B5563' }]}>{STATUTS[cycle.statut]?.label || cycle.statut}</Text>
+        </View>
+      </View>
+      <View style={styles.grille3}>
+        <View style={styles.miniStat}><Text style={styles.miniStatLabel}>Œufs</Text><Text style={styles.miniStatValeur}>{cycle.oeufs_collectes || 0}</Text></View>
+        <View style={styles.miniStat}><Text style={styles.miniStatLabel}>Poussins</Text><Text style={styles.miniStatValeur}>{cycle.poussins_viables || '—'}</Text></View>
+        <View style={styles.miniStat}><Text style={styles.miniStatLabel}>Éclosion</Text><Text style={styles.miniStatValeur}>{cycle.taux_eclosion ? cycle.taux_eclosion + '%' : '—'}</Text></View>
+      </View>
+      <TouchableOpacity style={styles.actionRouge} onPress={() => supprimerCycle(cycle)}>
+        <Text style={styles.actionRougeTexte}>🗑 Supprimer ce cycle</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Reproduction" sousTitre={cycleActif ? `${cycleActif.generation} · ${cycleActif.nom || ''}` : 'Aucun cycle actif'}
@@ -424,28 +493,59 @@ const ReproductionScreen = ({ token, projetActifId }) => {
             </TouchableOpacity>
           </View>
         </ScrollView>
+      ) : onglet === 'ponte' && cycleActif ? (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={collectes}
+          keyExtractor={(c) => String(c.id)}
+          renderItem={({ item }) => renderCollecte(item)}
+          ListHeaderComponent={
+            <View>
+              <EnTeteCycles />
+              <View style={styles.ligneEntre}>
+                <Text style={styles.sectionTitre}>Collectes · {collectes.length} entrées</Text>
+                <TouchableOpacity style={styles.boutonPetit} onPress={() => ouvrirFormCollecte()}>
+                  <Text style={styles.boutonPetitTexte}>+ Collecte</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.carte}>
+                <Text style={styles.carteTitre}>Résumé de la ponte</Text>
+                <View style={{ marginTop: 8 }}>
+                  <Text style={styles.miniLabel}>Total œufs</Text>
+                  <Text style={styles.miniValeurGrande}>{cycleActif.oeufs_collectes || 0}</Text>
+                </View>
+                <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F5F5F7' }}>
+                  <Text style={styles.miniLabel}>Période ponte (toutes vagues)</Text>
+                  <Text style={styles.infoValeur}>
+                    {cycleActif.periode_ponte_debut ? new Date(cycleActif.periode_ponte_debut).toLocaleDateString('fr-FR') : '—'}
+                    {cycleActif.periode_ponte_fin ? ' → ' + new Date(cycleActif.periode_ponte_fin).toLocaleDateString('fr-FR') : ''}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          }
+          ListEmptyComponent={
+            <View style={styles.videCarte}>
+              <Text style={styles.vide}>Aucune collecte enregistrée</Text>
+              <TouchableOpacity style={styles.boutonPrincipal} onPress={() => ouvrirFormCollecte()}>
+                <Text style={styles.boutonPrincipalTexte}>Enregistrer une collecte</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      ) : onglet === 'historique' ? (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={cycles}
+          keyExtractor={(c) => String(c.id)}
+          renderItem={({ item }) => renderCycleHistorique(item)}
+          ListHeaderComponent={<EnTeteCycles />}
+        />
       ) : (
         <ScrollView style={styles.conteneur}>
-          {cycles.length > 1 && (
-            <ScrollView horizontal style={{ marginTop: 8, marginBottom: 10 }} showsHorizontalScrollIndicator={false}>
-              {cycles.map(c => (
-                <TouchableOpacity key={c.id} onPress={() => { setCycleActif(c); chargerCollectes(c.uuid_id || c.id); }}
-                  style={[styles.cycleChip, cycleActif?.id === c.id && styles.cycleChipActif]}>
-                  <Text style={[styles.cycleChipTexte, cycleActif?.id === c.id && styles.cycleChipTexteActif]}>{c.generation} {c.nom ? `· ${c.nom}` : ''}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-
-          <View style={styles.ongletsLigne}>
-            {['synthese', 'ponte', 'couveuse', 'historique'].map(t => (
-              <TouchableOpacity key={t} onPress={() => setOnglet(t)} style={[styles.ongletBouton, onglet === t && styles.ongletBoutonActif]}>
-                <Text style={[styles.ongletTexte, onglet === t && styles.ongletTexteActif]}>
-                  {t === 'synthese' ? 'Synthèse' : t === 'ponte' ? 'Ponte' : t === 'couveuse' ? 'Couveuse' : 'Historique'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <EnTeteCycles />
 
           {onglet === 'synthese' && cycleActif && (
             <View>
@@ -495,59 +595,6 @@ const ReproductionScreen = ({ token, projetActifId }) => {
             </View>
           )}
 
-          {onglet === 'ponte' && cycleActif && (
-            <View>
-              <View style={styles.ligneEntre}>
-                <Text style={styles.sectionTitre}>Collectes · {collectes.length} entrées</Text>
-                <TouchableOpacity style={styles.boutonPetit} onPress={() => ouvrirFormCollecte()}>
-                  <Text style={styles.boutonPetitTexte}>+ Collecte</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.carte}>
-                <Text style={styles.carteTitre}>Résumé de la ponte</Text>
-                <View style={{ marginTop: 8 }}>
-                  <Text style={styles.miniLabel}>Total œufs</Text>
-                  <Text style={styles.miniValeurGrande}>{cycleActif.oeufs_collectes || 0}</Text>
-                </View>
-                <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F5F5F7' }}>
-                  <Text style={styles.miniLabel}>Période ponte (toutes vagues)</Text>
-                  <Text style={styles.infoValeur}>
-                    {cycleActif.periode_ponte_debut ? new Date(cycleActif.periode_ponte_debut).toLocaleDateString('fr-FR') : '—'}
-                    {cycleActif.periode_ponte_fin ? ' → ' + new Date(cycleActif.periode_ponte_fin).toLocaleDateString('fr-FR') : ''}
-                  </Text>
-                </View>
-              </View>
-              {collectes.length === 0 ? (
-                <View style={styles.videCarte}>
-                  <Text style={styles.vide}>Aucune collecte enregistrée</Text>
-                  <TouchableOpacity style={styles.boutonPrincipal} onPress={() => ouvrirFormCollecte()}>
-                    <Text style={styles.boutonPrincipalTexte}>Enregistrer une collecte</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : collectes.map(c => (
-                <View style={styles.carte} key={c.id}>
-                  <View style={styles.ligneEntre}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.carteTitre}>{new Date(c.date_collecte).toLocaleDateString('fr-FR')}</Text>
-                      {c.date_debut_periode && (
-                        <Text style={styles.vagueTexte}>
-                          Vague : {new Date(c.date_debut_periode).toLocaleDateString('fr-FR')}
-                          {c.date_fin_periode ? ' → ' + new Date(c.date_fin_periode).toLocaleDateString('fr-FR') : ''}
-                        </Text>
-                      )}
-                      {c.observations && <Text style={styles.infoTexte}>{c.observations}</Text>}
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#1D1D1F' }}>{c.nombre_oeufs} 🥚</Text>
-                      <TouchableOpacity onPress={() => ouvrirFormCollecte(c)}><Text style={styles.iconeAction}>✏️</Text></TouchableOpacity>
-                      <TouchableOpacity onPress={() => supprimerCollecte(c)}><Text style={styles.iconeAction}>🗑</Text></TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-
           {onglet === 'couveuse' && cycleActif && (
             <View>
               <View style={styles.carte}>
@@ -568,27 +615,6 @@ const ReproductionScreen = ({ token, projetActifId }) => {
             </View>
           )}
 
-          {onglet === 'historique' && cycles.map(cycle => (
-            <View style={styles.carte} key={cycle.id}>
-              <View style={styles.ligneEntre}>
-                <View>
-                  <Text style={styles.carteTitre}>{cycle.generation} · {cycle.nom || 'Sans nom'}</Text>
-                  {cycle.lot_origine_nom && <Text style={styles.infoTexte}>Lot : {cycle.lot_origine_nom}</Text>}
-                </View>
-                <View style={[styles.badge, { backgroundColor: STATUTS[cycle.statut]?.bg || '#F3F4F6' }]}>
-                  <Text style={[styles.badgeTexte, { color: STATUTS[cycle.statut]?.text || '#4B5563' }]}>{STATUTS[cycle.statut]?.label || cycle.statut}</Text>
-                </View>
-              </View>
-              <View style={styles.grille3}>
-                <View style={styles.miniStat}><Text style={styles.miniStatLabel}>Œufs</Text><Text style={styles.miniStatValeur}>{cycle.oeufs_collectes || 0}</Text></View>
-                <View style={styles.miniStat}><Text style={styles.miniStatLabel}>Poussins</Text><Text style={styles.miniStatValeur}>{cycle.poussins_viables || '—'}</Text></View>
-                <View style={styles.miniStat}><Text style={styles.miniStatLabel}>Éclosion</Text><Text style={styles.miniStatValeur}>{cycle.taux_eclosion ? cycle.taux_eclosion + '%' : '—'}</Text></View>
-              </View>
-              <TouchableOpacity style={styles.actionRouge} onPress={() => supprimerCycle(cycle)}>
-                <Text style={styles.actionRougeTexte}>🗑 Supprimer ce cycle</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
           <View style={{ height: 40 }} />
         </ScrollView>
       )}

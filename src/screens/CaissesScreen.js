@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
 
@@ -171,51 +171,59 @@ const CaissesScreen = ({ token }) => {
     return (
       <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F5F5F7' }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Header titre={caisseSelectionnee.nom} action={<TouchableOpacity onPress={() => { setVue('liste'); chargerCaisses(); }}><Text style={styles.lienRetourPetit}>← Retour</Text></TouchableOpacity>} />
-        <ScrollView style={styles.conteneur}>
-          <View style={styles.carteNoire}>
-            <Text style={styles.carteNoireLabel}>Solde actuel</Text>
-            <Text style={styles.carteNoireMontant}>{formatMontant(caisseSelectionnee.solde)}</Text>
-            <View style={styles.ligneEntre}>
-              <Text style={styles.creditTexte}>+ {formatMontant(caisseSelectionnee.total_credit)}</Text>
-              <Text style={styles.debitTexte}>- {formatMontant(caisseSelectionnee.total_debit)}</Text>
-            </View>
-          </View>
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={mouvements}
+          keyExtractor={(m) => String(m.id)}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.carteNoire}>
+                <Text style={styles.carteNoireLabel}>Solde actuel</Text>
+                <Text style={styles.carteNoireMontant}>{formatMontant(caisseSelectionnee.solde)}</Text>
+                <View style={styles.ligneEntre}>
+                  <Text style={styles.creditTexte}>+ {formatMontant(caisseSelectionnee.total_credit)}</Text>
+                  <Text style={styles.debitTexte}>- {formatMontant(caisseSelectionnee.total_debit)}</Text>
+                </View>
+              </View>
 
-          {!formAction ? (
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-              <TouchableOpacity style={styles.boutonCrediter} onPress={() => setFormAction('credit')}><Text style={styles.boutonCrediterTexte}>+ Créditer</Text></TouchableOpacity>
-              <TouchableOpacity style={styles.boutonDebiter} onPress={() => setFormAction('debit')}><Text style={styles.boutonDebiterTexte}>− Débiter</Text></TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.carte}>
-              <Text style={styles.carteTitre}>{formAction === 'credit' ? 'Créditer la caisse' : 'Débiter la caisse'}</Text>
-              {formAction === 'credit' && caisseSelectionnee?.type === 'projet' && (
-                <View style={styles.alerteOrangeLegere}>
-                  <Text style={styles.alerteOrangeTexte}>⚠️ N'utilise pas ce formulaire pour une mise investisseur ou une vente : utilise l'écran Investisseurs ou Commerce, sinon l'argent sera compté deux fois dans la caisse.</Text>
+              {!formAction ? (
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                  <TouchableOpacity style={styles.boutonCrediter} onPress={() => setFormAction('credit')}><Text style={styles.boutonCrediterTexte}>+ Créditer</Text></TouchableOpacity>
+                  <TouchableOpacity style={styles.boutonDebiter} onPress={() => setFormAction('debit')}><Text style={styles.boutonDebiterTexte}>− Débiter</Text></TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.carte}>
+                  <Text style={styles.carteTitre}>{formAction === 'credit' ? 'Créditer la caisse' : 'Débiter la caisse'}</Text>
+                  {formAction === 'credit' && caisseSelectionnee?.type === 'projet' && (
+                    <View style={styles.alerteOrangeLegere}>
+                      <Text style={styles.alerteOrangeTexte}>⚠️ N'utilise pas ce formulaire pour une mise investisseur ou une vente : utilise l'écran Investisseurs ou Commerce, sinon l'argent sera compté deux fois dans la caisse.</Text>
+                    </View>
+                  )}
+                  <Text style={styles.label}>Montant (F)</Text>
+                  <TextInput style={styles.champ} keyboardType="numeric" value={values.montant} onChangeText={v => setValues({ ...values, montant: v })} />
+                  <Text style={styles.label}>Motif</Text>
+                  <TextInput style={styles.champ} placeholder="Ex: Apport associés, Paiement fournisseur..." value={values.motif} onChangeText={v => setValues({ ...values, motif: v })} />
+                  <Text style={styles.label}>Note (optionnel)</Text>
+                  <TextInput style={[styles.champ, { height: 60 }]} multiline value={values.note} onChangeText={v => setValues({ ...values, note: v })} />
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                    <TouchableOpacity style={styles.boutonConfirmer} onPress={soumettreMouvement} disabled={envoi}>
+                      <Text style={styles.boutonConfirmerTexte}>{envoi ? 'Enregistrement...' : 'Confirmer'}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.boutonAnnuler} onPress={() => setFormAction(null)}>
+                      <Text style={styles.boutonAnnulerTexte}>Annuler</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
-              <Text style={styles.label}>Montant (F)</Text>
-              <TextInput style={styles.champ} keyboardType="numeric" value={values.montant} onChangeText={v => setValues({ ...values, montant: v })} />
-              <Text style={styles.label}>Motif</Text>
-              <TextInput style={styles.champ} placeholder="Ex: Apport associés, Paiement fournisseur..." value={values.motif} onChangeText={v => setValues({ ...values, motif: v })} />
-              <Text style={styles.label}>Note (optionnel)</Text>
-              <TextInput style={[styles.champ, { height: 60 }]} multiline value={values.note} onChangeText={v => setValues({ ...values, note: v })} />
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-                <TouchableOpacity style={styles.boutonConfirmer} onPress={soumettreMouvement} disabled={envoi}>
-                  <Text style={styles.boutonConfirmerTexte}>{envoi ? 'Enregistrement...' : 'Confirmer'}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.boutonAnnuler} onPress={() => setFormAction(null)}>
-                  <Text style={styles.boutonAnnulerTexte}>Annuler</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
 
-          <Text style={styles.sectionTitre}>Historique des mouvements</Text>
-          {chargementMouvements ? <ActivityIndicator color="#1D1D1F" /> : mouvements.length === 0 ? (
-            <Text style={styles.vide}>Aucun mouvement pour l'instant</Text>
-          ) : mouvements.map(m => (
-            <View style={styles.carte} key={m.id}>
+              <Text style={styles.sectionTitre}>Historique des mouvements</Text>
+              {chargementMouvements && <ActivityIndicator color="#1D1D1F" />}
+            </View>
+          }
+          ListEmptyComponent={!chargementMouvements ? <Text style={styles.vide}>Aucun mouvement pour l'instant</Text> : null}
+          renderItem={({ item: m }) => (
+            <View style={styles.carte}>
               <View style={styles.ligneEntre}>
                 <Text style={styles.carteTitre}>{m.motif}</Text>
                 <Text style={[styles.montantMouvement, { color: m.type === 'credit' ? '#059669' : '#DC2626' }]}>{m.type === 'credit' ? '+' : '−'}{formatMontant(m.montant)}</Text>
@@ -229,9 +237,8 @@ const CaissesScreen = ({ token }) => {
                 <Text style={styles.actionRougeTexte}>Supprimer</Text>
               </TouchableOpacity>
             </View>
-          ))}
-          <View style={{ height: 40 }} />
-        </ScrollView>
+          )}
+        />
       </KeyboardAvoidingView>
     );
   }

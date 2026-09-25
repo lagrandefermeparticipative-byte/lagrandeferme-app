@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl, TouchableOpacity, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import Header from '../components/Header';
 import api from '../services/api';
 
@@ -97,24 +97,26 @@ const VentesScreen = ({ token }) => {
           </TouchableOpacity>
         }
       />
-      <ScrollView
+      <FlatList
         style={styles.conteneur}
+        contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={<RefreshControl refreshing={rafraichissement} onRefresh={onRefresh} />}
-      >
-
-        <View style={styles.resumeCarte}>
-          <Text style={styles.resumeChiffre}>{Number(totalRecette).toLocaleString('fr-FR')} F</Text>
-          <Text style={styles.resumeLabel}>Total recette · {ventes.length} vente(s)</Text>
-        </View>
-
-        {ventes.length === 0 && <Text style={styles.vide}>Aucune vente pour le moment.</Text>}
-        {ventes.map((v, i) => (
-          <View style={styles.carte} key={v.id || i}>
+        data={ventes}
+        keyExtractor={(v, i) => String(v.id || i)}
+        ListHeaderComponent={
+          <View style={styles.resumeCarte}>
+            <Text style={styles.resumeChiffre}>{Number(totalRecette).toLocaleString('fr-FR')} F</Text>
+            <Text style={styles.resumeLabel}>Total recette · {ventes.length} vente(s)</Text>
+          </View>
+        }
+        ListEmptyComponent={<Text style={styles.vide}>Aucune vente pour le moment.</Text>}
+        renderItem={({ item: v }) => (
+          <View style={styles.carte}>
             <Text style={styles.cardTitre}>{v.males_vendus} mâles · {v.femelles_vendues} femelles</Text>
             <Text style={styles.cardTexte}>{Number(v.recette_totale || 0).toLocaleString('fr-FR')} F</Text>
           </View>
-        ))}
-      </ScrollView>
+        )}
+      />
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <KeyboardAvoidingView

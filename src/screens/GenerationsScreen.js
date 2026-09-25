@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
 
@@ -173,70 +173,78 @@ const GenerationsScreen = ({ token, projetActifId }) => {
     );
   }
 
+  const renderGeneration = (g) => {
+    const badge = STATUTS[g.statut] || { label: g.statut, bg: '#F3F4F6', text: '#4B5563' };
+    return (
+      <View style={styles.carte}>
+        <View style={styles.ligneEntre}>
+          <Text style={styles.carteTitre}>{g.code}</Text>
+          <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
+        </View>
+        <Text style={styles.carteSousTexte}>
+          {g.origine === 'reproduction_interne' ? '🐣 Née sur la ferme' : g.origine === 'achat' ? '🛒 Achat externe' : 'Autre'}
+          {g.generation_parente_id ? ` · issue de ${trouverCode(g.generation_parente_id) || '…'}` : ''}
+        </Text>
+
+        <View style={styles.grille4}>
+          <View style={styles.miniBox}><Text style={styles.miniValeur}>{g.quantite_initiale_totale ?? 0}</Text><Text style={styles.miniLabel}>Reçus</Text></View>
+          <View style={styles.miniBox}><Text style={[styles.miniValeur, { color: '#DC2626' }]}>{g.total_morts ?? 0}</Text><Text style={styles.miniLabel}>Morts</Text></View>
+          <View style={styles.miniBox}><Text style={[styles.miniValeur, { color: '#C2410C' }]}>{g.total_reproducteurs_actifs ?? 0}</Text><Text style={styles.miniLabel}>Reproducteurs</Text></View>
+          <View style={styles.miniBox}><Text style={[styles.miniValeur, { color: '#047857' }]}>{g.disponibles ?? 0}</Text><Text style={styles.miniLabel}>Disponibles</Text></View>
+        </View>
+
+        {g.cout_unitaire_production !== null && g.cout_unitaire_production !== undefined && (
+          <View style={styles.encartIndigo}>
+            <Text style={styles.encartIndigoTexte}>Coût de production : {formatMontant(g.cout_unitaire_production)}/sujet ({formatMontant(g.cout_total_affecte)} pour {g.effectif_produit} sujets)</Text>
+          </View>
+        )}
+
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+          <TouchableOpacity style={styles.actionIndigo} onPress={() => ouvrirCoutForm(g)}><Text style={styles.actionIndigoTexte}>Affecter un coût</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.actionGrise} onPress={() => toggleMouvements(g.id)}>
+            <Text style={styles.actionGriseTexte}>{generationOuverte === g.id ? 'Masquer les mouvements' : 'Voir les mouvements'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {generationOuverte === g.id && (
+          <View style={styles.mouvementsBloc}>
+            {chargementMouvements && !mouvementsParGeneration[g.id] ? (
+              <ActivityIndicator color="#6E6E73" />
+            ) : (mouvementsParGeneration[g.id] || []).length === 0 ? (
+              <Text style={styles.vide}>Aucun mouvement enregistré</Text>
+            ) : mouvementsParGeneration[g.id].map(m => (
+              <View key={m.id} style={styles.ligneMouvement}>
+                <Text style={styles.mouvementTexte}>{labelMouvement(m.type_mouvement)}</Text>
+                <Text style={styles.mouvementValeur}>{m.quantite}</Text>
+                <Text style={styles.mouvementDate}>{new Date(m.date_mouvement).toLocaleDateString('fr-FR')}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Générations" action={<TouchableOpacity style={styles.boutonAjout} onPress={() => setVue('nouvelle')}><Text style={styles.boutonAjoutTexte}>+ Génération</Text></TouchableOpacity>} />
-      <ScrollView style={styles.conteneur}>
-        {chargement ? (
-          <ActivityIndicator style={{ marginTop: 30 }} color="#1D1D1F" />
-        ) : generations.length === 0 ? (
-          <View style={styles.videCarte}>
-            <Text style={styles.vide}>Aucune génération enregistrée pour ce projet</Text>
-            <TouchableOpacity style={styles.boutonPrincipalPetit} onPress={() => setVue('nouvelle')}><Text style={styles.boutonPrincipalTexte}>Créer G1</Text></TouchableOpacity>
-          </View>
-        ) : generations.map(g => {
-          const badge = STATUTS[g.statut] || { label: g.statut, bg: '#F3F4F6', text: '#4B5563' };
-          return (
-            <View key={g.id} style={styles.carte}>
-              <View style={styles.ligneEntre}>
-                <Text style={styles.carteTitre}>{g.code}</Text>
-                <View style={[styles.badge, { backgroundColor: badge.bg }]}><Text style={[styles.badgeTexte, { color: badge.text }]}>{badge.label}</Text></View>
-              </View>
-              <Text style={styles.carteSousTexte}>
-                {g.origine === 'reproduction_interne' ? '🐣 Née sur la ferme' : g.origine === 'achat' ? '🛒 Achat externe' : 'Autre'}
-                {g.generation_parente_id ? ` · issue de ${trouverCode(g.generation_parente_id) || '…'}` : ''}
-              </Text>
-
-              <View style={styles.grille4}>
-                <View style={styles.miniBox}><Text style={styles.miniValeur}>{g.quantite_initiale_totale ?? 0}</Text><Text style={styles.miniLabel}>Reçus</Text></View>
-                <View style={styles.miniBox}><Text style={[styles.miniValeur, { color: '#DC2626' }]}>{g.total_morts ?? 0}</Text><Text style={styles.miniLabel}>Morts</Text></View>
-                <View style={styles.miniBox}><Text style={[styles.miniValeur, { color: '#C2410C' }]}>{g.total_reproducteurs_actifs ?? 0}</Text><Text style={styles.miniLabel}>Reproducteurs</Text></View>
-                <View style={styles.miniBox}><Text style={[styles.miniValeur, { color: '#047857' }]}>{g.disponibles ?? 0}</Text><Text style={styles.miniLabel}>Disponibles</Text></View>
-              </View>
-
-              {g.cout_unitaire_production !== null && g.cout_unitaire_production !== undefined && (
-                <View style={styles.encartIndigo}>
-                  <Text style={styles.encartIndigoTexte}>Coût de production : {formatMontant(g.cout_unitaire_production)}/sujet ({formatMontant(g.cout_total_affecte)} pour {g.effectif_produit} sujets)</Text>
-                </View>
-              )}
-
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                <TouchableOpacity style={styles.actionIndigo} onPress={() => ouvrirCoutForm(g)}><Text style={styles.actionIndigoTexte}>Affecter un coût</Text></TouchableOpacity>
-                <TouchableOpacity style={styles.actionGrise} onPress={() => toggleMouvements(g.id)}>
-                  <Text style={styles.actionGriseTexte}>{generationOuverte === g.id ? 'Masquer les mouvements' : 'Voir les mouvements'}</Text>
-                </TouchableOpacity>
-              </View>
-
-              {generationOuverte === g.id && (
-                <View style={styles.mouvementsBloc}>
-                  {chargementMouvements && !mouvementsParGeneration[g.id] ? (
-                    <ActivityIndicator color="#6E6E73" />
-                  ) : (mouvementsParGeneration[g.id] || []).length === 0 ? (
-                    <Text style={styles.vide}>Aucun mouvement enregistré</Text>
-                  ) : mouvementsParGeneration[g.id].map(m => (
-                    <View key={m.id} style={styles.ligneMouvement}>
-                      <Text style={styles.mouvementTexte}>{labelMouvement(m.type_mouvement)}</Text>
-                      <Text style={styles.mouvementValeur}>{m.quantite}</Text>
-                      <Text style={styles.mouvementDate}>{new Date(m.date_mouvement).toLocaleDateString('fr-FR')}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
+      {chargement ? (
+        <ActivityIndicator style={{ marginTop: 30 }} color="#1D1D1F" />
+      ) : (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={generations}
+          keyExtractor={(g) => String(g.id)}
+          renderItem={({ item }) => renderGeneration(item)}
+          ListEmptyComponent={
+            <View style={styles.videCarte}>
+              <Text style={styles.vide}>Aucune génération enregistrée pour ce projet</Text>
+              <TouchableOpacity style={styles.boutonPrincipalPetit} onPress={() => setVue('nouvelle')}><Text style={styles.boutonPrincipalTexte}>Créer G1</Text></TouchableOpacity>
             </View>
-          );
-        })}
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          }
+        />
+      )}
     </View>
   );
 };

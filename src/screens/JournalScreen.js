@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
 
@@ -32,37 +32,49 @@ const JournalScreen = ({ token }) => {
   const modules = ['Tous', ...new Set(activites.map(a => a.module || 'Autre'))];
   const activitesFiltrees = filtreModule === 'Tous' ? activites : activites.filter(a => a.module === filtreModule);
 
+  const EnTete = () => (
+    <View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12, marginBottom: 10 }}>
+        {modules.map(m => (
+          <TouchableOpacity key={m} onPress={() => setFiltreModule(m)} style={[styles.chip, filtreModule === m && styles.chipActif]}>
+            <Text style={[styles.chipTexte, filtreModule === m && styles.chipTexteActif]}>{m}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      <Text style={styles.compteur}>{activitesFiltrees.length} activité{activitesFiltrees.length > 1 ? 's' : ''}</Text>
+    </View>
+  );
+
+  const renderActivite = (a) => (
+    <View style={styles.carte}>
+      <Text style={styles.icone}>{getIcone(a.module)}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.action}>{a.action}</Text>
+        {a.details && <Text style={styles.details}>{a.details}</Text>}
+        <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+          <Text style={styles.date}>{formatDate(a.created_at)}</Text>
+          {a.utilisateur_nom && <Text style={styles.date}>· {a.utilisateur_nom}</Text>}
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <Header titre="Journal d'activité" sousTitre="Tout ce qui se passe sur la ferme" sansRetour />
-      <ScrollView style={styles.conteneur}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12, marginBottom: 10 }}>
-          {modules.map(m => (
-            <TouchableOpacity key={m} onPress={() => setFiltreModule(m)} style={[styles.chip, filtreModule === m && styles.chipActif]}>
-              <Text style={[styles.chipTexte, filtreModule === m && styles.chipTexteActif]}>{m}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        <Text style={styles.compteur}>{activitesFiltrees.length} activité{activitesFiltrees.length > 1 ? 's' : ''}</Text>
-        {chargement ? (
-          <ActivityIndicator style={{ marginTop: 20 }} color="#1D1D1F" />
-        ) : activitesFiltrees.length === 0 ? (
-          <Text style={styles.vide}>Aucune activité enregistrée</Text>
-        ) : activitesFiltrees.map(a => (
-          <View key={a.id} style={styles.carte}>
-            <Text style={styles.icone}>{getIcone(a.module)}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.action}>{a.action}</Text>
-              {a.details && <Text style={styles.details}>{a.details}</Text>}
-              <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
-                <Text style={styles.date}>{formatDate(a.created_at)}</Text>
-                {a.utilisateur_nom && <Text style={styles.date}>· {a.utilisateur_nom}</Text>}
-              </View>
-            </View>
-          </View>
-        ))}
-        <View style={{ height: 40 }} />
-      </ScrollView>
+      {chargement ? (
+        <ActivityIndicator style={{ marginTop: 20 }} color="#1D1D1F" />
+      ) : (
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={activitesFiltrees}
+          keyExtractor={(a) => String(a.id)}
+          renderItem={({ item }) => renderActivite(item)}
+          ListHeaderComponent={<EnTete />}
+          ListEmptyComponent={<Text style={styles.vide}>Aucune activité enregistrée</Text>}
+        />
+      )}
     </View>
   );
 };

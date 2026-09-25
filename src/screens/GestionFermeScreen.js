@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
 
@@ -387,32 +387,40 @@ const GestionFermeScreen = ({ token, projetActifId }) => {
       {chargement ? (
         <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
-        <ScrollView style={styles.conteneur}>
-          <View style={styles.carteNoire}>
-            <Text style={styles.carteNoireLabelSeul}>Total dépensé (ferme)</Text>
-            <Text style={styles.carteNoireMontant}>{formatMontant(totalReel)}</Text>
-            <View style={[styles.ligneEntre, { marginTop: 8 }]}>
-              <Text style={styles.carteNoireLabel}>Prévu : {formatMontant(totalPrevu)}</Text>
-              <Text style={[styles.carteNoireLabel, { color: ecart > 0 ? '#F87171' : '#4ADE80' }]}>Écart : {ecart > 0 ? '+' : ''}{formatMontant(ecart)}</Text>
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={depensesFiltrees}
+          keyExtractor={(depense) => String(depense.id)}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.carteNoire}>
+                <Text style={styles.carteNoireLabelSeul}>Total dépensé (ferme)</Text>
+                <Text style={styles.carteNoireMontant}>{formatMontant(totalReel)}</Text>
+                <View style={[styles.ligneEntre, { marginTop: 8 }]}>
+                  <Text style={styles.carteNoireLabel}>Prévu : {formatMontant(totalPrevu)}</Text>
+                  <Text style={[styles.carteNoireLabel, { color: ecart > 0 ? '#F87171' : '#4ADE80' }]}>Écart : {ecart > 0 ? '+' : ''}{formatMontant(ecart)}</Text>
+                </View>
+              </View>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+                {categories.map(cat => (
+                  <TouchableOpacity key={cat} onPress={() => setFiltreCategorie(cat)} style={[styles.chip, filtreCategorie === cat && styles.chipActif]}>
+                    <Text style={[styles.chipTexte, filtreCategorie === cat && styles.chipTexteActif]}>{cat}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <Text style={styles.compteur}>{depensesFiltrees.length} dépense{depensesFiltrees.length > 1 ? 's' : ''}</Text>
             </View>
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-            {categories.map(cat => (
-              <TouchableOpacity key={cat} onPress={() => setFiltreCategorie(cat)} style={[styles.chip, filtreCategorie === cat && styles.chipActif]}>
-                <Text style={[styles.chipTexte, filtreCategorie === cat && styles.chipTexteActif]}>{cat}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <Text style={styles.compteur}>{depensesFiltrees.length} dépense{depensesFiltrees.length > 1 ? 's' : ''}</Text>
-
-          {depensesFiltrees.length === 0 ? <Text style={styles.vide}>Aucune dépense de ferme pour l'instant</Text> : depensesFiltrees.map(depense => {
+          }
+          ListEmptyComponent={<Text style={styles.vide}>Aucune dépense de ferme pour l'instant</Text>}
+          renderItem={({ item: depense }) => {
             const badge = getStatutBadge(depense.statut);
             const ecartLigne = (parseFloat(depense.montant_reel) || 0) - parseFloat(depense.montant_prevu || 0);
             const avancement = depense.avancement_pourcentage || 0;
             return (
-              <View key={depense.id} style={styles.carte}>
+              <View style={styles.carte}>
                 <View style={styles.ligneEntre}>
                   <Text style={styles.carteTitre}>{depense.libelle}</Text>
                   <View style={{ flexDirection: 'row', gap: 4 }}>
@@ -440,9 +448,8 @@ const GestionFermeScreen = ({ token, projetActifId }) => {
                 </View>
               </View>
             );
-          })}
-          <View style={{ height: 40 }} />
-        </ScrollView>
+          }}
+        />
       )}
     </View>
   );

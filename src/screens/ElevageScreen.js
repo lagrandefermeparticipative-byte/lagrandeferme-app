@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useCache } from '../context/CacheContext';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
 
@@ -206,26 +206,34 @@ const ElevageScreen = ({ token, projetActifId }) => {
     return (
       <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
         <Header titre={`Historique · ${lotSelectionne.nom}`} />
-        <ScrollView style={styles.conteneur}>
-          <View style={styles.carteNoire}>
-            <Text style={styles.carteNoireLabel}>Total morts</Text>
-            <Text style={styles.carteNoireMontant}>{lotSelectionne.total_morts || 0}</Text>
-            <Text style={styles.carteNoireSousLabel}>Taux survie : {lotSelectionne.taux_survie || 100}% · {parseInt(lotSelectionne.vivants || lotSelectionne.quantite_initiale)} vivants</Text>
-          </View>
-          {mortalites.length === 0 ? <Text style={styles.vide}>Aucune mortalité enregistrée</Text> : mortalites.map(m => (
-            <View style={styles.carte} key={m.id}>
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={mortalites}
+          keyExtractor={(m) => String(m.id)}
+          ListHeaderComponent={
+            <View style={styles.carteNoire}>
+              <Text style={styles.carteNoireLabel}>Total morts</Text>
+              <Text style={styles.carteNoireMontant}>{lotSelectionne.total_morts || 0}</Text>
+              <Text style={styles.carteNoireSousLabel}>Taux survie : {lotSelectionne.taux_survie || 100}% · {parseInt(lotSelectionne.vivants || lotSelectionne.quantite_initiale)} vivants</Text>
+            </View>
+          }
+          ListEmptyComponent={<Text style={styles.vide}>Aucune mortalité enregistrée</Text>}
+          renderItem={({ item: m }) => (
+            <View style={styles.carte}>
               <View style={styles.ligneEntre}>
                 <Text style={styles.mortTitre}>-{m.nombre} mort{m.nombre > 1 ? 's' : ''}</Text>
                 <Text style={styles.carteSousTexte}>{new Date(m.date_mortalite).toLocaleDateString('fr-FR')}</Text>
               </View>
               <Text style={styles.carteSousTexte}>Cause : {m.cause}</Text>
             </View>
-          ))}
-          <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
-            <Text style={styles.boutonSecondaireTexte}>← Retour</Text>
-          </TouchableOpacity>
-          <View style={{ height: 40 }} />
-        </ScrollView>
+          )}
+          ListFooterComponent={
+            <TouchableOpacity style={styles.boutonSecondaire} onPress={() => setVue('liste')}>
+              <Text style={styles.boutonSecondaireTexte}>← Retour</Text>
+            </TouchableOpacity>
+          }
+        />
       </View>
     );
   }
@@ -522,40 +530,48 @@ const ElevageScreen = ({ token, projetActifId }) => {
       {chargement ? (
         <View style={styles.centre}><ActivityIndicator size="large" color="#1D1D1F" /></View>
       ) : (
-        <ScrollView style={styles.conteneur}>
-          <View style={{ marginTop: 8, marginBottom: 16 }}>
-            <View style={styles.ligneEntre}>
-              <Text style={styles.progressLabel}>Objectif {objectif} sujets</Text>
-              <Text style={styles.progressLabel}>{totalRecus} reçus · {progression}%</Text>
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          data={lots}
+          keyExtractor={(lot) => String(lot.id)}
+          ListHeaderComponent={
+            <View>
+              <View style={{ marginTop: 8, marginBottom: 16 }}>
+                <View style={styles.ligneEntre}>
+                  <Text style={styles.progressLabel}>Objectif {objectif} sujets</Text>
+                  <Text style={styles.progressLabel}>{totalRecus} reçus · {progression}%</Text>
+                </View>
+                <View style={styles.progressFond}>
+                  <View style={[styles.progressBarre, { width: `${Math.min(progression, 100)}%` }]} />
+                </View>
+              </View>
+
+              <View style={styles.grille3}>
+                <View style={styles.stat}><Text style={styles.statChiffre}>{totalRecus}</Text><Text style={styles.statLabel}>Reçus</Text></View>
+                <View style={styles.stat}><Text style={[styles.statChiffre, { color: '#DC2626' }]}>{totalMorts}</Text><Text style={styles.statLabel}>Morts</Text></View>
+                <View style={styles.stat}><Text style={styles.statChiffre}>{totalVivants}</Text><Text style={styles.statLabel}>Vivants</Text></View>
+                <View style={styles.stat}><Text style={[styles.statChiffre, { color: tauxSurvie >= 90 ? '#059669' : '#EA580C' }]}>{tauxSurvie}%</Text><Text style={styles.statLabel}>Survie</Text></View>
+              </View>
+
+              {projetEntierementVendu && (
+                <View style={styles.bandeauViolet}>
+                  <Text style={styles.bandeauVioletTexte}>🎉 Tous les sujets de ce projet ont été vendus.</Text>
+                </View>
+              )}
+
+              <Text style={styles.sectionTitre}>{lots.length} lot{lots.length > 1 ? 's' : ''} actif{lots.length > 1 ? 's' : ''}</Text>
             </View>
-            <View style={styles.progressFond}>
-              <View style={[styles.progressBarre, { width: `${Math.min(progression, 100)}%` }]} />
-            </View>
-          </View>
-
-          <View style={styles.grille3}>
-            <View style={styles.stat}><Text style={styles.statChiffre}>{totalRecus}</Text><Text style={styles.statLabel}>Reçus</Text></View>
-            <View style={styles.stat}><Text style={[styles.statChiffre, { color: '#DC2626' }]}>{totalMorts}</Text><Text style={styles.statLabel}>Morts</Text></View>
-            <View style={styles.stat}><Text style={styles.statChiffre}>{totalVivants}</Text><Text style={styles.statLabel}>Vivants</Text></View>
-            <View style={styles.stat}><Text style={[styles.statChiffre, { color: tauxSurvie >= 90 ? '#059669' : '#EA580C' }]}>{tauxSurvie}%</Text><Text style={styles.statLabel}>Survie</Text></View>
-          </View>
-
-          {projetEntierementVendu && (
-            <View style={styles.bandeauViolet}>
-              <Text style={styles.bandeauVioletTexte}>🎉 Tous les sujets de ce projet ont été vendus.</Text>
-            </View>
-          )}
-
-          <Text style={styles.sectionTitre}>{lots.length} lot{lots.length > 1 ? 's' : ''} actif{lots.length > 1 ? 's' : ''}</Text>
-
-          {lots.length === 0 ? (
+          }
+          ListEmptyComponent={
             <View style={styles.videCarte}>
               <Text style={styles.vide}>Aucun lot enregistré</Text>
               <TouchableOpacity style={styles.boutonPrincipal} onPress={() => setVue('nouveau')}>
                 <Text style={styles.boutonPrincipalTexte}>Ajouter un lot</Text>
               </TouchableOpacity>
             </View>
-          ) : lots.map(lot => {
+          }
+          renderItem={({ item: lot }) => {
             const vivants = parseInt(lot.vivants || lot.quantite_initiale);
             const morts = parseInt(lot.total_morts || 0);
             const vendus = parseInt(lot.total_vendus || 0);
@@ -640,9 +656,8 @@ const ElevageScreen = ({ token, projetActifId }) => {
                 )}
               </View>
             );
-          })}
-          <View style={{ height: 40 }} />
-        </ScrollView>
+          }}
+        />
       )}
     </View>
   );
