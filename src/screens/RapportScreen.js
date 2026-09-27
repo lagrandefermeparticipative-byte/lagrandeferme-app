@@ -45,6 +45,13 @@ const RapportScreen = ({ token, projetActifId }) => {
   const [uploadEnCours, setUploadEnCours] = useState(false);
   const [periodeJournal, setPeriodeJournal] = useState('semaine');
   const [observations, setObservations] = useState('');
+  // Réconciliation obligatoire de l'effectif (rôle stagiaire notamment) :
+  // comptage physique déclaré au moment du rapport, comparé côté serveur à
+  // l'effectif théorique du système. Un écart n'empêche jamais l'envoi mais
+  // exige une explication.
+  const [effectifConstate, setEffectifConstate] = useState('');
+  const [explicationEcart, setExplicationEcart] = useState('');
+  const ecartEstime = effectifConstate !== '' ? parseInt(effectifConstate) - effectifTotal : 0;
 
   const depensesFiltrees = (() => {
     const limite = new Date();
@@ -143,15 +150,25 @@ const RapportScreen = ({ token, projetActifId }) => {
   const supprimerPhoto = (url) => setPhotos(prev => prev.filter(p => p !== url));
 
   const soumettreRapport = async () => {
-    setEnvoi(true); setErreur('');
+    setErreur('');
+    if (effectifConstate === '') {
+      setErreur("Indique l'effectif compté physiquement aujourd'hui avant de soumettre le rapport.");
+      return;
+    }
+    if (ecartEstime !== 0 && !explicationEcart.trim()) {
+      setErreur("Un écart d'effectif est détecté par rapport au système : explique-le avant de soumettre.");
+      return;
+    }
+    setEnvoi(true);
     try {
       await api.post('/rapports', {
         observations, journal_activites: genererJournalTexte(), projet_id: projetActifId, semaine,
         effectif_debut: effectifTotal, morts_semaine: parseInt(mortaliteForm.nombre) || 0, cause_mortalite: mortaliteForm.cause,
         date_rapport: new Date().toISOString().split('T')[0], lots: lotsRapport, photos,
+        effectif_constate: parseInt(effectifConstate), explication_ecart: explicationEcart.trim() || undefined,
       }, { headers });
       setSucces(true);
-    } catch (error) { setErreur('Erreur lors de la soumission. Réessayez.'); }
+    } catch (error) { setErreur(error.response?.data?.message || 'Erreur lors de la soumission. Réessayez.'); }
     finally { setEnvoi(false); }
   };
 
@@ -161,7 +178,7 @@ const RapportScreen = ({ token, projetActifId }) => {
         <Text style={{ fontSize: 40, marginBottom: 12 }}>✅</Text>
         <Text style={styles.succesTitre}>Rapport S{semaine} soumis</Text>
         <Text style={styles.succesTexte}>Le gestionnaire va le relire avant diffusion.</Text>
-        <TouchableOpacity style={styles.boutonPrincipal} onPress={() => { setSucces(false); setEtape('cheptel'); setMortaliteEnvoyee(false); setPhotos([]); setObservations(''); chargerLots(); }}>
+        <TouchableOpacity style={styles.boutonPrincipal} onPress={() => { setSucces(false); setEtape('cheptel'); setMortaliteEnvoyee(false); setPhotos([]); setObservations(''); setEffectifConstate(''); setExplicationEcart(''); chargerLots(); }}>
           <Text style={styles.boutonPrincipalTexte}>Nouveau rapport</Text>
         </TouchableOpacity>
       </View>
@@ -297,6 +314,19 @@ const RapportScreen = ({ token, projetActifId }) => {
                 <TextInput style={[styles.champ, { height: 70 }]} multiline placeholder="Tout autre point à signaler..." value={observations} onChangeText={setObservations} />
               </View>
 
+              <View style={styles.carte}>
+                <Text style={styles.carteTitre}>Effectif compté physiquement aujourd'hui</Text>
+                <Text style={styles.carteSousTexte}>Recompte réellement le cheptel avant de saisir ce chiffre — c'est ce qui permet de détecter un écart avec le système.</Text>
+                <TextInput style={styles.champ} keyboardType="numeric" value={effectifConstate} onChangeText={setEffectifConstate} placeholder={`Système : ${effectifTotal}`} />
+                {effectifConstate !== '' && ecartEstime !== 0 && (
+                  <View style={styles.encartRouge}>
+                    <Text style={styles.encartRougeTitre}>⚠️ Écart d'effectif constaté : {ecartEstime > 0 ? '+' : ''}{ecartEstime} par rapport au système ({effectifTotal})</Text>
+                    <Text style={styles.label}>Explique l'écart (obligatoire)</Text>
+                    <TextInput style={[styles.champ, { height: 60 }]} multiline placeholder="Ex : 3 sujets volés non encore déclarés, erreur de comptage précédente..." value={explicationEcart} onChangeText={setExplicationEcart} />
+                  </View>
+                )}
+              </View>
+
               {erreur !== '' && <Text style={styles.erreurTexte}>{erreur}</Text>}
               <TouchableOpacity style={styles.boutonPrincipal} onPress={soumettreRapport} disabled={envoi}>
                 <Text style={styles.boutonPrincipalTexte}>{envoi ? 'Envoi en cours...' : `Soumettre le rapport S${semaine}`}</Text>
@@ -337,6 +367,8 @@ const styles = StyleSheet.create({
   chipMini: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, backgroundColor: '#F3F4F6', marginRight: 4 },
   chipMiniTexte: { fontSize: 10, color: '#6E6E73' },
   infoBleu: { fontSize: 11, color: '#1D4ED8', backgroundColor: '#EFF6FF', padding: 8, borderRadius: 8, marginTop: 8 },
+  encartRouge: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', borderRadius: 10, padding: 10, marginTop: 10 },
+  encartRougeTitre: { color: '#B91C1C', fontSize: 11, fontWeight: '600' },
   erreurTexte: { color: '#DC2626', fontSize: 13, marginTop: 8, marginBottom: 8 },
   boutonPrincipal: { backgroundColor: '#1D1D1F', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
   boutonPrincipalTexte: { color: '#fff', fontSize: 14, fontWeight: '600' },

@@ -5,6 +5,7 @@ import DashboardTechnicienScreen from './DashboardTechnicienScreen';
 import VenteTechnicienScreen from './VenteTechnicienScreen';
 import InvestisseurDashboardScreen from './InvestisseurDashboardScreen';
 import InvestissementScreen from './InvestissementScreen';
+import MonParcoursScreen from './MonParcoursScreen';
 import { useAuth } from '../context/AuthContext';
 import { useProjet } from '../context/ProjetContext';
 import { useNavigationProjets } from '../context/NavigationProjetsContext';
@@ -47,6 +48,13 @@ const AccueilRouteur = (props) => {
     }
     setProjetChoisiGlobal(modeGestion ? true : projetChoisi);
   }, [projetChoisi, modeInvestisseur, modeTechnicien, modeGestion]);
+
+  // Stagiaire : écran d'accueil dédié ("Mon parcours"), équivalent du
+  // RedirectByRole web qui l'envoie vers /mon-parcours. Aucun switch de mode
+  // ni de projet — un stagiaire est rattaché à un seul projet/technicien.
+  if (role === 'stagiaire') {
+    return <MonParcoursScreen token={token} />;
+  }
 
   if (modeInvestisseur) {
     if (!projetChoisi) return <InvestisseurDashboardScreen token={token} onChoisir={() => setProjetChoisi(true)} />;

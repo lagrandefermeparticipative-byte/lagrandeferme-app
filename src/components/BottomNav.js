@@ -33,6 +33,15 @@ const menuInvestisseur = (projetChoisi) => [
   { nom: 'Profil', icone: '👤', label: 'Profil' },
 ];
 
+// Rôle stagiaire : accès restreint à son parcours, au rapport hebdo et à son
+// profil — jamais aux écrans financiers/gestion, même logique de
+// restriction qu'un investisseur ou un technicien pur.
+const menuStagiaire = [
+  { nom: 'Accueil', icone: '🌱', label: 'Parcours' },
+  { nom: 'Rapport', icone: '📝', label: 'Rapport' },
+  { nom: 'Profil', icone: '👤', label: 'Profil' },
+];
+
 const BottomNav = () => {
   const navigation = useNavigation();
   const { utilisateur, modeVue } = useAuth();
@@ -67,6 +76,7 @@ const BottomNav = () => {
       return modeVue === 'investisseur' ? menuInvestisseur(projetChoisi) : menuTechnicien(projetChoisi);
     }
     if (utilisateur?.role === 'technicien') return menuTechnicien(projetChoisi);
+    if (utilisateur?.role === 'stagiaire') return menuStagiaire;
     return menuInvestisseur(projetChoisi);
   };
 

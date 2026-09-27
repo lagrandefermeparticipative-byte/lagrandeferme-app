@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 const getRoleLabel = (role) => ({
   gestionnaire: 'Gestionnaire', gestion_invest: 'Gestionnaire · Investisseur',
   technicien: 'Technicien', tech_invest: 'Technicien · Investisseur', investisseur: 'Investisseur',
+  stagiaire: 'Stagiaire',
 }[role] || role);
 
 const ProfilScreen = ({ utilisateur, token, onDeconnecter }) => {

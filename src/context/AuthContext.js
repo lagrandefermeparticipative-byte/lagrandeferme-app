@@ -71,8 +71,20 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.setItem('modeVue', mode);
   };
 
+  // Met à jour l'utilisateur en mémoire ET dans AsyncStorage — utile après un
+  // changement qui doit être visible immédiatement sans reconnexion (ex: fin
+  // de l'onboarding stagiaire, qui doit débloquer l'accès au reste de l'app
+  // tout de suite).
+  const mettreAJourUtilisateur = async (champs) => {
+    setUtilisateur((prev) => {
+      const maj = { ...prev, ...champs };
+      AsyncStorage.setItem('utilisateur', JSON.stringify(maj)).catch(() => {});
+      return maj;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ utilisateur, token, login, logout, loading, modeVue, switchMode }}>
+    <AuthContext.Provider value={{ utilisateur, token, login, logout, loading, modeVue, switchMode, mettreAJourUtilisateur }}>
       {children}
     </AuthContext.Provider>
   );

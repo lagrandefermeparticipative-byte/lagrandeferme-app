@@ -41,6 +41,7 @@ import GestionUtilisateursScreen from './src/screens/GestionUtilisateursScreen';
 import ApercuFermeScreen from './src/screens/ApercuFermeScreen';
 import ApercuFermeProjetScreen from './src/screens/ApercuFermeProjetScreen';
 import GestionAccesScreen from './src/screens/GestionAccesScreen';
+import OnboardingStagiaireScreen from './src/screens/OnboardingStagiaireScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -137,6 +138,15 @@ const Racine = () => {
 
   if (loading) return null;
   if (!utilisateur) return <LoginScreen />;
+
+  // Onboarding bloquant pour tout stagiaire dont le consentement RGPD et le
+  // questionnaire ne sont pas encore complétés — équivalent mobile du
+  // ProtectedRoute web qui redirige vers /onboarding-stagiaire tant que
+  // onboarding_complete est false. Rendu hors de la navigation normale
+  // (pas de BottomNav) puisqu'il n'y a rien d'autre à faire avant.
+  if (utilisateur.role === 'stagiaire' && utilisateur.onboarding_complete === false) {
+    return <OnboardingStagiaireScreen />;
+  }
 
   return (
     <ConnexionProvider>
