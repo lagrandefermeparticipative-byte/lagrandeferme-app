@@ -16,7 +16,7 @@ import { useNavigationProjets } from '../context/NavigationProjetsContext';
 // tableau de bord qu'un investisseur pur ou qu'un tech_invest en mode
 // investisseur.
 const AccueilRouteur = (props) => {
-  const { utilisateur, modeVue, token } = useAuth();
+  const { utilisateur, modeVue, token, vueInvestisseurCapacite } = useAuth();
   const { projets, chargement, projetActifId } = useProjet();
   const [projetChoisi, setProjetChoisi] = useState(false);
   const [vueTechnicien, setVueTechnicien] = useState('dashboard'); // 'dashboard' | 'liste' | 'vente'
@@ -31,14 +31,21 @@ const AccueilRouteur = (props) => {
   // Vrai uniquement quand le mode affiché est "investisseur" — que ce soit
   // parce que le compte n'a que ce rôle, ou parce qu'un compte cumulé a
   // basculé dessus via le switch.
-  const modeInvestisseur = estInvestisseurPur || (estGestionInvest && modeVue === 'investisseur') || (estTechInvest && modeVue === 'investisseur');
+  // Capacité composable "est_investisseur" — greffée sur un rôle qui n'a pas
+  // déjà un accès investisseur de base (investisseur/tech_invest/gestion_invest
+  // gèrent déjà leur propre bascule ci-dessus). Bascule indépendante,
+  // pilotée par le switch de BottomNav, jamais mélangée à modeVue.
+  const aCapaciteInvestisseur = utilisateur?.est_investisseur === true && !['investisseur', 'tech_invest', 'gestion_invest'].includes(role);
+  const modeCapaciteInvestisseur = aCapaciteInvestisseur && vueInvestisseurCapacite;
+
+  const modeInvestisseur = estInvestisseurPur || (estGestionInvest && modeVue === 'investisseur') || (estTechInvest && modeVue === 'investisseur') || modeCapaciteInvestisseur;
   const modeTechnicien = estTechInvest && modeVue !== 'investisseur';
   const modeGestion = estGestionnairePur || (estGestionInvest && modeVue !== 'investisseur');
 
   useEffect(() => {
     if (!estGestionnairePur) setProjetChoisi(false);
     setVueTechnicien('dashboard');
-  }, [modeVue]);
+  }, [modeVue, vueInvestisseurCapacite]);
 
   useEffect(() => {
     if ((modeInvestisseur || modeTechnicien) && projetChoisi) {
@@ -52,7 +59,7 @@ const AccueilRouteur = (props) => {
   // Stagiaire : écran d'accueil dédié ("Mon parcours"), équivalent du
   // RedirectByRole web qui l'envoie vers /mon-parcours. Aucun switch de mode
   // ni de projet — un stagiaire est rattaché à un seul projet/technicien.
-  if (role === 'stagiaire') {
+  if (role === 'stagiaire' && !modeCapaciteInvestisseur) {
     return <MonParcoursScreen token={token} />;
   }
 

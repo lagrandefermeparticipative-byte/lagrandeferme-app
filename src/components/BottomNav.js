@@ -44,7 +44,7 @@ const menuStagiaire = [
 
 const BottomNav = () => {
   const navigation = useNavigation();
-  const { utilisateur, modeVue } = useAuth();
+  const { utilisateur, modeVue, vueInvestisseurCapacite, switchVueInvestisseurCapacite } = useAuth();
   const { espaceActif, switchEspace, setAnimationDirection, vueApercuFerme, setVueApercuFerme } = useEspace();
     const { projetChoisi } = useNavigationProjets();
   const routeActuelle = useNavigationState(state => state?.routes[state.index]?.name);
@@ -87,9 +87,18 @@ const BottomNav = () => {
   // espace à part (comme le switch Gestion/Investisseur), jamais un item de
   // plus mélangé dans le menu habituel de la personne.
   const aCapaciteApercuFerme = utilisateur?.apercu_ferme_actif && !['gestionnaire', 'gestion_invest'].includes(utilisateur?.role);
+  // Capacité composable "est_investisseur" — greffée sur n'importe quel rôle
+  // qui n'a pas déjà un accès investisseur de base (investisseur, tech_invest,
+  // gestion_invest ont déjà leur propre switch/écran dédié).
+  const aCapaciteInvestisseur = utilisateur?.est_investisseur === true && !['investisseur', 'tech_invest', 'gestion_invest'].includes(utilisateur?.role);
   const menuBase = getMenu();
   const menuApercuFerme = [{ nom: 'ApercuFerme', icone: '🔍', label: 'Aperçu ferme' }, { nom: 'Profil', icone: '👤', label: 'Profil' }];
-  const menu = (aCapaciteApercuFerme && vueApercuFerme) ? menuApercuFerme : menuBase;
+  const menuCapaciteInvestisseur = menuInvestisseur(projetChoisi);
+  const menu = (aCapaciteApercuFerme && vueApercuFerme)
+    ? menuApercuFerme
+    : (aCapaciteInvestisseur && vueInvestisseurCapacite)
+      ? menuCapaciteInvestisseur
+      : menuBase;
   const LARGEUR_TOTALE = 320; // largeur totale du sélecteur (ajustable selon ton écran)
   const PADDING = 4;
   const largeurBouton = (LARGEUR_TOTALE - PADDING * 2) / 2;
@@ -136,6 +145,22 @@ const BottomNav = () => {
             style={[styles.espaceBouton, vueApercuFerme && styles.espaceBoutonActifFond]}
           >
             <Text style={[styles.espaceTexte, vueApercuFerme && styles.espaceTexteActif]}>Aperçu ferme</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      {aCapaciteInvestisseur && (
+        <View style={[styles.espaceSwitch, { width: LARGEUR_TOTALE, alignSelf: 'center' }]}>
+          <TouchableOpacity
+            onPress={() => { switchVueInvestisseurCapacite(false); navigation.navigate(menuBase[0].nom); }}
+            style={[styles.espaceBouton, !vueInvestisseurCapacite && styles.espaceBoutonActifFond]}
+          >
+            <Text style={[styles.espaceTexte, !vueInvestisseurCapacite && styles.espaceTexteActif]}>Mon espace</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => { switchVueInvestisseurCapacite(true); navigation.navigate('Accueil'); }}
+            style={[styles.espaceBouton, vueInvestisseurCapacite && styles.espaceBoutonActifFond]}
+          >
+            <Text style={[styles.espaceTexte, vueInvestisseurCapacite && styles.espaceTexteActif]}>Investisseur</Text>
           </TouchableOpacity>
         </View>
       )}

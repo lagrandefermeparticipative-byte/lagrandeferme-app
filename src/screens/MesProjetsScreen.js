@@ -30,7 +30,7 @@ const MesProjetsScreen = ({ onChoisir }) => {
   const [lignesInvest, setLignesInvest] = useState(null);
   const [detailsOuverts, setDetailsOuverts] = useState(false);
 
-  const estInvestisseur = utilisateur?.role === 'investisseur' || utilisateur?.role === 'tech_invest';
+  const estInvestisseur = utilisateur?.role === 'investisseur' || utilisateur?.role === 'tech_invest' || utilisateur?.est_investisseur === true;
 
   useEffect(() => {
     if (estInvestisseur && projets.length > 1 && token) {

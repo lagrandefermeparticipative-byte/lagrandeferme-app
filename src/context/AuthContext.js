@@ -10,6 +10,12 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modeVue, setModeVue] = useState('gestion');
+  // Capacité composable "est_investisseur" — indépendante du rôle de base et
+  // des rôles cumulés existants (tech_invest/gestion_invest, gérés via
+  // modeVue ci-dessus). Un stagiaire/technicien/gestionnaire peut en plus
+  // avoir cette casquette ; ce booléen ne fait que basculer l'affichage,
+  // jamais mélangé à modeVue.
+  const [vueInvestisseurCapacite, setVueInvestisseurCapaciteState] = useState(false);
 
   useEffect(() => {
     const restaurerSession = async () => {
@@ -17,12 +23,14 @@ export const AuthProvider = ({ children }) => {
         const t = await SecureStore.getItemAsync('token');
         const u = await AsyncStorage.getItem('utilisateur');
         const m = await AsyncStorage.getItem('modeVue');
+        const vic = await AsyncStorage.getItem('vueInvestisseurCapacite');
         if (t && u) {
           const user = JSON.parse(u);
           setToken(t);
           setUtilisateur(user);
           if (user.role === 'tech_invest') setModeVue(m || 'technicien');
           else if (user.role === 'gestion_invest') setModeVue(m || 'gestion');
+          setVueInvestisseurCapaciteState(vic === '1');
 
           // Rafraîchit en arrière-plan depuis le serveur — sans ça, un droit
           // accordé après coup (ex: capacité "Aperçu ferme") ne serait
@@ -53,6 +61,8 @@ export const AuthProvider = ({ children }) => {
     setUtilisateur(u);
     if (u.role === 'tech_invest') setModeVue('technicien');
     else if (u.role === 'gestion_invest') setModeVue('gestion');
+    setVueInvestisseurCapaciteState(false);
+    await AsyncStorage.setItem('vueInvestisseurCapacite', '0');
     return u;
   };
 
@@ -61,14 +71,22 @@ export const AuthProvider = ({ children }) => {
     // On nettoie aussi les réglages propres à un compte (mode de vue, espace
     // actif, projet actif) — sans ça, ils restent en mémoire et s'appliquent
     // à tort à la personne suivante qui se connecte sur ce même appareil.
-    await AsyncStorage.multiRemove(['utilisateur', 'modeVue', 'espaceActif', 'projet_actif_id']);
+    await AsyncStorage.multiRemove(['utilisateur', 'modeVue', 'espaceActif', 'projet_actif_id', 'vueInvestisseurCapacite']);
     setUtilisateur(null);
     setToken(null);
+    setVueInvestisseurCapaciteState(false);
   };
 
   const switchMode = async (mode) => {
     setModeVue(mode);
     await AsyncStorage.setItem('modeVue', mode);
+  };
+
+  // Bascule dédiée à la capacité "est_investisseur" — un vrai espace à part,
+  // jamais mélangé au modeVue des rôles cumulés (tech_invest/gestion_invest).
+  const switchVueInvestisseurCapacite = async (valeur) => {
+    setVueInvestisseurCapaciteState(valeur);
+    await AsyncStorage.setItem('vueInvestisseurCapacite', valeur ? '1' : '0');
   };
 
   // Met à jour l'utilisateur en mémoire ET dans AsyncStorage — utile après un
@@ -84,7 +102,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ utilisateur, token, login, logout, loading, modeVue, switchMode, mettreAJourUtilisateur }}>
+    <AuthContext.Provider value={{ utilisateur, token, login, logout, loading, modeVue, switchMode, mettreAJourUtilisateur, vueInvestisseurCapacite, switchVueInvestisseurCapacite }}>
       {children}
     </AuthContext.Provider>
   );
