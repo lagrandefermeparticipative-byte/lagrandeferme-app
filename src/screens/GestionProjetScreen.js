@@ -5,6 +5,7 @@ import api from '../services/api';
 import { creerInvestisseurSchema, creerDepenseSchema } from '@lagrandeferme/schemas';
 import { formaterErreursZod } from '@lagrandeferme/schemas/erreurs';
 import Header from '../components/Header';
+import confirmerMouvementCaisse from '../services/confirmerMouvementCaisse';
 import { useCache } from '../context/CacheContext';
 import { useProjet } from '../context/ProjetContext';
 
@@ -78,7 +79,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
       const deps = depensesRes.data;
       setDepenses(deps);
       const init = {};
-      deps.forEach(d => { init[d.id] = { montant_reel: String(d.montant_reel || ''), date_depense: d.date_depense ? d.date_depense.split('T')[0] : '', statut: d.statut || 'planifiee' }; });
+      deps.forEach(d => { init[d.id] = { date_depense: d.date_depense ? d.date_depense.split('T')[0] : '', statut: d.statut || 'planifiee' }; });
       setSaisiesRapides(init);
     } catch (error) { console.log('Erreur GestionProjet:', error.message); }
     finally { setChargement(false); }
@@ -91,10 +92,15 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   const sauvegarderSaisieRapide = async (depense) => {
     const saisie = saisiesRapides[depense.id];
     if (!saisie) return;
+    if (!(await confirmerMouvementCaisse(depense, saisie.statut, depense.montant_prevu, formatMontant))) return;
     try {
-      await api.put(`/depenses/${depense.uuid_id || depense.id}`, { montant_reel: parseFloat(saisie.montant_reel) || 0, date_depense: saisie.date_depense || null, statut: saisie.statut }, { headers });
+      // Le réel ne bouge plus que via Payer ou le statut (Payée / Annulée).
+      await api.put(`/depenses/${depense.uuid_id || depense.id}`, { date_depense: saisie.date_depense || undefined, statut: saisie.statut }, { headers });
       chargerDonnees();
-    } catch (error) { console.log('Erreur sauvegarde:', error.message); }
+    } catch (error) {
+      console.log('Erreur sauvegarde:', error.message);
+      Alert.alert('Erreur', error.response?.data?.message || 'Erreur lors de la sauvegarde.');
+    }
   };
 
   const choisirEtUploaderFacture = async (depense) => {
@@ -322,10 +328,8 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <View style={{ flex: 1 }}><Text style={styles.label}>Montant prévu (F)</Text><TextInput style={styles.champ} keyboardType="numeric" value={newDepenseForm.montant_prevu} onChangeText={v => setNewDepenseForm({ ...newDepenseForm, montant_prevu: v })} /></View>
-              <View style={{ flex: 1 }}><Text style={styles.label}>Montant réel (F)</Text><TextInput style={styles.champ} keyboardType="numeric" value={newDepenseForm.montant_reel} onChangeText={v => setNewDepenseForm({ ...newDepenseForm, montant_reel: v })} /></View>
-            </View>
+            <Text style={styles.label}>Montant prévu (F)</Text>
+            <TextInput style={styles.champ} keyboardType="numeric" value={newDepenseForm.montant_prevu} onChangeText={v => setNewDepenseForm({ ...newDepenseForm, montant_prevu: v })} />
             <Text style={styles.label}>Statut</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {['planifiee', 'engagee', 'payee', 'annulee'].map(s => (
@@ -635,7 +639,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
   const renderDepenseBudget = (depense) => {
     const saisie = saisiesRapides[depense.id] || {};
     const badge = getStatutBadge(saisie.statut || depense.statut);
-    const montantReel = parseFloat(saisie.montant_reel) || 0;
+    const montantReel = parseFloat(depense.montant_reel) || 0;
     const ecart = montantReel - parseFloat(depense.montant_prevu || 0);
     return (
       <View style={styles.carte}>
@@ -649,7 +653,7 @@ const GestionProjetScreen = ({ token, projetId, onRetour }) => {
         </View>
         <View style={styles.saisieRapideBloc}>
           <View style={{ flexDirection: 'row', gap: 6 }}>
-            <View style={{ flex: 1 }}><Text style={styles.miniLabel}>Montant réel (F)</Text><TextInput style={styles.champPetit} keyboardType="numeric" value={saisie.montant_reel} onChangeText={v => handleSaisieRapide(depense.id, 'montant_reel', v)} /></View>
+            <View style={{ flex: 1 }}><Text style={styles.miniLabel}>Montant réel</Text><Text style={styles.champPetit}>{formatMontant(montantReel)}</Text></View>
             <View style={{ flex: 1 }}><Text style={styles.miniLabel}>Date</Text><TextInput style={styles.champPetit} placeholder="AAAA-MM-JJ" value={saisie.date_depense} onChangeText={v => handleSaisieRapide(depense.id, 'date_depense', v)} /></View>
           </View>
           <Text style={styles.miniLabel}>Statut</Text>

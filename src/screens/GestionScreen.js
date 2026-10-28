@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
+import confirmerMouvementCaisse from '../services/confirmerMouvementCaisse';
 
 const formatMontant = (m) => new Intl.NumberFormat('fr-FR').format(Math.round(m || 0)) + ' F';
 
@@ -91,9 +92,11 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
   };
 
   const enregistrerModification = async () => {
+    if (!(await confirmerMouvementCaisse(depenseSelectionnee, form.statut, form.montant_prevu, formatMontant))) return;
     setEnvoi(true); setErreur('');
     try {
-      await api.put(`/depenses/${depenseSelectionnee.uuid_id || depenseSelectionnee.id}`, { ...form, type_depense: 'projet' }, { headers });
+      // Le réel ne bouge plus que via Payer ou le statut (Payée / Annulée).
+      await api.put(`/depenses/${depenseSelectionnee.uuid_id || depenseSelectionnee.id}`, { ...form, montant_reel: undefined, type_depense: 'projet' }, { headers });
       setVue('liste'); charger();
     } catch (error) { setErreur(error.response?.data?.message || 'Erreur.'); }
     finally { setEnvoi(false); }
@@ -249,8 +252,6 @@ const GestionScreen = ({ token, projetActifId, projetNom }) => {
             <TextInput style={styles.champ} placeholder="AAAA-MM-JJ" value={form.date_depense} onChangeText={v => setForm({ ...form, date_depense: v })} />
             <Text style={styles.label}>Montant prévu (F)</Text>
             <TextInput style={styles.champ} keyboardType="numeric" value={String(form.montant_prevu)} onChangeText={v => setForm({ ...form, montant_prevu: v })} />
-            <Text style={styles.label}>Montant réel (F)</Text>
-            <TextInput style={styles.champ} keyboardType="numeric" value={String(form.montant_reel)} onChangeText={v => setForm({ ...form, montant_reel: v })} />
             <Text style={styles.label}>Statut</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {Object.keys(STATUTS).map(s => (

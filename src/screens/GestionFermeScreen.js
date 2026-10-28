@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import api from '../services/api';
 import Header from '../components/Header';
+import confirmerMouvementCaisse from '../services/confirmerMouvementCaisse';
 
 const formatMontant = (m) => new Intl.NumberFormat('fr-FR').format(Math.round(m || 0)) + ' F';
 
@@ -23,7 +24,7 @@ const VueDevis = ({ token, depense, onBack }) => {
 
   const chargerLignes = async () => {
     try {
-      const res = await api.get(`/depenses/${depense.uuid_id || depense.id}/lignes-devis`, { headers });
+      const res = await api.get(`/depenses/${depense.uuid_id || depense.id}/devis`, { headers });
       setLignes(res.data);
     } catch (error) { console.log('Erreur lignes devis:', error.message); }
     finally { setChargement(false); }
@@ -38,7 +39,7 @@ const VueDevis = ({ token, depense, onBack }) => {
   const ajouterLigne = async () => {
     if (!nouvelleLigne.libelle || !nouvelleLigne.montant_prevu) return;
     try {
-      await api.post(`/depenses/${depense.uuid_id || depense.id}/lignes-devis`, {
+      await api.post(`/depenses/${depense.uuid_id || depense.id}/devis`, {
         libelle: nouvelleLigne.libelle, montant_prevu: parseFloat(nouvelleLigne.montant_prevu), ordre: lignes.length + 1,
       }, { headers });
       setNouvelleLigne({ libelle: '', montant_prevu: '' });
@@ -52,7 +53,7 @@ const VueDevis = ({ token, depense, onBack }) => {
       Alert.prompt('Dépense imprévue', 'Montant dépensé (F) :', async (montant) => {
         if (!montant) return;
         try {
-          await api.post(`/depenses/${depense.uuid_id || depense.id}/lignes-devis`, {
+          await api.post(`/depenses/${depense.uuid_id || depense.id}/devis`, {
             libelle, montant_prevu: 0, montant_reel: parseFloat(montant), ordre: lignes.length + 1,
             ajoutee_apres_coup: true, motif_ecart: 'depense_additionnelle',
           }, { headers });
@@ -69,7 +70,7 @@ const VueDevis = ({ token, depense, onBack }) => {
 
   const enregistrerEdition = async (ligneId) => {
     try {
-      await api.put(`/depenses/lignes-devis/${ligneId}`, {
+      await api.put(`/depenses/devis/${ligneId}`, {
         montant_reel: parseFloat(editValues.montant_reel) || 0,
         motif_ecart: editValues.motif_ecart || null,
         prix_marche_note: editValues.prix_marche_note || null,
@@ -83,7 +84,7 @@ const VueDevis = ({ token, depense, onBack }) => {
     Alert.alert('Supprimer', 'Supprimer cette ligne ?', [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Supprimer', style: 'destructive', onPress: async () => {
-        try { await api.delete(`/depenses/lignes-devis/${ligneId}`, { headers }); chargerLignes(); }
+        try { await api.delete(`/depenses/devis/${ligneId}`, { headers }); chargerLignes(); }
         catch (error) { console.log('Erreur suppression ligne:', error.message); }
       }},
     ]);
@@ -218,15 +219,9 @@ const FormDepenseFerme = ({ values, onChange, onSubmit, onCancel, titre, envoi, 
               </View>
             </View>
           ) : (
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Montant prévu (F)</Text>
-                <TextInput style={styles.champ} keyboardType="numeric" placeholder="0" value={values.montant_prevu} onChangeText={v => onChange('montant_prevu', v)} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Montant réel (F)</Text>
-                <TextInput style={styles.champ} keyboardType="numeric" placeholder="0" value={values.montant_reel} onChangeText={v => onChange('montant_reel', v)} />
-              </View>
+            <View>
+              <Text style={styles.label}>Montant prévu (F)</Text>
+              <TextInput style={styles.champ} keyboardType="numeric" placeholder="0" value={values.montant_prevu} onChangeText={v => onChange('montant_prevu', v)} />
             </View>
           )}
 
@@ -341,7 +336,7 @@ const GestionFermeScreen = ({ token, projetActifId }) => {
         for (let i = 0; i < lignesDevis.length; i++) {
           const ligne = lignesDevis[i];
           if (!ligne.libelle || !ligne.montant_prevu) continue;
-          await api.post(`/depenses/${nouvelleDepenseId}/lignes-devis`, { libelle: ligne.libelle, montant_prevu: parseFloat(ligne.montant_prevu), ordre: i + 1 }, { headers });
+          await api.post(`/depenses/${nouvelleDepenseId}/devis`, { libelle: ligne.libelle, montant_prevu: parseFloat(ligne.montant_prevu), ordre: i + 1 }, { headers });
         }
       }
       setShowForm(false); setForm(videForm); setLignesDevis([]);
@@ -351,16 +346,19 @@ const GestionFermeScreen = ({ token, projetActifId }) => {
   };
 
   const soumettreEdit = async () => {
+    if (!(await confirmerMouvementCaisse(depenseSelectionnee, editForm.statut, editForm.montant_prevu, formatMontant))) return;
     setEnvoi(true);
     try {
-      await api.put(`/depenses/${depenseSelectionnee.uuid_id || depenseSelectionnee.id}`, { ...editForm, type_depense: 'ferme' }, { headers });
+      // Le réel ne bouge plus que via Payer ou le statut (Payée / Annulée).
+      await api.put(`/depenses/${depenseSelectionnee.uuid_id || depenseSelectionnee.id}`, { ...editForm, montant_reel: undefined, type_depense: 'ferme' }, { headers });
       setShowEditForm(false);
       chargerDonnees();
     } catch (error) { console.log('Erreur édition:', error.message); }
     finally { setEnvoi(false); }
   };
 
-  const totalPrevu = depenses.reduce((s, d) => s + parseFloat(d.montant_prevu || 0), 0);
+  // Une dépense annulée sort du budget : son prévu n'est plus compté.
+  const totalPrevu = depenses.reduce((s, d) => s + (d.statut === 'annulee' ? 0 : parseFloat(d.montant_prevu || 0)), 0);
   const totalReel = depenses.reduce((s, d) => s + parseFloat(d.montant_reel || 0), 0);
   const ecart = totalReel - totalPrevu;
   const categories = ['Toutes', ...new Set(depenses.map(d => d.categorie || 'Autre'))];
