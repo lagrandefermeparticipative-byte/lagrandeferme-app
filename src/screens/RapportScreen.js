@@ -115,7 +115,7 @@ const RapportScreen = ({ token, projetActifId }) => {
     setEnvoi(true); setErreur('');
     try {
       if (parseInt(mortaliteForm.nombre) > 0) {
-        await api.post('/lots/mortalites', { ...mortaliteForm, lot_id: parseInt(mortaliteForm.lot_id), nombre: parseInt(mortaliteForm.nombre) }, { headers });
+        await api.post('/lots/mortalite', { ...mortaliteForm, lot_id: parseInt(mortaliteForm.lot_id), nombre: parseInt(mortaliteForm.nombre) }, { headers });
       }
       setMortaliteEnvoyee(true); setEtape('rapport');
     } catch (error) { setErreur('Erreur lors de la mise à jour du cheptel.'); }

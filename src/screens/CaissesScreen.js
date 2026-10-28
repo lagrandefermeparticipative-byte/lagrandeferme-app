@@ -56,7 +56,7 @@ const CaissesScreen = ({ token }) => {
     if (!values.montant || !values.motif) { Alert.alert('Champs manquants', 'Montant et motif requis.'); return; }
     setEnvoi(true);
     try {
-      const route = formAction === 'credit' ? 'crediter' : 'debiter';
+      const route = formAction === 'credit' ? 'credit' : 'debit';
       await api.post(`/caisses/${caisseSelectionnee.uuid_id || caisseSelectionnee.id}/${route}`, values, { headers });
       setValues({ montant: '', motif: '', note: '' }); setFormAction(null);
       ouvrirCaisse(caisseSelectionnee); chargerCaisses();

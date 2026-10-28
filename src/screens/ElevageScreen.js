@@ -105,7 +105,7 @@ const ElevageScreen = ({ token, projetActifId }) => {
     if (!mortForm.nombre) { setErreur('Nombre requis.'); return; }
     setEnvoi(true); setErreur('');
     try {
-      await api.post('/lots/mortalites', { ...mortForm, nombre: parseInt(mortForm.nombre), lot_id: lotSelectionne.uuid_id || lotSelectionne.id, date_mortalite: new Date().toISOString().split('T')[0] }, { headers });
+      await api.post('/lots/mortalite', { ...mortForm, nombre: parseInt(mortForm.nombre), lot_id: lotSelectionne.uuid_id || lotSelectionne.id, date_mortalite: new Date().toISOString().split('T')[0] }, { headers });
       setVue('liste'); charger();
     } catch (error) { setErreur(error.response?.data?.message || 'Erreur.'); }
     finally { setEnvoi(false); }

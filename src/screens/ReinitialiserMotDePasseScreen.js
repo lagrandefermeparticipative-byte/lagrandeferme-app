@@ -23,7 +23,7 @@ const ReinitialiserMotDePasseScreen = ({ tokenInitial, onRetourLogin }) => {
     if (motDePasse !== confirmation) { setErreur('Les mots de passe ne correspondent pas.'); return; }
     setChargement(true);
     try {
-      await api.post(`/auth/reinitialiser-mot-de-passe/${token}`, { mot_de_passe: motDePasse });
+      await api.post('/auth/reinitialiser-mot-de-passe', { token: token.trim(), nouveau_mot_de_passe: motDePasse });
       setReussi(true);
     } catch (error) {
       setErreur(error.response?.data?.message || 'Lien invalide ou expiré.');
